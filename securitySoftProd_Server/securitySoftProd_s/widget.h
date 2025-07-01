@@ -2,6 +2,8 @@
 #define WIDGET_H
 
 #include <QWidget>
+#include <QLabel>
+#include <QTcpServer>
 
 class Widget : public QWidget
 {
@@ -10,5 +12,13 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
+
+private slots:
+    void clientConnect();
+    void echoData();
+
+private:
+    QLabel *infoLabel;
+    QTcpServer *tcpServer;
 };
 #endif // WIDGET_H
