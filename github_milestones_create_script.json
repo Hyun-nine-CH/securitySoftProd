@@ -1,0 +1,44 @@
+[
+    {
+        "title": "2025-07-01",
+        "state": "open",
+        "description": "Day 1 작업 내용 기록용 마일스톤",
+        "due_on": "2025-07-01T23:59:59Z"
+    },
+    {
+        "title": "2025-07-02",
+        "state": "open",
+        "description": "Day 2 작업 내용 기록용 마일스톤",
+        "due_on": "2025-07-02T23:59:59Z"
+    },
+    {
+        "title": "2025-07-03",
+        "state": "open",
+        "description": "Day 3 작업 내용 기록용 마일스톤",
+        "due_on": "2025-07-03T23:59:59Z"
+    },
+    {
+        "title": "2025-07-04",
+        "state": "open",
+        "description": "Day 4 작업 내용 기록용 마일스톤",
+        "due_on": "2025-07-04T23:59:59Z"
+    },
+    {
+        "title": "2025-07-05",
+        "state": "open",
+        "description": "Day 5 작업 내용 기록용 마일스톤",
+        "due_on": "2025-07-05T23:59:59Z"
+    },
+    {
+        "title": "2025-07-06",
+        "state": "open",
+        "description": "Day 6 작업 내용 기록용 마일스톤",
+        "due_on": "2025-07-06T23:59:59Z"
+    },
+    {
+        "title": "2025-07-07",
+        "state": "open",
+        "description": "Day 7 작업 내용 기록용 마일스톤",
+        "due_on": "2025-07-07T23:59:59Z"
+    }
+]
