@@ -1,0 +1,19 @@
+<RCC>
+    <qresource prefix="/">
+        <file>images/antivirus.png</file>
+        <file>images/backdoor.png</file>
+        <file>images/backdoor(1).png</file>
+        <file>images/chat.png</file>
+        <file>images/client.png</file>
+        <file>images/debugging.png</file>
+        <file>images/encryption.png</file>
+        <file>images/firewall-security.png</file>
+        <file>images/icons8-download-64.png</file>
+        <file>images/images.png</file>
+        <file>images/protection.png</file>
+        <file>images/reliability.png</file>
+        <file>images/security.png</file>
+        <file>images/shield.png</file>
+        <file>images/Exit-PNG-Transparent-Image.png</file>
+    </qresource>
+</RCC>
