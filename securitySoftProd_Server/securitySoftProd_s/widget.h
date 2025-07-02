@@ -4,10 +4,11 @@
 #include <QWidget>
 #include <QLabel>
 #include <QTcpServer>
-#include <QTcpSocket>
-#include <QVector>
+#include <QMap>
+#include <QFile>
 
 #include "parsing.h"
+#include "clientinfo.h"
 
 class Widget : public QWidget
 {
@@ -20,15 +21,21 @@ public:
 private slots:
     void ClientConnect();
     void BroadCast();
+    void DisConnectEvent();
 
 private:
-    QLabel *InfoLabel;
-    QLabel *PortLabel;
-    QLabel *ChatLabel;
+    QLabel     *InfoLabel;
+    QLabel     *PortLabel;
+    QLabel     *ChatLabel;
     QTcpServer *TcpServer;
-    QVector<QTcpSocket*> ClientList;
-    bool IsInfo; //정보 인지 채팅인지 확인하는 플래그
+    QFile      *NewFile;
+    QByteArray InBlock;
+    QString    FileName;
+    qint64     TotalSize;
+    qint64     ByteReceived;
+    QMap<QTcpSocket*, ClientInfo*> CInfoList;
 
     Parsing *Parse;
+    ClientInfo *CInfo;
 };
 #endif // WIDGET_H
