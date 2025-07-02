@@ -4,6 +4,10 @@
 #include <QWidget>
 #include <QLabel>
 #include <QTcpServer>
+#include <QTcpSocket>
+#include <QVector>
+
+#include "parsing.h"
 
 class Widget : public QWidget
 {
@@ -14,11 +18,17 @@ public:
     ~Widget();
 
 private slots:
-    void clientConnect();
-    void echoData();
+    void ClientConnect();
+    void BroadCast();
 
 private:
-    QLabel *infoLabel;
-    QTcpServer *tcpServer;
+    QLabel *InfoLabel;
+    QLabel *PortLabel;
+    QLabel *ChatLabel;
+    QTcpServer *TcpServer;
+    QVector<QTcpSocket*> ClientList;
+    bool IsInfo; //정보 인지 채팅인지 확인하는 플래그
+
+    Parsing *Parse;
 };
 #endif // WIDGET_H
