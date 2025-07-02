@@ -88,46 +88,48 @@ void Widget::BroadCast()
 
     //파일을 받았을때
     QByteArray PeekedData = ClientConnection->peek(16);
-    if(Parse->IsFile(PeekedData)){
-        if(ByteReceived == 0){
-            QDataStream In(ClientConnection);
-            In >> TotalSize >> ByteReceived >> FileName;
-            QFileInfo info(FileName);
-            QString CurrentFileName = info.fileName();
-            NewFile = new QFile(CurrentFileName);
-            NewFile->open(QFile::WriteOnly);
-        }else{
-            InBlock = ClientConnection->readAll();
-            ByteReceived += InBlock.size();
-            NewFile->write(InBlock);
-            NewFile->flush();
-        }
-        if(ByteReceived == TotalSize){
-            InfoLabel->setText(tr("%1 receive completed").arg(FileName));
-            InBlock.clear();
-            ByteReceived = 0;
-            TotalSize = 0;
-            NewFile->close();
-            delete NewFile;
-            NewFile = nullptr;
-        }
-    }else if(Parse->IsInfo(ByteArray) == false){
+    if(Parse->IsInfo(ByteArray) == false){
         //브로드캐스팅
-        if(ThatClient){
-            for(QMap<QTcpSocket*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
-                                                                                              it != CInfoList.constEnd(); ++it){
-                ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(QTcpSocket* 포인터)을 가져옴
-                //같은 방이면 브로드캐스트 해라
-                qDebug() << "compare : " << C->getClientRoomId();
-                qDebug() << "origin  : " << ThatClient->getClientRoomId();
-                if(QString::compare(C->getClientRoomId(), ThatClient->getClientRoomId()) == 0)
-                {
-                    C->getClientSocket()->write(ByteArray);
-                    C->getClientSocket()->flush();
+        if(Parse->IsFile(PeekedData)){
+            if(ByteReceived == 0){
+                QDataStream In(ClientConnection);
+                In >> TotalSize >> ByteReceived >> FileName;
+                QFileInfo info(FileName);
+                QString CurrentFileName = info.fileName();
+                NewFile = new QFile(CurrentFileName);
+                NewFile->open(QFile::WriteOnly);
+            }else{
+                InBlock = ClientConnection->readAll();
+                ByteReceived += InBlock.size();
+                NewFile->write(InBlock);
+                NewFile->flush();
+            }
+            if(ByteReceived == TotalSize){
+                InfoLabel->setText(tr("%1 receive completed").arg(FileName));
+                InBlock.clear();
+                ByteReceived = 0;
+                TotalSize = 0;
+                NewFile->close();
+                delete NewFile;
+                NewFile = nullptr;
+            }
+        } else{
+            if(ThatClient){
+                for(QMap<QTcpSocket*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
+                                                                                                  it != CInfoList.constEnd(); ++it){
+                    ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(QTcpSocket* 포인터)을 가져옴
+                    //같은 방이면 브로드캐스트 해라
+                    qDebug() << "compare : " << C->getClientRoomId();
+                    qDebug() << "origin  : " << ThatClient->getClientRoomId();
+                    if(QString::compare(C->getClientRoomId(), ThatClient->getClientRoomId()) == 0)
+                    {
+                        C->getClientSocket()->write(ByteArray);
+                        C->getClientSocket()->flush();
+                    }
                 }
             }
         }
-    }else if(Parse->IsInfo(ByteArray) == true){
+    }else{
         CInfo->setClientData(ByteArray);
         CInfo->ChangeJsonData();
     }
