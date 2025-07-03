@@ -1,0 +1,129 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>MainWindow_Admin</class>
+ <widget class="QMainWindow" name="MainWindow_Admin">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>800</width>
+    <height>600</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>MainWindow</string>
+  </property>
+  <widget class="QWidget" name="centralwidget">
+   <layout class="QHBoxLayout" name="horizontalLayout">
+    <property name="leftMargin">
+     <number>0</number>
+    </property>
+    <property name="topMargin">
+     <number>0</number>
+    </property>
+    <property name="rightMargin">
+     <number>0</number>
+    </property>
+    <property name="bottomMargin">
+     <number>0</number>
+    </property>
+    <item>
+     <widget class="QTabWidget" name="tabWidget">
+      <property name="currentIndex">
+       <number>-1</number>
+      </property>
+     </widget>
+    </item>
+   </layout>
+  </widget>
+  <widget class="QMenuBar" name="menubar">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>800</width>
+     <height>37</height>
+    </rect>
+   </property>
+   <widget class="QMenu" name="menuFile">
+    <property name="title">
+     <string>File</string>
+    </property>
+    <addaction name="actionClient_Info"/>
+    <addaction name="actionSecurityProd_Info"/>
+    <addaction name="actionOrder_Info"/>
+    <addaction name="actionChatting_Room"/>
+    <addaction name="separator"/>
+    <addaction name="actionQuit"/>
+   </widget>
+   <addaction name="menuFile"/>
+  </widget>
+  <widget class="QStatusBar" name="statusbar"/>
+  <widget class="QToolBar" name="toolBar">
+   <property name="windowTitle">
+    <string>toolBar</string>
+   </property>
+   <attribute name="toolBarArea">
+    <enum>TopToolBarArea</enum>
+   </attribute>
+   <attribute name="toolBarBreak">
+    <bool>false</bool>
+   </attribute>
+   <addaction name="actionClient_Info"/>
+   <addaction name="actionSecurityProd_Info"/>
+   <addaction name="actionOrder_Info"/>
+   <addaction name="actionChatting_Room"/>
+   <addaction name="separator"/>
+   <addaction name="actionQuit"/>
+  </widget>
+  <action name="actionClient_Info">
+   <property name="icon">
+    <iconset resource="ImagesTool.qrc">
+     <normaloff>:/images/public-relation.png</normaloff>:/images/public-relation.png</iconset>
+   </property>
+   <property name="text">
+    <string>Client Info</string>
+   </property>
+  </action>
+  <action name="actionSecurityProd_Info">
+   <property name="icon">
+    <iconset resource="ImagesTool.qrc">
+     <normaloff>:/images/firewall-security.png</normaloff>:/images/firewall-security.png</iconset>
+   </property>
+   <property name="text">
+    <string>SecurityProd Info</string>
+   </property>
+  </action>
+  <action name="actionOrder_Info">
+   <property name="icon">
+    <iconset resource="ImagesTool.qrc">
+     <normaloff>:/images/Upload-Icon-Logo-PNG-Photos.png</normaloff>:/images/Upload-Icon-Logo-PNG-Photos.png</iconset>
+   </property>
+   <property name="text">
+    <string>Order Info</string>
+   </property>
+  </action>
+  <action name="actionChatting_Room">
+   <property name="icon">
+    <iconset resource="ImagesTool.qrc">
+     <normaloff>:/images/chat.png</normaloff>:/images/chat.png</iconset>
+   </property>
+   <property name="text">
+    <string>Chatting Room</string>
+   </property>
+  </action>
+  <action name="actionQuit">
+   <property name="icon">
+    <iconset resource="ImagesTool.qrc">
+     <normaloff>:/images/Exit-PNG-Transparent-Image.png</normaloff>:/images/Exit-PNG-Transparent-Image.png</iconset>
+   </property>
+   <property name="text">
+    <string>Quit</string>
+   </property>
+  </action>
+ </widget>
+ <resources>
+  <include location="ImagesTool.qrc"/>
+ </resources>
+ <connections/>
+</ui>
