@@ -2,6 +2,7 @@
 #include <QtNetwork>
 #include <QtWidgets>
 #include <QDataStream>
+#include <QBuffer>
 
 #include "widget.h"
 
@@ -22,10 +23,14 @@
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
-    InfoLabel = new QLabel(this);
-    PortLabel = new QLabel(this);
-    ChatLabel = new QLabel(this);
-    Parse     = new Parsing();
+    InfoLabel     = new QLabel(this);
+    PortLabel     = new QLabel(this);
+    ChatLabel     = new QLabel(this);
+    Parse         = new Parsing();
+    TotalSize     = 0;
+    CurrentPacket = 0;
+    DataType      = 0;
+    ReceivePacket = 0;
 
     QPushButton *QuitButton = new QPushButton("Quit",this);
     connect(QuitButton,SIGNAL(clicked()),qApp,SLOT(quit()));
@@ -82,36 +87,59 @@ void Widget::BroadCast()
     시그널로 받은 그 클라이언트의 메시지를 받는 것
      */
     QTcpSocket *ClientConnection = dynamic_cast<QTcpSocket*>(sender());
-    if(ClientConnection->bytesAvailable() > BLOCK_SIZE) return;
-    QByteArray ByteArray = ClientConnection->read(BLOCK_SIZE);
-    ClientInfo* ThatClient = CInfoList.value(ClientConnection);
+    qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
+    ByteArray.append(ClientConnection->readAll());
+    qDebug() << "수신 후 ByteArray 크기: " << ByteArray.size();
+    QBuffer buffer(&ByteArray);
+    buffer.open(QIODevice::ReadOnly); // 읽기 모드로 오픈 필수
+    QDataStream In(&buffer);
+    In.setVersion(QDataStream::Qt_5_15);
 
-    //파일을 받았을때
-    QByteArray PeekedData = ClientConnection->peek(16);
-    if(Parse->IsFile(PeekedData)){
-        if(ByteReceived == 0){
-            QDataStream In(ClientConnection);
-            In >> TotalSize >> ByteReceived >> FileName;
+    ClientInfo* ThatClient = CInfoList.value(ClientConnection);
+    // qDebug() << "Server: " << ClientConnection->peerAddress().toString()
+    //          << "에서 데이터 수신. 현재 버퍼 크기: " << ByteArray.size();
+
+    //파싱
+    if(ReceivePacket == 0)
+        In >> DataType >> TotalSize >> CurrentPacket >> FileName;
+    // buffer의 읽기 포인터는 자동으로 8바이트 이동합니다.
+    // qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
+    //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
+    //qDebug() << "데이터 타입 : " << DataType;
+    if(DataType == 0x01){
+        if(ReceivePacket == 0){
             QFileInfo info(FileName);
             QString CurrentFileName = info.fileName();
             NewFile = new QFile(CurrentFileName);
             NewFile->open(QFile::WriteOnly);
+
+            // 첫 패킷에서도 헤더 제거 후 데이터를 파일에 써야 함!
+            ByteArray.remove(0, buffer.pos());
+            ReceivePacket = CurrentPacket; // 첫 패킷의 데이터 크기 업데이트
+            //qDebug() << "첫 패킷 ReceivePacket : " << ReceivePacket;
         }else{
-            InBlock = ClientConnection->readAll();
-            ByteReceived += InBlock.size();
-            NewFile->write(InBlock);
-            NewFile->flush();
+            qDebug() << "ByteArray 파일 : " << ByteArray;
+            if (NewFile && NewFile->isOpen()) { // NewFile이 nullptr이 아니고, 열려있는지 확인
+                NewFile->write(ByteArray);
+            }
+            ReceivePacket += ByteArray.size();
+            // qDebug() << "ReceivePacket : " << ReceivePacket;
+            // qDebug() << "TotalSize : " << TotalSize;
         }
-        if(ByteReceived == TotalSize){
+        if(ReceivePacket == TotalSize){
             InfoLabel->setText(tr("%1 receive completed").arg(FileName));
-            InBlock.clear();
-            ByteReceived = 0;
+            ByteArray.clear();
+            ReceivePacket = 0;
             TotalSize = 0;
             NewFile->close();
             delete NewFile;
             NewFile = nullptr;
         }
-    }else if(Parse->IsInfo(ByteArray) == false){
+    }
+    else if(Parse->IsInfo(ByteArray)){
+        CInfo->setClientData(ByteArray);
+        CInfo->ChangeJsonData();
+    }else{
         //브로드캐스팅
         if(ThatClient){
             for(QMap<QTcpSocket*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
@@ -127,14 +155,9 @@ void Widget::BroadCast()
                 }
             }
         }
-    }else if(Parse->IsInfo(ByteArray) == true){
-        CInfo->setClientData(ByteArray);
-        CInfo->ChangeJsonData();
     }
-
-
-
     ChatLabel->setText(QString(ByteArray));
+    ByteArray.clear();
 }
 
 void Widget::DisConnectEvent()
