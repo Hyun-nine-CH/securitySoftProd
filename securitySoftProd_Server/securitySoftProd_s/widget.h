@@ -7,6 +7,7 @@
 #include <QMap>
 #include <QFile>
 
+
 #include "parsing.h"
 #include "clientinfo.h"
 
@@ -29,10 +30,12 @@ private:
     QLabel     *ChatLabel;
     QTcpServer *TcpServer;
     QFile      *NewFile;
-    QByteArray InBlock;
+    QByteArray ByteArray;
     QString    FileName;
     qint64     TotalSize;
-    qint64     ByteReceived;
+    qint64     CurrentPacket;
+    qint64     DataType;
+    qint64     ReceivePacket;
     QMap<QTcpSocket*, ClientInfo*> CInfoList;
 
     Parsing *Parse;
