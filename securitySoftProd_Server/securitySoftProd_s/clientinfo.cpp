@@ -10,6 +10,8 @@ ClientInfo::ClientInfo()
 void ClientInfo::ChangeJsonData()
 {
     if(!InfoData.isEmpty()){
+        QByteArray Modify = getClientData();
+        qDebug() << "WHat is Modify : " << Modify;
         QJsonDocument doc = QJsonDocument::fromJson(InfoData);
         QJsonParseError parseError;
         // 파싱이 성공했고, 파싱된 데이터가 JSON이 맞는지 확인
@@ -19,8 +21,7 @@ void ClientInfo::ChangeJsonData()
             // QJsonObject에서 값을 추출하여 할당
             setClientID(obj.value("ClientId").toString());
             setClientRoomId(obj.value("RoomId").toString());
-            setClientSocket(socket);
-
+            qDebug() << "JSON Parsing Succsess";
         } else {
             // 파싱 실패 또는 예상치 못한 JSON 형태 (객체가 아님)일 경우 처리
             // 예: 기본값 설정 또는 오류 로깅
@@ -30,6 +31,7 @@ void ClientInfo::ChangeJsonData()
             qDebug() << "JSON 파싱 실패:" << parseError.errorString();
             qDebug() << "받은 데이터:" << InfoData;
         }
+        setClientSocket(socket);
     }
 }
 

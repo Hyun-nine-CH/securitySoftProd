@@ -10,13 +10,15 @@ CONFIG += c++17
 
 SOURCES += \
     clientinfo.cpp \
+    communication.cpp \
     main.cpp \
-    parsing.cpp \
+    productdb.cpp \
     widget.cpp
 
 HEADERS += \
     clientinfo.h \
-    parsing.h \
+    communication.h \
+    productdb.h \
     widget.h
 
 # Default rules for deployment.

@@ -6,10 +6,12 @@
 #include <QTcpServer>
 #include <QMap>
 #include <QFile>
+#include <QBuffer>
+#include <QThread>
 
-#include "parsing.h"
 #include "clientinfo.h"
-
+#include "communication.h"
+#include "productdb.h"
 class Widget : public QWidget
 {
     Q_OBJECT
@@ -19,9 +21,14 @@ public:
     ~Widget();
 
 private slots:
+    // 클라이언트 연결시
     void ClientConnect();
-    void BroadCast();
-    void DisConnectEvent();
+    // 클라이언트 종료시
+    void DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread);
+    // 채팅 메시지 받았을 때
+    void BroadCast(const QByteArray& MessageData, const QString& RoomId);
+    // 클라이언트 정보 완성되서 넘길때
+    void SetCInfo( CommuniCation* Thread, ClientInfo *Info);
 
 private:
     QLabel     *InfoLabel;
@@ -29,13 +36,22 @@ private:
     QLabel     *ChatLabel;
     QTcpServer *TcpServer;
     QFile      *NewFile;
-    QByteArray InBlock;
+    QByteArray ByteArray;
     QString    FileName;
     qint64     TotalSize;
-    qint64     ByteReceived;
-    QMap<QTcpSocket*, ClientInfo*> CInfoList;
+    qint64     CurrentPacket;
+    qint64     DataType;
+    qint64     ReceivePacket;
+    QMutex     *ListMutex;
+    QMap<CommuniCation*, ClientInfo*> CInfoList;
 
-    Parsing *Parse;
-    ClientInfo *CInfo;
+    ClientInfo    *CInfo;
+    CommuniCation *Comm;
+    ProductDB *pdb; //지워야함
+
+    void FileReceive(const QBuffer &buffer);
+    void ClientInitDataReceive(const QBuffer &buffer);
+    void ChatMessageReceive(const QBuffer &buffer);
+    void LoadProductDB();
 };
 #endif // WIDGET_H
