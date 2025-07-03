@@ -7,8 +7,6 @@
 #include <QMap>
 #include <QFile>
 
-
-#include "parsing.h"
 #include "clientinfo.h"
 
 class Widget : public QWidget
@@ -38,7 +36,6 @@ private:
     qint64     ReceivePacket;
     QMap<QTcpSocket*, ClientInfo*> CInfoList;
 
-    Parsing *Parse;
     ClientInfo *CInfo;
 };
 #endif // WIDGET_H
