@@ -1,0 +1,7 @@
+{
+  "type": "ChatMessage",
+  "sender": "kim",
+  "room_id": "GeneralChat",
+  "message": "안녕하세요! 잘 지내셨나요?",
+  "timestamp": "2025-07-02T15:30:00Z"
+}
