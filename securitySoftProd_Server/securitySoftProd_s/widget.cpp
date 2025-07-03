@@ -30,6 +30,7 @@ Widget::Widget(QWidget *parent)
     InfoLabel     = new QLabel(this);
     PortLabel     = new QLabel(this);
     ChatLabel     = new QLabel(this);
+    ListMutex     = new QMutex();
     TotalSize     = 0;
     CurrentPacket = 0;
     DataType      = 0;
@@ -72,9 +73,11 @@ void Widget::ClientConnect()
     QTcpSocket *ClientConnection = TcpServer->nextPendingConnection();
     //여기서 이제 QVector로 QTcpSocket을 만들어서 클라이언트들을 저장
     CInfo = new ClientInfo();
-    QMutex *CommMutex = new QMutex();
-    Comm = new CommuniCation(ClientConnection,CInfo,CommMutex);
+
+    Comm = new CommuniCation(ClientConnection,CInfo);
+    ListMutex->lock();
     CInfoList.insert(Comm,CInfo);
+    ListMutex->unlock();
     // 스레드 종료 시 해당 스레드 객체를 자동으로 삭제하도록 연결
     connect(Comm, &QThread::finished, Comm, &QObject::deleteLater);
 
@@ -85,6 +88,7 @@ void Widget::ClientConnect()
     Comm->start(); // workerThread의 run() 메서드가 실행됩니다.
     //브로드캐스트 시점 신호
     connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);
+    connect(Comm, &CommuniCation::SendClientInfo, this, &Widget::SetCInfo);
     //CInfo->setClientSocket(ClientConnection);
     //CInfoList.insert(ClientConnection,CInfo);
     //소켓에 대한 읽고 닫기 연결
@@ -148,6 +152,13 @@ void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
     //ChatLabel->setText(QString(ByteArray));
     //ByteArray.clear();
 
+    /*
+        MessageData를 복사하여 전달
+        그대로 받게 되면 다른 클라이언트에서 이 코드를 실행할때
+        MessageData에 접근해서 크래시 나거나 데이터 오염됨
+    */
+    QByteArray messageCopy = MessageData;
+    ListMutex->lock();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
         it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
@@ -164,12 +175,25 @@ void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
                 // 대상 스레드의 이벤트 루프에서 안전하게 실행됩니다.
                 QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
                                           Qt::QueuedConnection,  // 연결 타입 (필수)
-                                          Q_ARG(QByteArray, MessageData)); // 슬롯에 전달할 인자
+                                          Q_ARG(QByteArray, messageCopy)); // 슬롯에 전달할 인자
                 qDebug() << "메시지 전송 요청됨: " << W->metaObject()->className();
             }
         }
     }
+    ListMutex->unlock();
 
+}
+
+void Widget::SetCInfo(CommuniCation* Thread, ClientInfo *Info)
+{
+    if (Thread) {
+        ListMutex->lock();
+        // QMap에서 ClientInfo*를 빠르게 찾음
+        if (CInfoList.contains(Thread)) {
+            CInfoList[Thread] = Info;
+        }
+        ListMutex->unlock();
+    }
 }
 
 void Widget::FileReceive(const QBuffer &buffer)
@@ -240,18 +264,18 @@ void Widget::ChatMessageReceive(const QBuffer &buffer)
 
 }
 
-void Widget::DisConnectEvent()
+void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
 {
-    QTcpSocket* DisConnectSocket = qobject_cast<QTcpSocket*>(sender());
-    if (DisConnectSocket) {
+    if (Socket) {
+        ListMutex->lock();
         // QMap에서 ClientInfo*를 빠르게 찾음
-        if (CInfoList.contains(DisConnectSocket)) {
+        if (CInfoList.contains(Thread)) {
             /*
                 Info의 의미
                 CInfoList에서 DisConnectSocket를 키로 사용하여
                 해당 키에 연결된 값(value), 즉 ClientInfo* 포인터를 가져오는 역할
             */
-            ClientInfo* Info = CInfoList.value(DisConnectSocket);
+            ClientInfo* Info = CInfoList.value(Thread);
 
             /*
              *  romove의 의미
@@ -260,7 +284,7 @@ void Widget::DisConnectEvent()
                 값으로 저장되어 있던 ClientInfo* 포인터가 가리키는
                 실제 ClientInfo 객체의 메모리까지 해제해주지는 않음
             */
-            CInfoList.remove(DisConnectSocket);
+            CInfoList.remove(Thread);
 
             // 가져온 ClientInfo* 포인터를 사용하여 실제 ClientInfo 객체의 메모리를 해제
             delete Info;
@@ -269,9 +293,9 @@ void Widget::DisConnectEvent()
 
             qDebug() << "QMap에서 클라이언트 제거 완료.";
         }
-
+        ListMutex->unlock();
         // 소켓 삭제 예약
-        DisConnectSocket->deleteLater();
+        Socket->deleteLater();
     }
     // UI 업데이트: CInfoList.size() 사용
     InfoLabel->setText(tr("%1 connection is established...").arg(CInfoList.size()));
@@ -279,5 +303,27 @@ void Widget::DisConnectEvent()
 
 Widget::~Widget()
 {
-
+    ListMutex->lock();
+    // 모든 ClientInfo 객체 삭제
+    for(QMap<CommuniCation*, ClientInfo*>::iterator it = CInfoList.begin();
+         it != CInfoList.end(); ++it) {
+        ClientInfo* info = it.value();
+        delete info;
+    }
+    if (NewFile) { // NewFile이 nullptr이 아닌 경우에만 delete
+        if (NewFile->isOpen()) {
+            NewFile->close(); // 열려있으면 닫기
+        }
+        delete NewFile;
+        NewFile = nullptr; // dangling pointer 방지
+    }
+    CInfoList.clear();
+    ListMutex->unlock();
+    delete ListMutex;
+    delete CInfo;
+    delete Comm;
+    delete InfoLabel;
+    delete PortLabel;
+    delete ChatLabel;
+    delete TcpServer;
 }

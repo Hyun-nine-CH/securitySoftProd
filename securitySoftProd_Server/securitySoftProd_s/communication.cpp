@@ -2,8 +2,7 @@
 
 #include <QFileInfo>
 
-CommuniCation::CommuniCation(QTcpSocket* socket, ClientInfo* myInfo, \
-                             QMutex* mapMutex,QObject* parent)
+CommuniCation::CommuniCation(QTcpSocket* socket, ClientInfo* myInfo,QObject* parent)
     :Socket(socket), CInfo(myInfo),WorkThread(this)
 {
     // 중요: 소켓을 이 스레드로 이동시켜, 소켓 관련 시그널/슬롯이 이 스레드에서 실행되도록 합니다.
@@ -117,6 +116,7 @@ void CommuniCation::ClientInitDataReceive(const QBuffer &buffer)
         CInfo->setClientData(ByteArray);
         qDebug() << "end 내용 : " << ByteArray;
         CInfo->ChangeJsonData();
+        emit SendClientInfo(this,CInfo);
         ReceivePacket = 0;
         TotalSize = 0;
         DataType = 0;
@@ -132,5 +132,5 @@ void CommuniCation::WriteData(const QByteArray& MessageData)
 
 void CommuniCation::ClientDisconnected()
 {
-    emit Disconnected(Socket);
+    emit Disconnected(Socket,this);
 }

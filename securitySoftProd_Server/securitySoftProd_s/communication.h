@@ -14,8 +14,7 @@ class CommuniCation : public QThread
 {
     Q_OBJECT
 public:
-    CommuniCation(QTcpSocket* socket, ClientInfo* myInfo, \
-                  QMutex* mapMutex,QObject* parent = nullptr);
+    CommuniCation(QTcpSocket* socket, ClientInfo* myInfo,QObject* parent = nullptr);
     ClientInfo* getClientInfo();
 
 protected:
@@ -23,13 +22,14 @@ protected:
 
 signals:
     // 스레드에서 소켓 끊김을 알리는 시그널
-    void Disconnected(QTcpSocket* Socket);
+    void Disconnected(QTcpSocket* Socket, CommuniCation* Thread);
     // 채팅 메시지 시그널
     void ChattingMesg(const QByteArray& MessageData, const QString& RoomId);
+    // 클라이언트 정보 넘기는 시그널
+    void SendClientInfo(CommuniCation* Thread, ClientInfo *Info);
 private slots:
     void ReadClientData(); // 소켓에서 데이터 읽기
     void ClientDisconnected(); // 소켓 연결 끊김 처리
-    void ClientConnect();
     void WriteData(const QByteArray& MessageData);
 
 private:
