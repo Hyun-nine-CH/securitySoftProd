@@ -10,12 +10,14 @@ CONFIG += c++17
 
 SOURCES += \
     clientinfo.cpp \
+    communication.cpp \
     main.cpp \
     productdb.cpp \
     widget.cpp
 
 HEADERS += \
     clientinfo.h \
+    communication.h \
     productdb.h \
     widget.h
 
