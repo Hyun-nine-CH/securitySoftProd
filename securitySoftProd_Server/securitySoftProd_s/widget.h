@@ -7,8 +7,10 @@
 #include <QMap>
 #include <QFile>
 #include <QBuffer>
+#include <QThread>
 
 #include "clientinfo.h"
+#include "communication.h"
 #include "productdb.h"
 class Widget : public QWidget
 {
@@ -20,8 +22,8 @@ public:
 
 private slots:
     void ClientConnect();
-    void BroadCast();
     void DisConnectEvent();
+    void BroadCast(const QByteArray& MessageData, const QString& RoomId);
 
 private:
     QLabel     *InfoLabel;
@@ -35,9 +37,10 @@ private:
     qint64     CurrentPacket;
     qint64     DataType;
     qint64     ReceivePacket;
-    QMap<QTcpSocket*, ClientInfo*> CInfoList;
+    QMap<CommuniCation*, ClientInfo*> CInfoList;
 
     ClientInfo *CInfo;
+    CommuniCation *Comm;
     ProductDB *pdb; //지워야함
 
     void FileReceive(const QBuffer &buffer);

@@ -19,6 +19,7 @@
     20250703
     헤더 추가하여 채팅인지 파일인지 구분하는 기능 추가
         - 프로토콜 QStreamData로 할것
+    구조 갈아 엎음. QThread 따로 뺌
 */
 
 Widget::Widget(QWidget *parent)
@@ -71,18 +72,31 @@ void Widget::ClientConnect()
     QTcpSocket *ClientConnection = TcpServer->nextPendingConnection();
     //여기서 이제 QVector로 QTcpSocket을 만들어서 클라이언트들을 저장
     CInfo = new ClientInfo();
-    CInfo->setClientSocket(ClientConnection);
-    CInfoList.insert(ClientConnection,CInfo);
+    QMutex *CommMutex = new QMutex();
+    Comm = new CommuniCation(ClientConnection,CInfo,CommMutex);
+    CInfoList.insert(Comm,CInfo);
+    // 스레드 종료 시 해당 스레드 객체를 자동으로 삭제하도록 연결
+    connect(Comm, &QThread::finished, Comm, &QObject::deleteLater);
+
+    // 스레드에서 클라이언트 연결이 끊겼음을 알리는 시그널 연결 (서버에서 관리 용이)
+    connect(Comm, &CommuniCation::Disconnected, this, &Widget::DisConnectEvent);
+
+    // 2. 스레드 시작
+    Comm->start(); // workerThread의 run() 메서드가 실행됩니다.
+    //브로드캐스트 시점 신호
+    connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);
+    //CInfo->setClientSocket(ClientConnection);
+    //CInfoList.insert(ClientConnection,CInfo);
     //소켓에 대한 읽고 닫기 연결
-    connect(ClientConnection, SIGNAL(disconnected()),\
-            this, SLOT(DisConnectEvent()));
-    connect(ClientConnection, SIGNAL(readyRead()),SLOT(BroadCast()));
+    // connect(ClientConnection, SIGNAL(disconnected()),\
+    //         this, SLOT(DisConnectEvent()));
+    // connect(ClientConnection, SIGNAL(readyRead()),SLOT(BroadCast()));
     //클라이언트 몇개가 연결되었는지 확인
-    int ClientNum = CInfoList.size();
-    InfoLabel->setText(tr("%1 connection is established...").arg(ClientNum));
+    //int ClientNum = CInfoList.size();
+    //InfoLabel->setText(tr("%1 connection is established...").arg(ClientNum));
 }
 
-void Widget::BroadCast()
+void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
 {
     /*
     특정 슬롯을 호출한 시그널의 발신자가 QTcpSocket 타입인지
@@ -90,49 +104,72 @@ void Widget::BroadCast()
     얻기 위한 표준적인 Qt 패턴
     시그널로 받은 그 클라이언트의 메시지를 받는 것
     */
-    QTcpSocket *ClientConnection = dynamic_cast<QTcpSocket*>(sender());
-    //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
-    ByteArray.append(ClientConnection->readAll());
-    qDebug() << "수신 후 ByteArray 크기: " << ByteArray.size();
-    QBuffer buffer(&ByteArray);
-    buffer.open(QIODevice::ReadOnly); // 읽기 모드로 오픈 필수
-    QDataStream In(&buffer);
-    In.setVersion(QDataStream::Qt_5_15);
-    qDebug() <<"받았을때 시점의 내용 : " << ByteArray;
-    ClientInfo* ThatClient = CInfoList.value(ClientConnection);
+    // QTcpSocket *ClientConnection = dynamic_cast<QTcpSocket*>(sender());
+    // //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
+    // ByteArray.append(ClientConnection->readAll());
+    // qDebug() << "수신 후 ByteArray 크기: " << ByteArray.size();
+    // QBuffer buffer(&ByteArray);
+    // buffer.open(QIODevice::ReadOnly); // 읽기 모드로 오픈 필수
+    // QDataStream In(&buffer);
+    // In.setVersion(QDataStream::Qt_5_15);
+    // qDebug() <<"받았을때 시점의 내용 : " << ByteArray;
+    // ClientInfo* ThatClient = CInfoList.value(ClientConnection);
     // qDebug() << "Server: " << ClientConnection->peerAddress().toString()
     //          << "에서 데이터 수신. 현재 버퍼 크기: " << ByteArray.size();
     //파싱
-    if(ReceivePacket == 0)
-        In >> DataType >> TotalSize >> CurrentPacket >> FileName;
-    // buffer의 읽기 포인터는 자동으로 8바이트 이동합니다.
-    // qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
-    //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
-    qDebug() << "데이터 타입 : " << DataType;
-    switch (DataType) {
-    case 0x01:FileReceive(buffer);break;
-    case 0x02:ClientInitDataReceive(buffer);break;
-    case 0x03:LoadProductDB(); break;
-    default:
-        if(ThatClient){
-            for(QMap<QTcpSocket*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
-                                                                                              it != CInfoList.constEnd(); ++it){
-                ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(QTcpSocket* 포인터)을 가져옴
-                //같은 방이면 브로드캐스트 해라
-                qDebug() << "compare : " << C->getClientRoomId();
-                qDebug() << "origin  : " << ThatClient->getClientRoomId();
-                if(QString::compare(C->getClientRoomId(), ThatClient->getClientRoomId()) == 0)
-                {
-                    C->getClientSocket()->write(ByteArray);
-                    C->getClientSocket()->flush();
-                }
+    // if(ReceivePacket == 0)
+    //     In >> DataType >> TotalSize >> CurrentPacket >> FileName;
+    // // buffer의 읽기 포인터는 자동으로 8바이트 이동합니다.
+    // // qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
+    // //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
+    // qDebug() << "데이터 타입 : " << DataType;
+    // switch (DataType) {
+    // case 0x01:FileReceive(buffer);break;
+    // case 0x02:ClientInitDataReceive(buffer);break;
+    // case 0x03:LoadProductDB(); break;
+    // default:
+        // if(ThatClient){
+        //     for(QMap<QTcpSocket*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
+        //         it != CInfoList.constEnd(); ++it){
+        //         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(QTcpSocket* 포인터)을 가져옴
+        //         //같은 방이면 브로드캐스트 해라
+        //         qDebug() << "compare : " << C->getClientRoomId();
+        //         qDebug() << "origin  : " << ThatClient->getClientRoomId();
+        //         if(QString::compare(C->getClientRoomId(), ThatClient->getClientRoomId()) == 0)
+        //         {
+        //             C->getClientSocket()->write(ByteArray);
+        //             C->getClientSocket()->flush();
+        //         }
+        //     }
+        // }
+    //     break;
+    // }
+
+    //ChatLabel->setText(QString(ByteArray));
+    //ByteArray.clear();
+
+    for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
+        it != CInfoList.constEnd(); ++it){
+        ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
+        CommuniCation* W = it.key();
+        //같은 방이면 브로드캐스트 해라
+        qDebug() << "compare : " << C->getClientRoomId();
+        qDebug() << "origin  : " << RoomId;
+        if(QString::compare(C->getClientRoomId(), RoomId) == 0)
+        {
+            if (W)
+            {
+                // QMetaObject::invokeMethod를 사용하여 대상 스레드의 슬롯 호출
+                // Qt::QueuedConnection: 호출이 대상 스레드의 이벤트 큐에 추가되고,
+                // 대상 스레드의 이벤트 루프에서 안전하게 실행됩니다.
+                QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
+                                          Qt::QueuedConnection,  // 연결 타입 (필수)
+                                          Q_ARG(QByteArray, MessageData)); // 슬롯에 전달할 인자
+                qDebug() << "메시지 전송 요청됨: " << W->metaObject()->className();
             }
         }
-        break;
     }
 
-    ChatLabel->setText(QString(ByteArray));
-    ByteArray.clear();
 }
 
 void Widget::FileReceive(const QBuffer &buffer)
