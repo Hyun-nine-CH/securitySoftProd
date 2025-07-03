@@ -2,8 +2,6 @@
 #include <QtNetwork>
 #include <QtWidgets>
 #include <QDataStream>
-#include <QBuffer>
-
 #include "widget.h"
 
 #define BLOCK_SIZE 1024
@@ -26,6 +24,8 @@
 Widget::Widget(QWidget *parent)
     : QWidget(parent)
 {
+    //지워야 함
+    pdb = new ProductDB();
     InfoLabel     = new QLabel(this);
     PortLabel     = new QLabel(this);
     ChatLabel     = new QLabel(this);
@@ -61,6 +61,8 @@ Widget::Widget(QWidget *parent)
     PortLabel->setText(tr("the server is running on port %1")\
                            .arg(TcpServer->serverPort()));
     setWindowTitle(tr("Server"));
+    //test
+    pdb->LoadProductData();
 }
 
 void Widget::ClientConnect()
@@ -87,7 +89,7 @@ void Widget::BroadCast()
     런타임에 안전하게 확인하고, 그 QTcpSocket 객체의 포인터를
     얻기 위한 표준적인 Qt 패턴
     시그널로 받은 그 클라이언트의 메시지를 받는 것
-     */
+    */
     QTcpSocket *ClientConnection = dynamic_cast<QTcpSocket*>(sender());
     //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
     ByteArray.append(ClientConnection->readAll());
@@ -100,8 +102,6 @@ void Widget::BroadCast()
     ClientInfo* ThatClient = CInfoList.value(ClientConnection);
     // qDebug() << "Server: " << ClientConnection->peerAddress().toString()
     //          << "에서 데이터 수신. 현재 버퍼 크기: " << ByteArray.size();
-
-<<<<<<< HEAD
     //파싱
     if(ReceivePacket == 0)
         In >> DataType >> TotalSize >> CurrentPacket >> FileName;
@@ -109,114 +109,98 @@ void Widget::BroadCast()
     // qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
     //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
     qDebug() << "데이터 타입 : " << DataType;
-    if(DataType == 0x01){
-        if(ReceivePacket == 0){
-            QFileInfo info(FileName);
-            QString CurrentFileName = info.fileName();
-            NewFile = new QFile(CurrentFileName);
-            NewFile->open(QFile::WriteOnly);
-
-            // 첫 패킷에서도 헤더 제거 후 데이터를 파일에 써야 함!
-            ByteArray.remove(0, buffer.pos());
-            ReceivePacket = CurrentPacket; // 첫 패킷의 데이터 크기 업데이트
-            //qDebug() << "첫 패킷 ReceivePacket : " << ReceivePacket;
-        }else{
-            qDebug() << "ByteArray 파일 : " << ByteArray;
-            if (NewFile && NewFile->isOpen()) { // NewFile이 nullptr이 아니고, 열려있는지 확인
-                NewFile->write(ByteArray);
-            }
-            ReceivePacket += ByteArray.size();
-            // qDebug() << "ReceivePacket : " << ReceivePacket;
-            // qDebug() << "TotalSize : " << TotalSize;
-        }
-        if(ReceivePacket == TotalSize){
-            InfoLabel->setText(tr("%1 receive completed").arg(FileName));
-            ByteArray.clear();
-            ReceivePacket = 0;
-            TotalSize = 0;
-            DataType = 0;
-            NewFile->close();
-            delete NewFile;
-            NewFile = nullptr;
-        }
-    }
-    else if(DataType == 0x02){
-        if(ReceivePacket == 0){
-            ByteArray.remove(0, buffer.pos());
-            ReceivePacket = CurrentPacket;
-            qDebug() << "ReceivePacket : " << ReceivePacket;
-            qDebug() << "TotalSize : " << TotalSize;
-        }else{
-            qDebug() << "chat 내용 : " << ByteArray;
-            ReceivePacket += ByteArray.size();
-            qDebug() << "ReceivePacket : " << ReceivePacket;
-            qDebug() << "TotalSize : " << TotalSize;
-        }
-        if(ReceivePacket == TotalSize){
-            InfoLabel->setText(tr("client info receive completed"));
-            CInfo->setClientData(ByteArray);
-            qDebug() << "end 내용 : " << ByteArray;
-            CInfo->ChangeJsonData();
-            ReceivePacket = 0;
-            TotalSize = 0;
-            DataType = 0;
-            ByteArray.clear();
-        }
-    }else{
-=======
-    //파일을 받았을때
-    QByteArray PeekedData = ClientConnection->peek(16);
-    if(Parse->IsInfo(ByteArray) == false){
->>>>>>> 092ee3d05587a14dfb2b095bfc1f7df388ffea55
-        //브로드캐스팅
-        if(Parse->IsFile(PeekedData)){
-            if(ByteReceived == 0){
-                QDataStream In(ClientConnection);
-                In >> TotalSize >> ByteReceived >> FileName;
-                QFileInfo info(FileName);
-                QString CurrentFileName = info.fileName();
-                NewFile = new QFile(CurrentFileName);
-                NewFile->open(QFile::WriteOnly);
-            }else{
-                InBlock = ClientConnection->readAll();
-                ByteReceived += InBlock.size();
-                NewFile->write(InBlock);
-                NewFile->flush();
-            }
-            if(ByteReceived == TotalSize){
-                InfoLabel->setText(tr("%1 receive completed").arg(FileName));
-                InBlock.clear();
-                ByteReceived = 0;
-                TotalSize = 0;
-                NewFile->close();
-                delete NewFile;
-                NewFile = nullptr;
-            }
-        } else{
-            if(ThatClient){
-                for(QMap<QTcpSocket*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
-                                                                                                  it != CInfoList.constEnd(); ++it){
-                    ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(QTcpSocket* 포인터)을 가져옴
-                    //같은 방이면 브로드캐스트 해라
-                    qDebug() << "compare : " << C->getClientRoomId();
-                    qDebug() << "origin  : " << ThatClient->getClientRoomId();
-                    if(QString::compare(C->getClientRoomId(), ThatClient->getClientRoomId()) == 0)
-                    {
-                        C->getClientSocket()->write(ByteArray);
-                        C->getClientSocket()->flush();
-                    }
+    switch (DataType) {
+    case 0x01:FileReceive(buffer);break;
+    case 0x02:ClientInitDataReceive(buffer);break;
+    case 0x03:LoadProductDB(); break;
+    default:
+        if(ThatClient){
+            for(QMap<QTcpSocket*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
+                                                                                              it != CInfoList.constEnd(); ++it){
+                ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(QTcpSocket* 포인터)을 가져옴
+                //같은 방이면 브로드캐스트 해라
+                qDebug() << "compare : " << C->getClientRoomId();
+                qDebug() << "origin  : " << ThatClient->getClientRoomId();
+                if(QString::compare(C->getClientRoomId(), ThatClient->getClientRoomId()) == 0)
+                {
+                    C->getClientSocket()->write(ByteArray);
+                    C->getClientSocket()->flush();
                 }
             }
         }
-<<<<<<< HEAD
-=======
-    }else{
-        CInfo->setClientData(ByteArray);
-        CInfo->ChangeJsonData();
->>>>>>> 092ee3d05587a14dfb2b095bfc1f7df388ffea55
+        break;
     }
+
     ChatLabel->setText(QString(ByteArray));
     ByteArray.clear();
+}
+
+void Widget::FileReceive(const QBuffer &buffer)
+{
+    if(ReceivePacket == 0){
+        QFileInfo info(FileName);
+        QString CurrentFileName = info.fileName();
+        NewFile = new QFile(CurrentFileName);
+        NewFile->open(QFile::WriteOnly);
+
+        // 첫 패킷에서도 헤더 제거 후 데이터를 파일에 써야 함!
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket; // 첫 패킷의 데이터 크기 업데이트
+        //qDebug() << "첫 패킷 ReceivePacket : " << ReceivePacket;
+    }else{
+        qDebug() << "ByteArray 파일 : " << ByteArray;
+        if (NewFile && NewFile->isOpen()) { // NewFile이 nullptr이 아니고, 열려있는지 확인
+            NewFile->write(ByteArray);
+        }
+        ReceivePacket += ByteArray.size();
+        // qDebug() << "ReceivePacket : " << ReceivePacket;
+        // qDebug() << "TotalSize : " << TotalSize;
+    }
+    if(ReceivePacket == TotalSize){
+        InfoLabel->setText(tr("%1 receive completed").arg(FileName));
+        ByteArray.clear();
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        NewFile->close();
+        delete NewFile;
+        NewFile = nullptr;
+    }
+}
+
+void Widget::ClientInitDataReceive(const QBuffer &buffer)
+{
+    if(ReceivePacket == 0){
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }else{
+        qDebug() << "chat 내용 : " << ByteArray;
+        ReceivePacket += ByteArray.size();
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }
+    if(ReceivePacket == TotalSize){
+        InfoLabel->setText(tr("client info receive completed"));
+        CInfo->setClientData(ByteArray);
+        qDebug() << "end 내용 : " << ByteArray;
+        CInfo->ChangeJsonData();
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        ByteArray.clear();
+    }
+}
+
+void Widget::LoadProductDB()
+{
+
+}
+
+void Widget::ChatMessageReceive(const QBuffer &buffer)
+{
+
 }
 
 void Widget::DisConnectEvent()

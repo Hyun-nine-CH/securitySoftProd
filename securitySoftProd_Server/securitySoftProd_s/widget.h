@@ -6,9 +6,10 @@
 #include <QTcpServer>
 #include <QMap>
 #include <QFile>
+#include <QBuffer>
 
 #include "clientinfo.h"
-
+#include "productdb.h"
 class Widget : public QWidget
 {
     Q_OBJECT
@@ -37,5 +38,11 @@ private:
     QMap<QTcpSocket*, ClientInfo*> CInfoList;
 
     ClientInfo *CInfo;
+    ProductDB *pdb; //지워야함
+
+    void FileReceive(const QBuffer &buffer);
+    void ClientInitDataReceive(const QBuffer &buffer);
+    void ChatMessageReceive(const QBuffer &buffer);
+    void LoadProductDB();
 };
 #endif // WIDGET_H
