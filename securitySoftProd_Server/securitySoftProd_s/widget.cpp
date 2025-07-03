@@ -18,6 +18,9 @@
     QMap으로 클라이언트 정보 저장 (클라이언트 정보클래스 이용해서)
     <첨부파일 기능 구현 중>
 
+    20250703
+    헤더 추가하여 채팅인지 파일인지 구분하는 기능 추가
+        - 프로토콜 QStreamData로 할것
 */
 
 Widget::Widget(QWidget *parent)
@@ -26,7 +29,6 @@ Widget::Widget(QWidget *parent)
     InfoLabel     = new QLabel(this);
     PortLabel     = new QLabel(this);
     ChatLabel     = new QLabel(this);
-    Parse         = new Parsing();
     TotalSize     = 0;
     CurrentPacket = 0;
     DataType      = 0;
@@ -87,14 +89,14 @@ void Widget::BroadCast()
     시그널로 받은 그 클라이언트의 메시지를 받는 것
      */
     QTcpSocket *ClientConnection = dynamic_cast<QTcpSocket*>(sender());
-    qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
+    //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
     ByteArray.append(ClientConnection->readAll());
     qDebug() << "수신 후 ByteArray 크기: " << ByteArray.size();
     QBuffer buffer(&ByteArray);
     buffer.open(QIODevice::ReadOnly); // 읽기 모드로 오픈 필수
     QDataStream In(&buffer);
     In.setVersion(QDataStream::Qt_5_15);
-
+    qDebug() <<"받았을때 시점의 내용 : " << ByteArray;
     ClientInfo* ThatClient = CInfoList.value(ClientConnection);
     // qDebug() << "Server: " << ClientConnection->peerAddress().toString()
     //          << "에서 데이터 수신. 현재 버퍼 크기: " << ByteArray.size();
@@ -105,7 +107,7 @@ void Widget::BroadCast()
     // buffer의 읽기 포인터는 자동으로 8바이트 이동합니다.
     // qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
     //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
-    //qDebug() << "데이터 타입 : " << DataType;
+    qDebug() << "데이터 타입 : " << DataType;
     if(DataType == 0x01){
         if(ReceivePacket == 0){
             QFileInfo info(FileName);
@@ -131,14 +133,34 @@ void Widget::BroadCast()
             ByteArray.clear();
             ReceivePacket = 0;
             TotalSize = 0;
+            DataType = 0;
             NewFile->close();
             delete NewFile;
             NewFile = nullptr;
         }
     }
-    else if(Parse->IsInfo(ByteArray)){
-        CInfo->setClientData(ByteArray);
-        CInfo->ChangeJsonData();
+    else if(DataType == 0x02){
+        if(ReceivePacket == 0){
+            ByteArray.remove(0, buffer.pos());
+            ReceivePacket = CurrentPacket;
+            qDebug() << "ReceivePacket : " << ReceivePacket;
+            qDebug() << "TotalSize : " << TotalSize;
+        }else{
+            qDebug() << "chat 내용 : " << ByteArray;
+            ReceivePacket += ByteArray.size();
+            qDebug() << "ReceivePacket : " << ReceivePacket;
+            qDebug() << "TotalSize : " << TotalSize;
+        }
+        if(ReceivePacket == TotalSize){
+            InfoLabel->setText(tr("client info receive completed"));
+            CInfo->setClientData(ByteArray);
+            qDebug() << "end 내용 : " << ByteArray;
+            CInfo->ChangeJsonData();
+            ReceivePacket = 0;
+            TotalSize = 0;
+            DataType = 0;
+            ByteArray.clear();
+        }
     }else{
         //브로드캐스팅
         if(ThatClient){
