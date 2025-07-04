@@ -6,7 +6,7 @@ ProductDB::ProductDB()
     FileName = "Product DB";
 }
 
-QByteArray ProductDB::LoadProductData()
+QByteArray ProductDB::LoadData()
 {
     QFile loadFile(FilePath);
 
@@ -85,15 +85,8 @@ QByteArray ProductDB::LoadProductData()
     //}
 }
 
-// void Widget::openFile()
-// {
-//     loadSize = byteToWrite = totalSize = 0;
-//     outBlock.clear();
+QByteArray ProductDB::ModifyData()
+{
 
-//     filename = QFileDialog::getOpenFileName(this);
-//     file = new QFile(filename);
-//     file->open(QFile::ReadOnly);
+}
 
-//     infoLabel->setText(tr("file %1 is opened").arg(filename));
-//     progressDialog->setValue(0);
-// }

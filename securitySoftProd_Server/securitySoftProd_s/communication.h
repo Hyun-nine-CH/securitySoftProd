@@ -9,6 +9,7 @@
 #include <QMutex>
 
 #include "clientinfo.h"
+#include "productdb.h"
 
 class CommuniCation : public QThread
 {
@@ -27,6 +28,8 @@ signals:
     void ChattingMesg(const QByteArray& MessageData, const QString& RoomId);
     // 클라이언트 정보 넘기는 시그널
     void SendClientInfo(CommuniCation* Thread, ClientInfo *Info);
+    // 상품데이터 수정 정보 넘기는 시그널
+    void ModifyProductDB(const QByteArray& MessageData);
 private slots:
     void ReadClientData(); // 소켓에서 데이터 읽기
     void ClientDisconnected(); // 소켓 연결 끊김 처리
@@ -44,11 +47,18 @@ private:
 
     ClientInfo *CInfo;
     QThread    WorkThread;
+    ProductDB  *PdDb;
 
+    //첨부파일
     void FileReceive(const QBuffer &buffer);
+    //클라이언트 초기 정보
     void ClientInitDataReceive(const QBuffer &buffer);
+    //채팅 정보
     void ChatMessageReceive(const QBuffer &buffer);
-
+    //상품 정보 전체 조회
+    void SendProductInfo();
+    //상품 수정
+    void ModiProductInfo(const QBuffer &buffer);
 };
 
 #endif // COMMUNICATION_H

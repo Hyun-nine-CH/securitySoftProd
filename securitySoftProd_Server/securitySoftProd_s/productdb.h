@@ -8,7 +8,8 @@ class ProductDB
 {
 public:
     ProductDB();
-    QByteArray LoadProductData();
+    QByteArray LoadData();
+    QByteArray ModifyData();
 
 private:
     QString    FilePath;
