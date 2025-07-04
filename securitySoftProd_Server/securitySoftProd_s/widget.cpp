@@ -2,6 +2,8 @@
 #include <QtNetwork>
 #include <QtWidgets>
 #include <QDataStream>
+#include <QJsonDocument>
+
 #include "widget.h"
 
 #define BLOCK_SIZE 1024
@@ -24,6 +26,7 @@
     20250704
     QThread 클래스 안정화
     데이터베이스 코드 작업중
+    데이터베이스 부모 코드에 데이터매니저 추가함(초기화 방식이 특이하니 주의할것)
 */
 
 Widget::Widget(QWidget *parent)
@@ -33,6 +36,7 @@ Widget::Widget(QWidget *parent)
     PortLabel     = new QLabel(this);
     ChatLabel     = new QLabel(this);
     ListMutex     = new QMutex();
+    DMan          = new DataManager();
     TotalSize     = 0;
     CurrentPacket = 0;
     DataType      = 0;
@@ -89,6 +93,10 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::SendClientInfo, this, &Widget::SetCInfo);
     //상품정보 수정 데이터매니저에게요청
     connect(Comm, &CommuniCation::ModifyProductDB, this, &Widget::ProductModi);
+    //상품정보 조회 요청
+    connect(Comm, &CommuniCation::RequestPdInfo, this, &Widget::LoadProductDB);
+    //상품정보 추가 요청
+    connect(Comm, &CommuniCation::RequestPdAdd, this, &Widget::ProductAdd);
 }
 
 void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
@@ -136,9 +144,46 @@ void Widget::SetCInfo(CommuniCation* Thread, ClientInfo *Info)
     }
 }
 
-void Widget::LoadProductDB()
+void Widget::LoadProductDB(CommuniCation* Thread)
 {
+    QByteArray Convert   = (DMan->getProductData()).toJson();
+    QByteArray Container;
 
+    QDataStream out(&Container,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << "filename";
+    Container.append(Convert);
+
+    out.device()->seek(0);
+    qint64 dataType = 0x03;
+    out << dataType << Container.size() << Container.size();
+    qDebug() << "load product Db";
+    qDebug() << Convert;
+    QMetaObject::invokeMethod(Thread,"WriteData", // 호출할 슬롯 이름 (문자열)
+                              Qt::QueuedConnection,  // 연결 타입 (필수)
+                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
+
+}
+
+void Widget::ProductAdd(CommuniCation *Thread, const QBuffer &MessageData)
+{
+    DMan->AddProductData(MessageData.data());
+    QByteArray Convert   = (DMan->getProductData()).toJson();
+    QByteArray Container;
+
+    QDataStream out(&Container,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << "filename";
+    Container.append(Convert);
+
+    out.device()->seek(0);
+    qint64 dataType = 0x03;
+    out << dataType << Container.size() << Container.size();
+    qDebug() << "add product Db";
+    qDebug() << Convert;
+    QMetaObject::invokeMethod(Thread,"WriteData", // 호출할 슬롯 이름 (문자열)
+                              Qt::QueuedConnection,  // 연결 타입 (필수)
+                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
 }
 
 void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
@@ -176,6 +221,11 @@ void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
     }
     // UI 업데이트: CInfoList.size() 사용
     InfoLabel->setText(tr("%1 connection is established...").arg(CInfoList.size()));
+}
+
+void Widget::ProductModi(const QByteArray& MessageData)
+{
+
 }
 
 Widget::~Widget()

@@ -33,6 +33,12 @@ signals:
                                ClientInfo     *Info);
     // 상품데이터 수정 정보 넘기는 시그널
     void ModifyProductDB(const QByteArray&    MessageData);
+    // 상품데이터 전체 정보 넘기는 시그널
+    void RequestPdInfo  (       CommuniCation* Thread);
+    // 상품데이터 추가 요청
+    void RequestPdAdd   (       CommuniCation* Thread,
+                         const   QBuffer&       MessageData);
+
 private slots:
     void ReadClientData    (); // 소켓에서 데이터 읽기
     void ClientDisconnected(); // 소켓 연결 끊김 처리
@@ -62,6 +68,8 @@ private:
     void SendProductInfo      ();
     //상품 수정
     void ModiProductInfo      (const QBuffer &buffer);
+    //상품 추가
+    void AddProductInfo(const QBuffer &buffer);
 };
 
 #endif // COMMUNICATION_H
