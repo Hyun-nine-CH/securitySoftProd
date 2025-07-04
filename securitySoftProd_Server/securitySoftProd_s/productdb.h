@@ -4,17 +4,22 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QFile>
-class ProductDB
+
+#include "database.h"
+
+class ProductDB : public DataBase
 {
 public:
-    ProductDB();
-    QByteArray LoadProductData();
+    ProductDB(DataManager *Dm, QObject *parent = nullptr);
+    QByteArray    SendData   ()                              override;
+    QJsonDocument LoadData   ()                              override;
+    void          AddData    (const QByteArray    &NewData)  override;
+    void          ModifyData (const QByteArray    &ModiData) override;
+    void          DeleteData (const QByteArray    &DelData)  override;
+    int           FindLastNum(const QJsonDocument &Trace)    override;
 
 private:
-    QString    FilePath;
     QByteArray ProductData;
-    QString    FileName;
-    qint64     TotalSize;
 };
 
 #endif // PRODUCTDB_H
