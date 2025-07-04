@@ -1,52 +1,52 @@
 [
-  {
-    "productId": "PD001",
-    "productName": "무선 게이밍 마우스",
-    "price": 75000,
-    "stock": 150,
-    "description": "초경량 설계와 고정밀 센서를 갖춘 게이밍 마우스입니다. RGB 조명 지원.",
-    "category": "Peripherals",
-    "manufacturer": "GamingTech Inc.",
-    "imageUrl": "https://example.com/images/mouse001.jpg"
-  },
-  {
-    "productId": "PD002",
-    "productName": "기계식 키보드 (청축)",
-    "price": 120000,
-    "stock": 80,
-    "description": "청축 스위치를 사용하여 경쾌한 타건감을 제공하는 기계식 키보드입니다. 견고한 알루미늄 바디.",
-    "category": "Peripherals",
-    "manufacturer": "KeyboardGenius Co.",
-    "imageUrl": "https://example.com/images/keyboard002.jpg"
-  },
-  {
-    "productId": "PD003",
-    "productName": "27인치 QHD 모니터",
-    "price": 350000,
-    "stock": 50,
-    "description": "선명한 QHD 해상도와 144Hz 주사율을 지원하는 27인치 게이밍 모니터입니다. IPS 패널.",
-    "category": "Displays",
-    "manufacturer": "VisionMaster Ltd.",
-    "imageUrl": "https://example.com/images/monitor003.jpg"
-  },
-  {
-    "productId": "PD004",
-    "productName": "노이즈 캔슬링 헤드폰",
-    "price": 250000,
-    "stock": 120,
-    "description": "탁월한 노이즈 캔슬링 기능과 고음질 사운드를 자랑하는 프리미엄 헤드폰입니다. 긴 배터리 수명.",
-    "category": "Audio",
-    "manufacturer": "Soundscape Audio",
-    "imageUrl": "https://example.com/images/headphone004.jpg"
-  },
-  {
-    "productId": "PD005",
-    "productName": "USB-C 허브 (7-in-1)",
-    "price": 45000,
-    "stock": 200,
-    "description": "USB-C 포트 하나로 다양한 장치를 연결할 수 있는 다기능 허브입니다. HDMI, USB 3.0, SD카드 슬롯 포함.",
-    "category": "Accessories",
-    "manufacturer": "ConnectAll Solutions",
-    "imageUrl": "https://example.com/images/hub005.jpg"
-  }
+    {
+        "category": "Peripherals",
+        "description": "초경량 설계와 고정밀 센서를 갖춘 게이밍 마우스입니다. RGB 조명 지원.",
+        "imageUrl": "https://example.com/images/mouse001.jpg",
+        "manufacturer": "GamingTech Inc.",
+        "price": 75000,
+        "productId": 1,
+        "productName": "무선 게이밍 마우스",
+        "stock": 150
+    },
+    {
+        "category": "Peripherals",
+        "description": "청축 스위치를 사용하여 경쾌한 타건감을 제공하는 기계식 키보드입니다. 견고한 알루미늄 바디.",
+        "imageUrl": "https://example.com/images/keyboard002.jpg",
+        "manufacturer": "KeyboardGenius Co.",
+        "price": 120000,
+        "productId": 2,
+        "productName": "기계식 키보드 (청축)",
+        "stock": 80
+    },
+    {
+        "category": "Displays",
+        "description": "선명한 QHD 해상도와 144Hz 주사율을 지원하는 27인치 게이밍 모니터입니다. IPS 패널.",
+        "imageUrl": "https://example.com/images/monitor003.jpg",
+        "manufacturer": "VisionMaster Ltd.",
+        "price": 350000,
+        "productId": 3,
+        "productName": "27인치 QHD 모니터",
+        "stock": 50
+    },
+    {
+        "category": "Audio",
+        "description": "탁월한 노이즈 캔슬링 기능과 고음질 사운드를 자랑하는 프리미엄 헤드폰입니다. 긴 배터리 수명.",
+        "imageUrl": "https://example.com/images/headphone004.jpg",
+        "manufacturer": "Soundscape Audio",
+        "price": 250000,
+        "productId": 4,
+        "productName": "노이즈 캔슬링 헤드폰",
+        "stock": 120
+    },
+    {
+        "category": "Accessories",
+        "description": "USB-C 포트 하나로 다양한 장치를 연결할 수 있는 다기능 허브입니다. HDMI, USB 3.0, SD카드 슬롯 포함.",
+        "imageUrl": "https://example.com/images/hub005.jpg",
+        "manufacturer": "ConnectAll Solutions",
+        "price": 45000,
+        "productId": 5,
+        "productName": "USB-C 허브 (7-in-1)",
+        "stock": 200
+    }
 ]

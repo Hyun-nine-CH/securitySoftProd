@@ -1,12 +1,38 @@
 #include "productdb.h"
+#include "datamanager.h"
+
 #include <QDir>
-ProductDB::ProductDB()
-{
+#include <QJsonParseError>
+
+ProductDB::ProductDB(DataManager *Dm, QObject *parent)
+    :DataBase(Dm,parent)
+{ 
     FilePath = "ProductDB.json";
     FileName = "Product DB";
 }
 
-QByteArray ProductDB::LoadProductData()
+QByteArray ProductDB::SendData()
+{
+    ProductData.clear();
+    TotalSize = 0;
+    // QJsonDocument를 사용하여 JSON 데이터 파싱
+    QByteArray data = (DbManager->getProductData()).toJson();
+    QDataStream out(&ProductData,QIODevice::WriteOnly);
+
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << FileName;
+
+    ProductData.append(data);
+    TotalSize += ProductData.size();
+
+    out.device()->seek(0);
+    qint64 dataType = 0x02;
+    out << dataType << TotalSize << TotalSize;
+
+    return ProductData;
+}
+
+QJsonDocument ProductDB::LoadData()
 {
     QFile loadFile(FilePath);
 
@@ -25,75 +51,57 @@ QByteArray ProductDB::LoadProductData()
     QJsonDocument   jsonDoc     = QJsonDocument::fromJson(jsonData, &parseError);
     QByteArray      data        = jsonDoc.toJson();
 
-    QDataStream out(&ProductData,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << FileName;
-
-    ProductData.append(data);
-    TotalSize += ProductData.size();
-
-    out.device()->seek(0);
-    qint64 dataType = 0x02;
-    out << dataType << TotalSize << TotalSize;
-
-    return ProductData;
-
-    // // 파싱 오류 확인
-    // if (parseError.error != QJsonParseError::NoError) {
-    //     qWarning() << "Failed to parse JSON document:" << parseError.errorString();
-    //     return;
-    // }
-
-    // JSON 문서가 배열인지 확인 (ProductDB.json은 최상위가 배열입니다.)
-    //if (jsonDoc.isArray()) {
-        //QJsonArray productArray = jsonDoc.array();
-
-        //qDebug() << "--- 제품 데이터 로드 완료 (" << productArray.size() << "개) ---";
-        // 배열의 각 요소를 순회하며 제품 정보 출력
-        // for (const QJsonValue &value : productArray) {
-        //     // 각 요소가 JSON 객체인지 확인
-        //     if (value.isObject()) {
-        //         QJsonObject productObject = value.toObject();
-
-        //         // 각 필드 조회
-        //         QString productId    = productObject["productId"].toString();
-        //         QString productName  = productObject["productName"].toString();
-        //         double price         = productObject["price"].toDouble(); // 가격은 실수형
-        //         int stock            = productObject["stock"].toInt();       // 재고는 정수형
-        //         QString description  = productObject["description"].toString();
-        //         QString category     = productObject["category"].toString();
-        //         QString manufacturer = productObject["manufacturer"].toString();
-        //         QString imageUrl     = productObject["imageUrl"].toString();
-
-
-        //         qDebug() << "------------------------------------";
-        //         qDebug() << "제품 ID:" << productId;
-        //         qDebug() << "제품명:" << productName;
-        //         qDebug() << "가격:" << price << "원";
-        //         qDebug() << "재고:" << stock << "개";
-        //         qDebug() << "설명:" << description;
-        //         qDebug() << "카테고리:" << category;
-        //         qDebug() << "제조사:"  << manufacturer;
-        //         qDebug() << "이미지 URL:" << imageUrl;
-        //     } else {
-        //         qWarning() << "JSON 배열 내부에 객체가 아닌 요소가 있습니다.";
-        //     }
-        // }
-        //qDebug() << "--- 제품 데이터 출력 종료 ---";
-    //} else {
-    //    qWarning() << "JSON 문서의 최상위 요소가 배열이 아닙니다. 예상 형식과 다릅니다.";
-    //}
+    return jsonDoc;
 }
 
-// void Widget::openFile()
-// {
-//     loadSize = byteToWrite = totalSize = 0;
-//     outBlock.clear();
+void ProductDB::AddData(const QByteArray &NewData)
+{
+    qDebug() << "원본 NewData:" << NewData;
+    QJsonDocument &AllDoc = DbManager->getProductData();
+    int LastNum = FindLastNum(AllDoc);
 
-//     filename = QFileDialog::getOpenFileName(this);
-//     file = new QFile(filename);
-//     file->open(QFile::ReadOnly);
+    QJsonDocument New = QJsonDocument::fromJson(NewData);
+    QJsonObject NewObj = New.object();
+    qDebug() << "Convert objec NewData : " << NewObj.keys();
+    NewObj.insert("Id",LastNum);
+    New.setObject(NewObj);
 
-//     infoLabel->setText(tr("file %1 is opened").arg(filename));
-//     progressDialog->setValue(0);
-// }
+    QJsonArray AllArr;
+    AllArr = AllDoc.array();
+    AllArr.append(NewObj);
+
+    AllDoc.setArray(AllArr);
+    //qDebug() << "추가 : "<< AllDoc;
+    DbManager->SaveProductData(FilePath);
+    //return LoadData();
+}
+
+void ProductDB::ModifyData(const QByteArray &ModiData)
+{
+    //return LoadData();
+}
+
+void ProductDB::DeleteData(const QByteArray &DelData)
+{
+
+}
+
+int ProductDB::FindLastNum(const QJsonDocument &Trace)
+{
+    QJsonParseError parseError;
+    int BigNum = 0;
+    if (!Trace.isNull() && Trace.isObject()) {
+        QJsonArray arr = Trace.array();
+        for(int i = 0; i < arr.size()-1; i++) {
+            QJsonObject first = arr[i].toObject();
+            QJsonObject second = arr[i+1].toObject();
+            first.value("id").toInt() < second.value("id").toInt() ? \
+            BigNum = second.value("id").toInt() : BigNum = first.value("id").toInt();
+        }
+        qDebug() << "JSON Parsing Succsess";
+    } else
+        qDebug() << "JSON 파싱 실패:" << parseError.errorString();
+
+    return BigNum+1;
+}
+

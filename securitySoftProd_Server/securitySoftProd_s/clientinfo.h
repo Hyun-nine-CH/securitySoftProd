@@ -9,13 +9,13 @@ public:
     ClientInfo();
 
     QString     getClientID    ();
-    void        setClientID    (const QString &Id);
     QString     getClientRoomId();
-    void        setClientRoomId(const QString &RoomId);
     QTcpSocket* getClientSocket();
-    void        setClientSocket(QTcpSocket *soc);
-    QByteArray  getClientData();
-    void        setClientData(const QByteArray &Data);
+    QByteArray  getClientData  ();
+    void        setClientData  (const QByteArray &Data);
+    void        setClientID    (const QString    &Id);
+    void        setClientRoomId(const QString    &RoomId);
+    void        setClientSocket(      QTcpSocket *soc);
 
     void ChangeJsonData(); //처음에 받은 데이터를 JSON으로 변환
 

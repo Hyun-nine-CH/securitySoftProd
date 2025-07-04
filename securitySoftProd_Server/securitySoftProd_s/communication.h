@@ -9,6 +9,7 @@
 #include <QMutex>
 
 #include "clientinfo.h"
+#include "productdb.h"
 
 class CommuniCation : public QThread
 {
@@ -22,15 +23,26 @@ protected:
 
 signals:
     // 스레드에서 소켓 끊김을 알리는 시그널
-    void Disconnected(QTcpSocket* Socket, CommuniCation* Thread);
+    void Disconnected   (      QTcpSocket*    Socket,
+                               CommuniCation* Thread);
     // 채팅 메시지 시그널
-    void ChattingMesg(const QByteArray& MessageData, const QString& RoomId);
+    void ChattingMesg   (const QByteArray&    MessageData,
+                         const QString&       RoomId);
     // 클라이언트 정보 넘기는 시그널
-    void SendClientInfo(CommuniCation* Thread, ClientInfo *Info);
+    void SendClientInfo (      CommuniCation* Thread,
+                               ClientInfo     *Info);
+    // 상품데이터 수정 정보 넘기는 시그널
+    void ModifyProductDB(const QByteArray&    MessageData);
+    // 상품데이터 전체 정보 넘기는 시그널
+    void RequestPdInfo  (       CommuniCation* Thread);
+    // 상품데이터 추가 요청
+    void RequestPdAdd   (       CommuniCation* Thread,
+                         const   QBuffer&       MessageData);
+
 private slots:
-    void ReadClientData(); // 소켓에서 데이터 읽기
+    void ReadClientData    (); // 소켓에서 데이터 읽기
     void ClientDisconnected(); // 소켓 연결 끊김 처리
-    void WriteData(const QByteArray& MessageData);
+    void WriteData         (const QByteArray& MessageData);
 
 private:
     QFile      *NewFile;
@@ -44,11 +56,20 @@ private:
 
     ClientInfo *CInfo;
     QThread    WorkThread;
+    ProductDB  *PdDb;
 
-    void FileReceive(const QBuffer &buffer);
+    //첨부파일
+    void FileReceive          (const QBuffer &buffer);
+    //클라이언트 초기 정보
     void ClientInitDataReceive(const QBuffer &buffer);
-    void ChatMessageReceive(const QBuffer &buffer);
-
+    //채팅 정보
+    void ChatMessageReceive   (const QBuffer &buffer);
+    //상품 정보 전체 조회
+    void SendProductInfo      ();
+    //상품 수정
+    void ModiProductInfo      (const QBuffer &buffer);
+    //상품 추가
+    void AddProductInfo(const QBuffer &buffer);
 };
 
 #endif // COMMUNICATION_H

@@ -8,12 +8,18 @@ CommuniCation::CommuniCation(QTcpSocket* socket, ClientInfo* myInfo,QObject* par
     // 중요: 소켓을 이 스레드로 이동시켜, 소켓 관련 시그널/슬롯이 이 스레드에서 실행되도록 합니다.
     if (Socket) {
         CInfo->setClientSocket(Socket);
-        Socket->moveToThread(this);
+
+        TotalSize     = 0;
+        CurrentPacket = 0;
+        DataType      = 0;
+        ReceivePacket = 0;
+        ByteArray     = 0;
+        FileName      = 0;
+
         connect(Socket, SIGNAL(disconnected()),this, SLOT(ClientDisconnected()));
         connect(Socket, SIGNAL(readyRead()),SLOT(ReadClientData()));
         connect(this, &QThread::finished, Socket, &QTcpSocket::deleteLater); // 스레드 종료 시 소켓 삭제
     }
-
 }
 
 void CommuniCation::run()
@@ -53,8 +59,11 @@ void CommuniCation::ReadClientData()
     //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
     qDebug() << "데이터 타입 : " << DataType;
     switch (DataType) {
-    case 0x01:FileReceive(buffer);break;
-    case 0x02:ClientInitDataReceive(buffer);break;
+    case 0x01:FileReceive          (buffer);     break;
+    case 0x02:ClientInitDataReceive(buffer);     break;
+    case 0x03:emit RequestPdInfo   (this);       break;
+    case 0x04:ModiProductInfo      (buffer);     break;
+    case 0x05:AddProductInfo(buffer);break;
     default: emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
     }
     ByteArray.clear();
@@ -133,4 +142,56 @@ void CommuniCation::WriteData(const QByteArray& MessageData)
 void CommuniCation::ClientDisconnected()
 {
     emit Disconnected(Socket,this);
+}
+
+void CommuniCation::SendProductInfo()
+{
+    qDebug() << "Product Info Send";
+}
+
+void CommuniCation::ModiProductInfo(const QBuffer &buffer)
+{
+    if(ReceivePacket == 0){
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }else{
+        qDebug() << "chat 내용 : " << ByteArray;
+        ReceivePacket += ByteArray.size();
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }
+    if(ReceivePacket == TotalSize){
+        qDebug() << "product modify data receive completed";
+        qDebug() << "end 내용 : " << ByteArray;
+        emit ModifyProductDB(ByteArray);
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        ByteArray.clear();
+    }
+}
+
+void CommuniCation::AddProductInfo(const QBuffer &buffer)
+{
+    if(ReceivePacket == 0){
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }else{
+        qDebug() << "chat 내용 : " << ByteArray;
+        ReceivePacket += ByteArray.size();
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }
+    if(ReceivePacket == TotalSize){
+        qDebug() << "product addd data receive completed";
+        emit RequestPdAdd(this,buffer);
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        ByteArray.clear();
+    }
 }
