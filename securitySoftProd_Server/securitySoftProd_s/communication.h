@@ -23,17 +23,20 @@ protected:
 
 signals:
     // 스레드에서 소켓 끊김을 알리는 시그널
-    void Disconnected(QTcpSocket* Socket, CommuniCation* Thread);
+    void Disconnected   (      QTcpSocket*    Socket,
+                               CommuniCation* Thread);
     // 채팅 메시지 시그널
-    void ChattingMesg(const QByteArray& MessageData, const QString& RoomId);
+    void ChattingMesg   (const QByteArray&    MessageData,
+                         const QString&       RoomId);
     // 클라이언트 정보 넘기는 시그널
-    void SendClientInfo(CommuniCation* Thread, ClientInfo *Info);
+    void SendClientInfo (      CommuniCation* Thread,
+                               ClientInfo     *Info);
     // 상품데이터 수정 정보 넘기는 시그널
-    void ModifyProductDB(const QByteArray& MessageData);
+    void ModifyProductDB(const QByteArray&    MessageData);
 private slots:
-    void ReadClientData(); // 소켓에서 데이터 읽기
+    void ReadClientData    (); // 소켓에서 데이터 읽기
     void ClientDisconnected(); // 소켓 연결 끊김 처리
-    void WriteData(const QByteArray& MessageData);
+    void WriteData         (const QByteArray& MessageData);
 
 private:
     QFile      *NewFile;
@@ -50,15 +53,15 @@ private:
     ProductDB  *PdDb;
 
     //첨부파일
-    void FileReceive(const QBuffer &buffer);
+    void FileReceive          (const QBuffer &buffer);
     //클라이언트 초기 정보
     void ClientInitDataReceive(const QBuffer &buffer);
     //채팅 정보
-    void ChatMessageReceive(const QBuffer &buffer);
+    void ChatMessageReceive   (const QBuffer &buffer);
     //상품 정보 전체 조회
-    void SendProductInfo();
+    void SendProductInfo      ();
     //상품 수정
-    void ModiProductInfo(const QBuffer &buffer);
+    void ModiProductInfo      (const QBuffer &buffer);
 };
 
 #endif // COMMUNICATION_H

@@ -1,6 +1,6 @@
 [
   {
-    "productId": "PD001",
+    "productId": 1,
     "productName": "무선 게이밍 마우스",
     "price": 75000,
     "stock": 150,
@@ -10,7 +10,7 @@
     "imageUrl": "https://example.com/images/mouse001.jpg"
   },
   {
-    "productId": "PD002",
+    "productId": 2,
     "productName": "기계식 키보드 (청축)",
     "price": 120000,
     "stock": 80,
@@ -20,7 +20,7 @@
     "imageUrl": "https://example.com/images/keyboard002.jpg"
   },
   {
-    "productId": "PD003",
+    "productId": 3,
     "productName": "27인치 QHD 모니터",
     "price": 350000,
     "stock": 50,
@@ -30,7 +30,7 @@
     "imageUrl": "https://example.com/images/monitor003.jpg"
   },
   {
-    "productId": "PD004",
+    "productId": 4,
     "productName": "노이즈 캔슬링 헤드폰",
     "price": 250000,
     "stock": 120,
@@ -40,7 +40,7 @@
     "imageUrl": "https://example.com/images/headphone004.jpg"
   },
   {
-    "productId": "PD005",
+    "productId": 5,
     "productName": "USB-C 허브 (7-in-1)",
     "price": 45000,
     "stock": 200,
