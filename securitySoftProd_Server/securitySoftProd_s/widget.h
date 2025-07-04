@@ -22,15 +22,18 @@ public:
 
 private slots:
     // 클라이언트 연결시
-    void ClientConnect();
+    void ClientConnect  ();
     // 클라이언트 종료시
-    void DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread);
+    void DisConnectEvent(      QTcpSocket*    Socket,
+                               CommuniCation* Thread);
     // 채팅 메시지 받았을 때
-    void BroadCast(const QByteArray& MessageData, const QString& RoomId);
+    void BroadCast      (const QByteArray&    MessageData,
+                         const QString&       RoomId);
     // 클라이언트 정보 완성되서 넘길때
-    void SetCInfo( CommuniCation* Thread, ClientInfo *Info);
+    void SetCInfo       (      CommuniCation* Thread,
+                               ClientInfo*    Info);
     // 상품정보 수정 요청 들어왔을때
-    void ProductModi(const QByteArray& MessageData);
+    void ProductModi    (const QByteArray&    MessageData);
 
 private:
     QLabel     *InfoLabel;
@@ -45,10 +48,12 @@ private:
     qint64     DataType;
     qint64     ReceivePacket;
     QMutex     *ListMutex;
-    QMap<CommuniCation*, ClientInfo*> CInfoList;
 
     ClientInfo    *CInfo;
     CommuniCation *Comm;
+
+    QMap<CommuniCation*, ClientInfo*> CInfoList;
+
     void LoadProductDB();
 };
 #endif // WIDGET_H

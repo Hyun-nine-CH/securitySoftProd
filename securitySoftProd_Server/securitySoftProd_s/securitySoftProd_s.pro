@@ -11,6 +11,8 @@ CONFIG += c++17
 SOURCES += \
     clientinfo.cpp \
     communication.cpp \
+    database.cpp \
+    datamanager.cpp \
     main.cpp \
     productdb.cpp \
     widget.cpp
@@ -18,6 +20,8 @@ SOURCES += \
 HEADERS += \
     clientinfo.h \
     communication.h \
+    database.h \
+    datamanager.h \
     productdb.h \
     widget.h
 
