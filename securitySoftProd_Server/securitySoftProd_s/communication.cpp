@@ -8,12 +8,18 @@ CommuniCation::CommuniCation(QTcpSocket* socket, ClientInfo* myInfo,QObject* par
     // 중요: 소켓을 이 스레드로 이동시켜, 소켓 관련 시그널/슬롯이 이 스레드에서 실행되도록 합니다.
     if (Socket) {
         CInfo->setClientSocket(Socket);
-        Socket->moveToThread(this);
         connect(Socket, SIGNAL(disconnected()),this, SLOT(ClientDisconnected()));
         connect(Socket, SIGNAL(readyRead()),SLOT(ReadClientData()));
         connect(this, &QThread::finished, Socket, &QTcpSocket::deleteLater); // 스레드 종료 시 소켓 삭제
-    }
+        TotalSize     = 0;
+        CurrentPacket = 0;
+        DataType      = 0;
+        ReceivePacket = 0;
+        ByteArray     = 0;
+        FileName      = 0;
 
+        PdDb = new ProductDB();
+    }
 }
 
 void CommuniCation::run()
@@ -55,6 +61,8 @@ void CommuniCation::ReadClientData()
     switch (DataType) {
     case 0x01:FileReceive(buffer);break;
     case 0x02:ClientInitDataReceive(buffer);break;
+    case 0x03:SendProductInfo();break;
+    case 0x04:ModiProductInfo(buffer);break;
     default: emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
     }
     ByteArray.clear();
@@ -133,4 +141,36 @@ void CommuniCation::WriteData(const QByteArray& MessageData)
 void CommuniCation::ClientDisconnected()
 {
     emit Disconnected(Socket,this);
+}
+
+void CommuniCation::SendProductInfo()
+{
+    WriteData(PdDb->LoadData());
+    qDebug() << "Product Info Send";
+}
+
+void CommuniCation::ModiProductInfo(const QBuffer &buffer)
+{
+    if(ReceivePacket == 0){
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }else{
+        qDebug() << "chat 내용 : " << ByteArray;
+        ReceivePacket += ByteArray.size();
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }
+    if(ReceivePacket == TotalSize){
+        qDebug() << "product modify data receive completed";
+        CInfo->setClientData(ByteArray);
+        qDebug() << "end 내용 : " << ByteArray;
+        CInfo->ChangeJsonData();
+        emit ModifyProductDB(ByteArray);
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        ByteArray.clear();
+    }
 }

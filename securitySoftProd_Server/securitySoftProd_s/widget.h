@@ -11,7 +11,7 @@
 
 #include "clientinfo.h"
 #include "communication.h"
-#include "productdb.h"
+
 class Widget : public QWidget
 {
     Q_OBJECT
@@ -29,6 +29,8 @@ private slots:
     void BroadCast(const QByteArray& MessageData, const QString& RoomId);
     // 클라이언트 정보 완성되서 넘길때
     void SetCInfo( CommuniCation* Thread, ClientInfo *Info);
+    // 상품정보 수정 요청 들어왔을때
+    void ProductModi(const QByteArray& MessageData);
 
 private:
     QLabel     *InfoLabel;
@@ -47,11 +49,6 @@ private:
 
     ClientInfo    *CInfo;
     CommuniCation *Comm;
-    ProductDB *pdb; //지워야함
-
-    void FileReceive(const QBuffer &buffer);
-    void ClientInitDataReceive(const QBuffer &buffer);
-    void ChatMessageReceive(const QBuffer &buffer);
     void LoadProductDB();
 };
 #endif // WIDGET_H
