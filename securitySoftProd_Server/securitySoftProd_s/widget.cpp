@@ -27,6 +27,7 @@
     QThread 클래스 안정화
     데이터베이스 코드 작업중
     데이터베이스 부모 코드에 데이터매니저 추가함(초기화 방식이 특이하니 주의할것)
+    product 추가 조회 기능 완성
 */
 
 Widget::Widget(QWidget *parent)
