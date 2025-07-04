@@ -3,21 +3,25 @@
 
 #include <QObject>
 
+class DataManager;
+
 class DataBase : public QObject
 {
     Q_OBJECT
 public:
-    explicit DataBase(QObject *parent = nullptr);
-    virtual  QByteArray LoadData   ()                           = 0;
-    virtual  QByteArray AddData    (const QByteArray &NewData)  = 0;
-    virtual  QByteArray ModifyData (const QByteArray &ModiData){return ModiData;};
-    virtual  QByteArray DeleteData (const QByteArray &DelData) {return DelData;};
-    virtual  QString    FindLastNum(const QString    &Trace)   {return Trace;};
+    explicit DataBase(DataManager *Dm, QObject *parent = nullptr);
+    virtual  QByteArray    SendData   ()                              = 0;
+    virtual  QJsonDocument LoadData   ()                              = 0;
+    virtual  void          AddData    (const QByteArray    &NewData) {};
+    virtual  void          ModifyData (const QByteArray    &ModiData){};
+    virtual  void          DeleteData (const QByteArray    &DelData) {};
+    virtual  int           FindLastNum(const QJsonDocument &Trace)   {return 1;};
 
 protected:
-    QString    FilePath;
-    QString    FileName;
-    qint64     TotalSize;
+    QString     FilePath;
+    QString     FileName;
+    qint64      TotalSize;
+    DataManager *DbManager;
 
 };
 

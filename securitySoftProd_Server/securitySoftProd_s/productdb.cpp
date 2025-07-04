@@ -1,16 +1,41 @@
 #include "productdb.h"
+#include "datamanager.h"
+
 #include <QDir>
-ProductDB::ProductDB()
-{
+#include <QJsonParseError>
+
+ProductDB::ProductDB(DataManager *Dm, QObject *parent)
+    :DataBase(Dm,parent)
+{ 
     FilePath = "ProductDB.json";
     FileName = "Product DB";
 }
 
-QByteArray ProductDB::LoadData()
+QByteArray ProductDB::SendData()
 {
-    QFile loadFile(FilePath);
     ProductData.clear();
     TotalSize = 0;
+    // QJsonDocument를 사용하여 JSON 데이터 파싱
+    QByteArray data = (DbManager->getProductData()).toJson();
+    QDataStream out(&ProductData,QIODevice::WriteOnly);
+
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << FileName;
+
+    ProductData.append(data);
+    TotalSize += ProductData.size();
+
+    out.device()->seek(0);
+    qint64 dataType = 0x02;
+    out << dataType << TotalSize << TotalSize;
+
+    return ProductData;
+}
+
+QJsonDocument ProductDB::LoadData()
+{
+    QFile loadFile(FilePath);
+
     // 파일 열기 시도
     if (!loadFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
         qWarning() << "Couldn't open file:" << FilePath;
@@ -26,38 +51,57 @@ QByteArray ProductDB::LoadData()
     QJsonDocument   jsonDoc     = QJsonDocument::fromJson(jsonData, &parseError);
     QByteArray      data        = jsonDoc.toJson();
 
-    QDataStream out(&ProductData,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << FileName;
-
-    ProductData.append(data);
-    TotalSize += ProductData.size();
-
-    out.device()->seek(0);
-    qint64 dataType = 0x02;
-    out << dataType << TotalSize << TotalSize;
-
-    return ProductData;
+    return jsonDoc;
 }
 
-QByteArray ProductDB::AddData(const QByteArray &NewData)
+void ProductDB::AddData(const QByteArray &NewData)
 {
-    QString LastNum = FindLastNum(LoadData());
+    qDebug() << "원본 NewData:" << NewData;
+    QJsonDocument &AllDoc = DbManager->getProductData();
+    int LastNum = FindLastNum(AllDoc);
 
     QJsonDocument New = QJsonDocument::fromJson(NewData);
+    QJsonObject NewObj = New.object();
+    qDebug() << "Convert objec NewData : " << NewObj.keys();
+    NewObj.insert("Id",LastNum);
+    New.setObject(NewObj);
 
-    return LoadData();
+    QJsonArray AllArr;
+    AllArr = AllDoc.array();
+    AllArr.append(NewObj);
+
+    AllDoc.setArray(AllArr);
+    //qDebug() << "추가 : "<< AllDoc;
+    DbManager->SaveProductData(FilePath);
+    //return LoadData();
 }
 
-QByteArray ProductDB::ModifyData(const QByteArray &ModiData)
+void ProductDB::ModifyData(const QByteArray &ModiData)
 {
-    return LoadData();
+    //return LoadData();
 }
 
-QString ProductDB::FindLastNum(const QString &Trace)
+void ProductDB::DeleteData(const QByteArray &DelData)
 {
-    QString LastNum;
 
-    return LastNum;
+}
+
+int ProductDB::FindLastNum(const QJsonDocument &Trace)
+{
+    QJsonParseError parseError;
+    int BigNum = 0;
+    if (!Trace.isNull() && Trace.isObject()) {
+        QJsonArray arr = Trace.array();
+        for(int i = 0; i < arr.size()-1; i++) {
+            QJsonObject first = arr[i].toObject();
+            QJsonObject second = arr[i+1].toObject();
+            first.value("id").toInt() < second.value("id").toInt() ? \
+            BigNum = second.value("id").toInt() : BigNum = first.value("id").toInt();
+        }
+        qDebug() << "JSON Parsing Succsess";
+    } else
+        qDebug() << "JSON 파싱 실패:" << parseError.errorString();
+
+    return BigNum+1;
 }
 

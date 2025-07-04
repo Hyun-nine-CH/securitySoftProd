@@ -1,5 +1,7 @@
 #include "database.h"
 
-DataBase::DataBase(QObject *parent)
-    : QObject{parent}
-{}
+DataBase::DataBase(DataManager *Dm, QObject *parent)
+    : QObject{parent}, DbManager(Dm)
+{
+
+}

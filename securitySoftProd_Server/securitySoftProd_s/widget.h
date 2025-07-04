@@ -11,6 +11,7 @@
 
 #include "clientinfo.h"
 #include "communication.h"
+#include "datamanager.h"
 
 class Widget : public QWidget
 {
@@ -19,6 +20,9 @@ class Widget : public QWidget
 public:
     Widget(QWidget *parent = nullptr);
     ~Widget();
+
+signals:
+    void SendProductInfo(const QByteArray&    PInfo);
 
 private slots:
     // 클라이언트 연결시
@@ -34,6 +38,11 @@ private slots:
                                ClientInfo*    Info);
     // 상품정보 수정 요청 들어왔을때
     void ProductModi    (const QByteArray&    MessageData);
+    // 상품정보 조회 요청 들어왔을때
+    void LoadProductDB  (      CommuniCation* Thread);
+    // 상품정보 추가 요청 들어왔을때
+    void ProductAdd     (      CommuniCation* Thread,
+                          const     QBuffer&       MessageData);
 
 private:
     QLabel     *InfoLabel;
@@ -51,9 +60,10 @@ private:
 
     ClientInfo    *CInfo;
     CommuniCation *Comm;
+    DataManager   *DMan;
 
     QMap<CommuniCation*, ClientInfo*> CInfoList;
 
-    void LoadProductDB();
+
 };
 #endif // WIDGET_H
