@@ -63,8 +63,8 @@ void CommuniCation::ReadClientData()
     case 0x02:ClientInitDataReceive(buffer);     break;
     case 0x03:emit RequestPdInfo   (this);       break;
     case 0x04:ModiProductInfo      (buffer);     break;
-    case 0x05:AddProductInfo(buffer);break;
-    default: emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
+    case 0x05:AddProductInfo       (buffer);     break;
+    default:emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
     }
     ByteArray.clear();
 }
@@ -165,7 +165,7 @@ void CommuniCation::ModiProductInfo(const QBuffer &buffer)
     if(ReceivePacket == TotalSize){
         qDebug() << "product modify data receive completed";
         qDebug() << "end 내용 : " << ByteArray;
-        emit ModifyProductDB(ByteArray);
+        emit ModifyProductDB(this,ByteArray);
         ReceivePacket = 0;
         TotalSize = 0;
         DataType = 0;

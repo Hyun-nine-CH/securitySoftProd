@@ -26,6 +26,11 @@ void DataManager::AddProductData(const QByteArray &NewData)
     PDb->AddData(NewData);
 }
 
+void DataManager::ModiProductData(const QByteArray &ModiData)
+{
+    PDb->ModifyData(ModiData);
+}
+
 bool DataManager::LoadClientData()
 {
     return true;
