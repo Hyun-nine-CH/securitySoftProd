@@ -64,6 +64,7 @@ void CommuniCation::ReadClientData()
     case 0x03:emit RequestPdInfo   (this);       break;
     case 0x04:ModiProductInfo      (buffer);     break;
     case 0x05:AddProductInfo       (buffer);     break;
+    case 0x06:DelProductInfo       (buffer);     break;
     default:emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
     }
     ByteArray.clear();
@@ -187,8 +188,31 @@ void CommuniCation::AddProductInfo(const QBuffer &buffer)
         qDebug() << "TotalSize : " << TotalSize;
     }
     if(ReceivePacket == TotalSize){
-        qDebug() << "product addd data receive completed";
+        qDebug() << "product add data receive completed";
         emit RequestPdAdd(this,buffer);
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        ByteArray.clear();
+    }
+}
+
+void CommuniCation::DelProductInfo(const QBuffer &buffer)
+{
+    if(ReceivePacket == 0){
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }else{
+        qDebug() << "chat 내용 : " << ByteArray;
+        ReceivePacket += ByteArray.size();
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }
+    if(ReceivePacket == TotalSize){
+        qDebug() << "product del data receive completed";
+        emit RequestPdDel(this,buffer);
         ReceivePacket = 0;
         TotalSize = 0;
         DataType = 0;

@@ -31,6 +31,11 @@ void DataManager::ModiProductData(const QByteArray &ModiData)
     PDb->ModifyData(ModiData);
 }
 
+void DataManager::DelProductData(const QByteArray &DelData)
+{
+    PDb->DeleteData(DelData);
+}
+
 bool DataManager::LoadClientData()
 {
     return true;
