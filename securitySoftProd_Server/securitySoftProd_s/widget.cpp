@@ -6,8 +6,6 @@
 
 #include "widget.h"
 
-#define BLOCK_SIZE 1024
-
 //코드 한거
 /*
     20250702
@@ -29,6 +27,11 @@
     데이터베이스 부모 코드에 데이터매니저 추가함(초기화 방식이 특이하니 주의할것)
     product 추가 조회 기능 완성
     깃 이슈 사용
+
+    20250706
+    product modify 완성
+    나중에 product에서 sendData 삭제할것
+    product delete 작업 완료
 */
 
 Widget::Widget(QWidget *parent)
@@ -99,6 +102,8 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestPdInfo, this, &Widget::LoadProductDB);
     //상품정보 추가 요청
     connect(Comm, &CommuniCation::RequestPdAdd, this, &Widget::ProductAdd);
+    //상품정보 삭제 요청
+    connect(Comm, &CommuniCation::RequestPdDel, this, &Widget::ProductDel);
 }
 
 void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
@@ -132,7 +137,6 @@ void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
         }
     }
     ListMutex->unlock();
-
 }
 
 void Widget::SetCInfo(CommuniCation* Thread, ClientInfo *Info)
@@ -148,29 +152,24 @@ void Widget::SetCInfo(CommuniCation* Thread, ClientInfo *Info)
 
 void Widget::LoadProductDB(CommuniCation* Thread)
 {
-    QByteArray Convert   = (DMan->getProductData()).toJson();
-    QByteArray Container;
-
-    QDataStream out(&Container,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << "filename";
-    Container.append(Convert);
-
-    out.device()->seek(0);
-    qint64 dataType = 0x03;
-    out << dataType << Container.size() << Container.size();
-    qDebug() << "load product Db";
-    qDebug() << Convert;
-    QMetaObject::invokeMethod(Thread,"WriteData", // 호출할 슬롯 이름 (문자열)
-                              Qt::QueuedConnection,  // 연결 타입 (필수)
-                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
-
+    SendData((DMan->getProductData()).toJson(),Thread,PD_ALL);
 }
 
 void Widget::ProductAdd(CommuniCation *Thread, const QBuffer &MessageData)
 {
     DMan->AddProductData(MessageData.data());
-    QByteArray Convert   = (DMan->getProductData()).toJson();
+    SendData((DMan->getProductData()).toJson(),Thread,PD_ADD);
+}
+
+void Widget::ProductDel(CommuniCation *Thread, const QBuffer &MessageData)
+{
+    DMan->DelProductData(MessageData.data());
+    SendData((DMan->getProductData()).toJson(),Thread,PD_DEL);
+}
+
+void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)
+{
+    QByteArray Convert   = Data;
     QByteArray Container;
 
     QDataStream out(&Container,QIODevice::WriteOnly);
@@ -179,9 +178,9 @@ void Widget::ProductAdd(CommuniCation *Thread, const QBuffer &MessageData)
     Container.append(Convert);
 
     out.device()->seek(0);
-    qint64 dataType = 0x05;
+    qint64 dataType = Comand;
     out << dataType << Container.size() << Container.size();
-    qDebug() << "add product Db";
+    qDebug() << "send Data";
     qDebug() << Convert;
     QMetaObject::invokeMethod(Thread,"WriteData", // 호출할 슬롯 이름 (문자열)
                               Qt::QueuedConnection,  // 연결 타입 (필수)
@@ -200,7 +199,6 @@ void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
                 해당 키에 연결된 값(value), 즉 ClientInfo* 포인터를 가져오는 역할
             */
             ClientInfo* Info = CInfoList.value(Thread);
-
             /*
              *  romove의 의미
                 CInfoList에서 키-값 쌍 자체를 제거. 즉, DisConnectSocket이라는 키에
@@ -209,12 +207,10 @@ void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
                 실제 ClientInfo 객체의 메모리까지 해제해주지는 않음
             */
             CInfoList.remove(Thread);
-
             // 가져온 ClientInfo* 포인터를 사용하여 실제 ClientInfo 객체의 메모리를 해제
             delete Info;
             //유효하지 않은 메모리 접근 방지. delete를 썼기때문에 nullptr해준것
             Info = nullptr;
-
             qDebug() << "QMap에서 클라이언트 제거 완료.";
         }
         ListMutex->unlock();
@@ -228,30 +224,14 @@ void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
 void Widget::ProductModi(CommuniCation* Thread, const QByteArray& MessageData)
 {
     DMan->ModiProductData(MessageData.data());
-    QByteArray Convert   = (DMan->getProductData()).toJson();
-    QByteArray Container;
-
-    QDataStream out(&Container,QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << "filename";
-    Container.append(Convert);
-
-    out.device()->seek(0);
-    qint64 dataType = 0x04;
-    out << dataType << Container.size() << Container.size();
-    qDebug() << "add product Db";
-    qDebug() << Convert;
-    QMetaObject::invokeMethod(Thread,"WriteData", // 호출할 슬롯 이름 (문자열)
-                              Qt::QueuedConnection,  // 연결 타입 (필수)
-                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
+    SendData((DMan->getProductData()).toJson(),Thread,PD_MODI);
 }
 
 Widget::~Widget()
 {
     ListMutex->lock();
     // 모든 ClientInfo 객체 삭제
-    if(CInfoList.size()>0)
-    {
+    if(CInfoList.size()>0){
         for(QMap<CommuniCation*, ClientInfo*>::iterator it = CInfoList.begin();
              it != CInfoList.end(); ++it) {
             ClientInfo* info = it.value();
@@ -267,9 +247,6 @@ Widget::~Widget()
         CInfoList.clear();
         delete CInfo;
     }
-
     ListMutex->unlock();
-
     delete ListMutex;
-
 }

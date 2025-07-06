@@ -24,9 +24,10 @@ public:
     // QJsonDocument& getOrderData();
     // QJsonDocument& getChatLogData();
     //ProductDB
-    bool SaveProductData(const QString &filePath);
+    bool SaveProductData(const QString    &filePath);
     void AddProductData (const QByteArray &NewData);
     void ModiProductData(const QByteArray &ModiData);
+    void DelProductData (const QByteArray &DelData);
 
 private:
     QMap<QString,DataBase*> Db;

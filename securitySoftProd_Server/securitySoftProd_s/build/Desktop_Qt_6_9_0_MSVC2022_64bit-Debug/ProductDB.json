@@ -20,16 +20,6 @@
         "stock": 80
     },
     {
-        "category": "Displays",
-        "description": "선명한 QHD 해상도와 144Hz 주사율을 지원하는 27인치 게이밍 모니터입니다. IPS 패널.",
-        "imageUrl": "https://example.com/images/monitor003.jpg",
-        "manufacturer": "VisionMaster Ltd.",
-        "price": 350000,
-        "productId": 3,
-        "productName": "27인치 QHD 모니터",
-        "stock": 50
-    },
-    {
         "category": "Audio",
         "description": "탁월한 노이즈 캔슬링 기능과 고음질 사운드를 자랑하는 프리미엄 헤드폰입니다. 긴 배터리 수명.",
         "imageUrl": "https://example.com/images/headphone004.jpg",
@@ -48,5 +38,15 @@
         "productId": 5,
         "productName": "USB-C 허브 (7-in-1)",
         "stock": 200
+    },
+    {
+        "Id": 1,
+        "description": "수정함",
+        "stock": "Lee"
+    },
+    {
+        "Id": 6,
+        "description": "수정함",
+        "stock": "Lee"
     }
 ]

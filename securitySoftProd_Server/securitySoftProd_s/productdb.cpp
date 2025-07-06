@@ -86,9 +86,9 @@ void ProductDB::ModifyData(const QByteArray &ModiData)
     int  targetId = modifyObj["productId"].toInt();
     bool found    = false;
 
-    QJsonArray allArray = AllDoc.array();
-    for (int i = 0; i < allArray.size(); i++) {
-        QJsonObject item = allArray[i].toObject();
+    QJsonArray AllArray = AllDoc.array();
+    for (int i = 0; i < AllArray.size(); i++) {
+        QJsonObject item = AllArray[i].toObject();
 
         // productId가 일치하는 항목 찾기
         if (item.contains("productId") && item["productId"].toInt() == targetId) {
@@ -103,15 +103,15 @@ void ProductDB::ModifyData(const QByteArray &ModiData)
                     // 중요: 기존 항목에 해당 키가 있는 경우에만 업데이트
                     if (item.contains(key)) {
                         item[key] = modifyObj[key];
-                        qDebug() << "수정:" << key << "=" << modifyObj[key];
+                        //qDebug() << "수정:" << key << "=" << modifyObj[key];
                     } else {
-                        qDebug() << "기존에 없음:" << key;
+                        //qDebug() << "기존에 없음:" << key;
                     }
                 }
             }
 
             //수정된 객체를 배열에 다시 넣기
-            allArray[i] = item;
+            AllArray[i] = item;
             break;
         }
     }
@@ -120,30 +120,68 @@ void ProductDB::ModifyData(const QByteArray &ModiData)
         return;
     }
 
-    AllDoc.setArray(allArray);
+    AllDoc.setArray(AllArray);
     DbManager->SaveProductData(FilePath);
 }
 
 void ProductDB::DeleteData(const QByteArray &DelData)
 {
+    QJsonDocument &AllDoc  = DbManager->getProductData();
+    QJsonDocument New      = QJsonDocument::fromJson(DelData);
+    QJsonArray    AllArray = AllDoc.array();
+    QJsonArray    NewArray;
 
+    if(New.isObject()){ // 한개 삭제할때
+        QJsonObject   DelObj = New.object();
+        int           TargetId  = DelObj["productId"].toInt();
+
+        for (int i = 0; i < AllArray.size(); i++) {
+            QJsonObject item = AllArray[i].toObject();
+
+            if (item.contains("productId") && item["productId"].toInt() == TargetId)
+                continue;
+
+            NewArray.append(item);
+        }
+    } else if(New.isArray()){ //여러개 삭제할때
+        QJsonArray   Delarr = New.array();
+        bool         found  = false;
+
+        for (int i = 0; i < AllArray.size(); i++) {
+            QJsonObject item = AllArray[i].toObject();
+            for (int j = 0; j < Delarr.size(); j++) {
+                QJsonObject Del = Delarr[j].toObject();
+                if(item.contains("productId") && \
+                   item["productId"].toInt() == Del["productId"].toInt()){
+                    found = true;
+                    break;
+                }
+            }
+            if(!found)
+                NewArray.append(item);
+            found = false;
+        }
+    }
+
+    AllDoc.setArray(NewArray);
+    DbManager->SaveProductData(FilePath);
 }
 
 int ProductDB::FindLastNum(const QJsonDocument &Trace)
 {
     QJsonParseError parseError;
     int BigNum = 0;
-    if (!Trace.isNull() && Trace.isObject()) {
+    if (!Trace.isNull() && Trace.isArray()) {
         QJsonArray arr = Trace.array();
         for(int i = 0; i < arr.size()-1; i++) {
             QJsonObject first = arr[i].toObject();
             QJsonObject second = arr[i+1].toObject();
-            first.value("id").toInt() < second.value("id").toInt() ? \
-            BigNum = second.value("id").toInt() : BigNum = first.value("id").toInt();
+            first.value("productId").toInt() < second.value("productId").toInt() ? \
+            BigNum = second.value("productId").toInt() : BigNum = first.value("productId").toInt();
         }
         qDebug() << "JSON Parsing Succsess";
     } else
-        qDebug() << "JSON 파싱 실패:" << parseError.errorString();
+        qDebug() << "FindLastNum JSON 파싱 실패:" << parseError.errorString();
 
     return BigNum+1;
 }
