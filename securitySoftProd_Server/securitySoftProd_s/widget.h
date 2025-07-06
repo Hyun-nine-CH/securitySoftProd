@@ -37,7 +37,8 @@ private slots:
     void SetCInfo       (      CommuniCation* Thread,
                                ClientInfo*    Info);
     // 상품정보 수정 요청 들어왔을때
-    void ProductModi    (const QByteArray&    MessageData);
+    void ProductModi    (       CommuniCation* Thread,
+                          const QByteArray&    MessageData);
     // 상품정보 조회 요청 들어왔을때
     void LoadProductDB  (      CommuniCation* Thread);
     // 상품정보 추가 요청 들어왔을때

@@ -179,7 +179,7 @@ void Widget::ProductAdd(CommuniCation *Thread, const QBuffer &MessageData)
     Container.append(Convert);
 
     out.device()->seek(0);
-    qint64 dataType = 0x03;
+    qint64 dataType = 0x05;
     out << dataType << Container.size() << Container.size();
     qDebug() << "add product Db";
     qDebug() << Convert;
@@ -225,9 +225,25 @@ void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
     InfoLabel->setText(tr("%1 connection is established...").arg(CInfoList.size()));
 }
 
-void Widget::ProductModi(const QByteArray& MessageData)
+void Widget::ProductModi(CommuniCation* Thread, const QByteArray& MessageData)
 {
+    DMan->ModiProductData(MessageData.data());
+    QByteArray Convert   = (DMan->getProductData()).toJson();
+    QByteArray Container;
 
+    QDataStream out(&Container,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << "filename";
+    Container.append(Convert);
+
+    out.device()->seek(0);
+    qint64 dataType = 0x04;
+    out << dataType << Container.size() << Container.size();
+    qDebug() << "add product Db";
+    qDebug() << Convert;
+    QMetaObject::invokeMethod(Thread,"WriteData", // 호출할 슬롯 이름 (문자열)
+                              Qt::QueuedConnection,  // 연결 타입 (필수)
+                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
 }
 
 Widget::~Widget()
@@ -249,10 +265,11 @@ Widget::~Widget()
             NewFile = nullptr; // dangling pointer 방지
         }
         CInfoList.clear();
+        delete CInfo;
     }
 
     ListMutex->unlock();
 
     delete ListMutex;
-    delete CInfo;
+
 }

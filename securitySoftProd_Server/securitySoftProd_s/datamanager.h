@@ -13,7 +13,7 @@ class DataManager : public QObject
 public:
     explicit DataManager(QObject *parent = nullptr);
     // 각 데이터셋을 파일에 저장하는 메서드
-    bool SaveProductData(const QString &filePath);
+
     // bool SaveClientData(const QString &filePath);
     // bool SaveOrderData(const QString &filePath);
     // bool SaveChatLogData(const QString &filePath);
@@ -23,7 +23,10 @@ public:
     // QJsonDocument& getClientData();
     // QJsonDocument& getOrderData();
     // QJsonDocument& getChatLogData();
-    void AddProductData(const QByteArray &NewData);
+    //ProductDB
+    bool SaveProductData(const QString &filePath);
+    void AddProductData (const QByteArray &NewData);
+    void ModiProductData(const QByteArray &ModiData);
 
 private:
     QMap<QString,DataBase*> Db;
