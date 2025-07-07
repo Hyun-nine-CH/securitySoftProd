@@ -104,6 +104,8 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestPdAdd, this, &Widget::ProductAdd);
     //상품정보 삭제 요청
     connect(Comm, &CommuniCation::RequestPdDel, this, &Widget::ProductDel);
+    //로그인 정보 확인 요청
+    connect(Comm, &CommuniCation::RequestConfirm, this, &Widget::ConfirmLogin);
 }
 
 void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
@@ -165,6 +167,14 @@ void Widget::ProductDel(CommuniCation *Thread, const QBuffer &MessageData)
 {
     DMan->DelProductData(MessageData.data());
     SendData((DMan->getProductData()).toJson(),Thread,PD_DEL);
+}
+
+void Widget::ConfirmLogin(CommuniCation *Thread, const QBuffer &MessageData)
+{
+    QJsonObject   ClientLoginInfo = DMan->IsClient(MessageData.data());
+    QJsonDocument doc(ClientLoginInfo);
+    QByteArray    LoginInfo = doc.toJson();
+    SendData(LoginInfo,Thread,CONFIRM);
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

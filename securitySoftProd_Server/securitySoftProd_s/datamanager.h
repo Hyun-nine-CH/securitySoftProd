@@ -5,6 +5,7 @@
 
 #include "database.h"
 #include "productdb.h"
+#include "clientdb.h"
 
 class DataManager : public QObject
 {
@@ -20,7 +21,7 @@ public:
 
     // 각 데이터셋에 대한 접근자 (getter)
     QJsonDocument& getProductData();
-    // QJsonDocument& getClientData();
+    QJsonDocument& getClientData(); //전체 고객 정보
     // QJsonDocument& getOrderData();
     // QJsonDocument& getChatLogData();
     //ProductDB
@@ -29,9 +30,15 @@ public:
     void ModiProductData(const QByteArray &ModiData);
     void DelProductData (const QByteArray &DelData);
 
+    //Client DB
+    bool        SaveClientData(const QString    &filePath);
+    void        AddClientData (const QByteArray &NewData);
+    QJsonObject IsClient      (const QByteArray &IdPwData);
+
 private:
     QMap<QString,DataBase*> Db;
     ProductDB *PDb;
+    ClientDB  *CDb;
 
     QJsonDocument  ProductData;
     QJsonDocument  ClientData;
@@ -40,9 +47,8 @@ private:
 
     // 각 데이터셋을 파일에서 로드하는 메서드
     bool LoadProductData();
-
-
     bool LoadClientData();
+
     bool LoadOrderData();
     bool LoadChatLogData();
 

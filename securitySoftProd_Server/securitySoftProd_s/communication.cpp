@@ -65,6 +65,7 @@ void CommuniCation::ReadClientData()
     case 0x04:ModiProductInfo      (buffer);     break;
     case 0x05:AddProductInfo       (buffer);     break;
     case 0x06:DelProductInfo       (buffer);     break;
+    case 0x07:ConfrimLogin         (buffer);     break;
     default:emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
     }
     ByteArray.clear();
@@ -124,7 +125,7 @@ void CommuniCation::ClientInitDataReceive(const QBuffer &buffer)
     if(ReceivePacket == TotalSize){
         qDebug() << "client info receive completed";
         CInfo->setClientData(ByteArray);
-        qDebug() << "end 내용 : " << ByteArray;
+        //qDebug() << "end 내용 : " << ByteArray;
         CInfo->ChangeJsonData();
         emit SendClientInfo(this,CInfo);
         ReceivePacket = 0;
@@ -213,6 +214,29 @@ void CommuniCation::DelProductInfo(const QBuffer &buffer)
     if(ReceivePacket == TotalSize){
         qDebug() << "product del data receive completed";
         emit RequestPdDel(this,buffer);
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        ByteArray.clear();
+    }
+}
+
+void CommuniCation::ConfrimLogin(const QBuffer &buffer)
+{
+    if(ReceivePacket == 0){
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }else{
+        qDebug() << "chat 내용 : " << ByteArray;
+        ReceivePacket += ByteArray.size();
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }
+    if(ReceivePacket == TotalSize){
+        qDebug() << "Client login data receive completed";
+        emit RequestConfirm(this,buffer);
         ReceivePacket = 0;
         TotalSize = 0;
         DataType = 0;

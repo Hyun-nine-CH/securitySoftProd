@@ -4,11 +4,13 @@ DataManager::DataManager(QObject *parent)
     : QObject{parent}
 {
     PDb = new ProductDB(this);
+    CDb = new ClientDB(this);
 
     Db.insert("Product",PDb);
+    Db.insert("Client" ,CDb);
     if(LoadProductData() && LoadChatLogData() &&
        LoadClientData()  && LoadOrderData()){
-
+        qDebug() << "Load All DB";
     }
 }
 
@@ -36,9 +38,18 @@ void DataManager::DelProductData(const QByteArray &DelData)
     PDb->DeleteData(DelData);
 }
 
+QJsonObject DataManager::IsClient(const QByteArray &IdPwData)
+{
+    return CDb->Confirm(IdPwData);
+}
+
 bool DataManager::LoadClientData()
 {
-    return true;
+    ClientData = CDb->LoadData();
+    if(!(ClientData.isEmpty())){
+        return true;
+    }
+    return false;
 }
 
 bool DataManager::LoadOrderData()
@@ -90,10 +101,10 @@ QJsonDocument &DataManager::getProductData()
     return ProductData;
 }
 
-// QJsonDocument &DataManager::getClientData()
-// {
-
-// }
+QJsonDocument &DataManager::getClientData()
+{
+    return ClientData;
+}
 
 // QJsonDocument &DataManager::getOrderData()
 // {

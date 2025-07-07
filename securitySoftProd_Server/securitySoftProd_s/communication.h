@@ -42,6 +42,9 @@ signals:
     // 상품데이터 삭제 요청
     void RequestPdDel   (      CommuniCation* Thread,
                          const QBuffer&       MessageData);
+    // 로그인 확인 후 정보 보내기
+    void RequestConfirm(      CommuniCation* Thread,
+                        const QBuffer&       MessageData);
 private slots:
     void ReadClientData    (); // 소켓에서 데이터 읽기
     void ClientDisconnected(); // 소켓 연결 끊김 처리
@@ -75,6 +78,8 @@ private:
     void AddProductInfo       (const QBuffer &buffer);
     //상품 삭제
     void DelProductInfo       (const QBuffer &buffer);
+    //로그인 정보 확인
+    void ConfrimLogin         (const QBuffer &buffer);
 };
 
 #endif // COMMUNICATION_H
