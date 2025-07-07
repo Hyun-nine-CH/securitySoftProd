@@ -46,7 +46,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QWidget" name="">
+  <widget class="QWidget" name="layoutWidget">
    <property name="geometry">
     <rect>
      <x>570</x>
@@ -57,14 +57,14 @@
    </property>
    <layout class="QHBoxLayout" name="horizontalLayout">
     <item>
-     <widget class="QPushButton" name="pushButton_2">
+     <widget class="QPushButton" name="pushButton_fileClient">
       <property name="text">
        <string>파일 첨부 하기</string>
       </property>
      </widget>
     </item>
     <item>
-     <widget class="QPushButton" name="pushButton">
+     <widget class="QPushButton" name="pushButton_client">
       <property name="text">
        <string>전송하기</string>
       </property>
