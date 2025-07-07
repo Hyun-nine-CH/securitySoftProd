@@ -174,6 +174,8 @@ void Widget::ConfirmLogin(CommuniCation *Thread, const QBuffer &MessageData)
     QJsonObject   ClientLoginInfo = DMan->IsClient(MessageData.data());
     QJsonDocument doc(ClientLoginInfo);
     QByteArray    LoginInfo = doc.toJson();
+    CInfoList[Thread]->setClientData(LoginInfo);
+    CInfoList[Thread]->ChangeJsonData();
     SendData(LoginInfo,Thread,CONFIRM);
 }
 
