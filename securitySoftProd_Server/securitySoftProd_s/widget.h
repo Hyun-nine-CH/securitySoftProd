@@ -37,12 +37,20 @@ private slots:
     void SetCInfo       (      CommuniCation* Thread,
                                ClientInfo*    Info);
     // 상품정보 수정 요청 들어왔을때
-    void ProductModi    (const QByteArray&    MessageData);
+    void ProductModi    (      CommuniCation* Thread,
+                         const QByteArray&    MessageData);
     // 상품정보 조회 요청 들어왔을때
     void LoadProductDB  (      CommuniCation* Thread);
     // 상품정보 추가 요청 들어왔을때
     void ProductAdd     (      CommuniCation* Thread,
-                          const     QBuffer&       MessageData);
+                         const QBuffer& MessageData);
+    // 상품정보 삭제 요청 들어왔을때
+    void ProductDel     (      CommuniCation* Thread,
+                         const QBuffer& MessageData);
+    // 로그인 정보 확인 요청(확인 후 고객정보를 넘기거나 에러를 넘김)
+    void ConfirmLogin   (      CommuniCation* Thread,
+                         const QBuffer& MessageData);
+
 
 private:
     QLabel     *InfoLabel;
@@ -63,6 +71,14 @@ private:
     DataManager   *DMan;
 
     QMap<CommuniCation*, ClientInfo*> CInfoList;
+
+    const qint64 PD_ALL  = 0x03;
+    const qint64 PD_MODI = 0x04;
+    const qint64 PD_ADD  = 0x05;
+    const qint64 PD_DEL  = 0x06;
+    const qint64 CONFIRM = 0x07;
+
+    void SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand);
 
 
 };

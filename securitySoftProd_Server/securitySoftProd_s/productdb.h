@@ -20,6 +20,7 @@ public:
 
 private:
     QByteArray ProductData;
+    const QString FileId = "제품 번호";
 };
 
 #endif // PRODUCTDB_H
