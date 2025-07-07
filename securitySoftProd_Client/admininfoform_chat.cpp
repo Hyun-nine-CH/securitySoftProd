@@ -2,17 +2,14 @@
 #include "ui_admininfoform_chat.h"
 #include <QTabWidget>
 #include <QIcon>
-#include <QMessageBox>
 
-// ⭐️ 생성자 구현 변경
 AdminInfoForm_Chat::AdminInfoForm_Chat(const QString& companyName, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::AdminInfoForm_Chat)
     , m_companyName(companyName)
 {
     ui->setupUi(this);
-    // ⭐️ 위젯 내부의 버튼 클릭 시 on_sendButton_clicked 슬롯 호출
-    connect(ui->pushButton_admin, &QPushButton::clicked, this, &AdminInfoForm_Chat::on_sendButton_clicked);
+    connect(ui->pushButton_admin, &QPushButton::clicked, this, &AdminInfoForm_Chat::on_pushButton_admin_clicked);
 }
 
 AdminInfoForm_Chat::~AdminInfoForm_Chat()
@@ -20,21 +17,19 @@ AdminInfoForm_Chat::~AdminInfoForm_Chat()
     delete ui;
 }
 
-// ⭐️ '전송' 버튼이 눌리면 MainWindow_Admin에 시그널을 보냄
-void AdminInfoForm_Chat::on_sendButton_clicked()
+// '전송' 버튼이 눌리면 MainWindow_Admin에 시그널을 보냄
+void AdminInfoForm_Chat::on_pushButton_admin_clicked()
 {
     QString messageText = ui->lineEdit->text().trimmed();
     if (messageText.isEmpty()) return;
 
-    // ⭐️ 소켓에 직접 쓰는 대신 시그널 발생
+    // 어느 회사(m_companyName)에게 보내는지와 메시지 내용을 함께 시그널로 보냄
     emit messageSendRequested(m_companyName, messageText);
 
     ui->lineEdit->clear();
-    // ⭐️ "[나]" 메시지는 로컬에 바로 표시
-    ui->chatDisplay->append("[나] " + messageText);
 }
 
-// ⭐️ MainWindow에서 포맷된 메시지를 받아 표시하는 함수
+// MainWindow_Admin에서 포맷된 메시지를 받아 표시하는 함수
 void AdminInfoForm_Chat::appendMessage(const QString& formattedMessage)
 {
     if (!formattedMessage.trimmed().isEmpty()) {
@@ -47,7 +42,7 @@ void AdminInfoForm_Chat::appendMessage(const QString& formattedMessage)
     }
 }
 
-// ⭐️ 아래 함수들은 UI 관련이므로 그대로 유지
+// --- 아래 함수들은 UI 알림 관련이므로 변경 없음 ---
 void AdminInfoForm_Chat::showChatNotification()
 {
     if (auto p = parentWidget(); p) {

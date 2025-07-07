@@ -13,8 +13,8 @@
 namespace Protocol {
 enum DataType : qint64 {
     Login_Request  = 0x07,
-    //Login_Success  = 0x11, //데이터가 NULL이 아니면 Success
-    //Login_Failure  = 0x12,//데이터가 오면 파싱해서 NULL이면 fail
+    //데이터가 NULL이 아니면 Success
+    //데이터가 오면 파싱해서 NULL이면 fail
 };
 }
 
@@ -110,50 +110,67 @@ void Dialog_log::onReadyRead()
         QDataStream in(&m_buffer, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Qt_5_15);
 
-        // 1. 전체 데이터 크기를 읽을 만큼 데이터가 있는지 확인
-        if (m_buffer.size() < sizeof(qint64)) {
+        // 1. 최소 헤더(DataType, TotalSize, CurrentPacketSize)를 읽을 만큼 데이터가 있는지 확인
+        if (m_buffer.size() < (3 * sizeof(qint64))) {
             break;
         }
-        qint64 totalSize;
-        in >> totalSize;
 
-        // 2. 전체 메시지가 도착했는지 확인
+        // 2. 헤더 정보 미리 읽기 (실제 데이터는 아직 건드리지 않음)
+        qint64 dataType, totalSize, currentPacketSize;
+        in >> dataType >> totalSize >> currentPacketSize;
+
+        // 3. 전체 메시지(totalSize)가 모두 도착했는지 확인
         if (m_buffer.size() < totalSize) {
-            break;
+            break; // 데이터가 아직 다 오지 않았으면 중단
         }
 
-        // --- 전체 메시지를 수신했으므로 파싱 시작 ---
-        qint64 dataType;
-        in >> dataType; // 실제 데이터 타입 읽기
+        // --- 4. 전체 메시지가 도착했으므로 파싱 시작 ---
+        QString filename;
+        in >> filename; // 파일 이름("login info" 등) 읽기
 
-        // if (dataType == Protocol::Login_Success) {
-        //     qint64 clientId;
-        //     QString roomId;
-        //     in >> clientId >> roomId;
+        // 5. 실제 payload(JSON 데이터) 추출
+        // 헤더와 파일이름을 제외한 나머지 부분이 payload임
+        QByteArray payload = m_buffer.mid(in.device()->pos(), totalSize - in.device()->pos());
 
-        //     qDebug() << "[Client] Login Success. ClientID:" << clientId << "RoomID:" << roomId;
+        // 6. payload를 JSON 문서로 파싱
+        QJsonDocument doc = QJsonDocument::fromJson(payload);
 
-        //     // MainWindow가 소켓 제어권을 갖도록 시그널 연결 해제
-        //     disconnect(socket, &QTcpSocket::readyRead, this, &Dialog_log::onReadyRead);
+        // 7. 로그인 성공/실패 처리
+        // 응답으로 온 JSON이 유효한 객체이고 비어있지 않으면 '성공'
+        if (doc.isObject() && !doc.object().isEmpty()) {
+            QJsonObject userObject = doc.object();
 
-        //     // 관리자 ID는 1000번대, 일반 클라이언트는 그 이하로 가정
-        //     if (clientId >= 1000) {
-        //         auto adminWin = new MainWindow_Admin(socket, clientId, nullptr);
-        //         adminWin->setAttribute(Qt::WA_DeleteOnClose);
-        //         adminWin->show();
-        //     } else {
-        //         auto clientWin = new MainWindow(socket, roomId, clientId, nullptr);
-        //         clientWin->setAttribute(Qt::WA_DeleteOnClose);
-        //         clientWin->show();
-        //     }
-        //     this->accept(); // 로그인 성공 시 현재 창 닫기
+            // 필요한 정보 추출
+            qint64 clientId = userObject["ClientId"].toInteger();
+            QString roomId = userObject["RoomId"].toString();
+            QString managerName = userObject["manager"].toString(); // 채팅 닉네임으로 사용할 이름
 
-        // } else if (dataType == Protocol::Login_Failure) {
-        //     qDebug() << "[Client] Login Failed.";
-        //     QMessageBox::warning(this, "Login Failed", "Invalid ID or password.");
-        // }
+            qDebug() << "[Client] Login Success. ClientID:" << clientId << "RoomID:" << roomId;
 
-        // 처리한 메시지는 버퍼에서 제거
+            // MainWindow가 소켓 제어권을 갖도록 시그널 연결 해제
+            disconnect(socket, &QTcpSocket::readyRead, this, &Dialog_log::onReadyRead);
+
+            // 관리자(ID >= 1000)와 일반 클라이언트 구분하여 메인 창 실행
+            if (clientId >= 1000) {
+                // MainWindow_Admin 생성자에 필요한 정보 전달 (수정 필요 시 변경)
+                auto adminWin = new MainWindow_Admin(socket, clientId, nullptr);
+                adminWin->setAttribute(Qt::WA_DeleteOnClose);
+                adminWin->show();
+            } else {
+                // MainWindow 생성자에 필요한 정보 전달 (수정 필요 시 변경)
+                auto clientWin = new MainWindow(socket, roomId, clientId, nullptr);
+                clientWin->setAttribute(Qt::WA_DeleteOnClose);
+                clientWin->show();
+            }
+            this->accept(); // 로그인 성공 시 현재 창 닫기
+
+        } else {
+            // payload가 비어있거나(NULL), 유효하지 않은 JSON이면 '실패'
+            qDebug() << "[Client] Login Failed. Received empty or invalid data.";
+            QMessageBox::warning(this, "로그인 실패", "아이디 또는 비밀번호가 일치하지 않습니다.");
+        }
+
+        // 8. 처리한 메시지는 버퍼에서 제거
         m_buffer.remove(0, totalSize);
     }
 }

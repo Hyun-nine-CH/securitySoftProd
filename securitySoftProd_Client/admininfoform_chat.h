@@ -3,9 +3,6 @@
 
 #include <QWidget>
 
-// ⭐️ QTcpSocket 헤더는 더 이상 필요 없음
-// #include <QTcpSocket>
-
 namespace Ui {
 class AdminInfoForm_Chat;
 }
@@ -15,21 +12,19 @@ class AdminInfoForm_Chat : public QWidget
     Q_OBJECT
 
 public:
-    // ⭐️ 생성자에서 소켓 포인터 대신 회사 이름만 받음
+    // 생성자에서 자신이 담당할 회사 이름(roomId)을 받음
     explicit AdminInfoForm_Chat(const QString& companyName, QWidget *parent = nullptr);
     ~AdminInfoForm_Chat();
 
-    // MainWindow가 호출하는 함수들
     void appendMessage(const QString& formattedMessage);
     void onChatTabActivated();
 
 signals:
-    // ⭐️ MainWindow_Admin에게 메시지 전송을 요청하는 시그널
+    // 메시지 전송 시, 어느 회사에 보낼지와 메시지 내용을 함께 전달
     void messageSendRequested(const QString& companyName, const QString& message);
 
 private slots:
-    // ⭐️ 내부적으로만 사용되는 슬롯
-    void on_sendButton_clicked();
+    void on_pushButton_admin_clicked();
 
 private:
     void showChatNotification();
