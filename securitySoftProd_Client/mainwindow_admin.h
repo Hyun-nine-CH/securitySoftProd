@@ -4,6 +4,7 @@
 #include <QMainWindow>
 #include <QTcpSocket>
 #include <QMap>
+#include <QByteArray>
 
 class AdminInfoForm_Chat;
 namespace Ui { class MainWindow_Admin; }
@@ -13,25 +14,32 @@ class MainWindow_Admin : public QMainWindow
     Q_OBJECT
 
 public:
-    // ⭐️ 생성자에서 소켓과 관리자 ID를 받음
-    explicit MainWindow_Admin(QTcpSocket* socket, qint64 adminId, QWidget *parent = nullptr);
+    // 생성자에서 관리자 정보를 받도록 변경
+    explicit MainWindow_Admin(QTcpSocket* socket, qint64 clientId, const QString& managerName, QWidget *parent = nullptr);
     ~MainWindow_Admin();
 
 private slots:
     void handleServerMessage();
-    // ⭐️ 채팅 탭의 요청을 받아 메시지를 전송하는 슬롯
+    // 특정 회사 또는 관리자 채팅방에 메시지를 보내는 슬롯
     void sendChatMessage(const QString& companyName, const QString& message);
 
 private:
+    // 특정 회사의 채팅 탭을 만들거나 찾는 함수
     void createOrSwitchToChatTab(const QString& companyName);
-    // ⭐️ 데이터를 바이너리 형식으로 전송하는 헬퍼 함수
-    void writeData(qint64 dataType, const QString& roomId, qint64 clientId, const QString& message);
 
     Ui::MainWindow_Admin *ui;
     QTcpSocket* m_socket;
-    qint64 m_myUserId; // 관리자 자신의 ID (e.g., 1001)
+    QByteArray m_buffer;
+
+    // 관리자 자신의 정보
+    qint64  m_clientId;
+    QString m_managerName;
+
+    // Key: 회사이름(RoomId), Value: 해당 회사 채팅창 위젯
     QMap<QString, AdminInfoForm_Chat*> m_chatTabs;
-    QByteArray m_buffer; // ⭐️ 소켓 데이터 수신 버퍼
+
+    // 관리자 채팅방을 위한 고유 ID
+    const QString ADMIN_CHAT_ROOM_ID = "@Admins";
 };
 
 #endif // MAINWINDOW_ADMIN_H

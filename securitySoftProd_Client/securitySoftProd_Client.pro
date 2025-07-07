@@ -11,6 +11,7 @@ CONFIG += c++17
 SOURCES += \
     admininfoform.cpp \
     admininfoform_chat.cpp \
+    admininfoform_ol.cpp \
     admininfoform_prod.cpp \
     clientinfoform.cpp \
     clientinfoform_chat.cpp \
@@ -24,6 +25,7 @@ SOURCES += \
 HEADERS += \
     admininfoform.h \
     admininfoform_chat.h \
+    admininfoform_ol.h \
     admininfoform_prod.h \
     clientinfoform.h \
     clientinfoform_chat.h \
@@ -36,6 +38,7 @@ HEADERS += \
 FORMS += \
     admininfoform.ui \
     admininfoform_chat.ui \
+    admininfoform_ol.ui \
     admininfoform_prod.ui \
     clientinfoform.ui \
     clientinfoform_chat.ui \

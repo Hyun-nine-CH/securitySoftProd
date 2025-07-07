@@ -4,27 +4,29 @@
 #include "clientinfoform.h"
 #include "clientinfoform_chat.h"
 #include <QDataStream>
+#include <QJsonDocument>
+#include <QJsonObject>
 
-// ⭐️ 데이터 타입 정의 (관리자와 동일한 프로토콜 사용)
 namespace Protocol {
 enum DataType : qint64 {
-    Chat_Message = 0x01,
-    // 다른 데이터 타입 추가 가능
+    Chat_Message = 0x08,
 };
 }
 
-MainWindow::MainWindow(QTcpSocket* socket, const QString& companyName, qint64 clientId, QWidget *parent)
+MainWindow::MainWindow(QTcpSocket* socket, const QString& roomId, qint64 clientId, const QString& managerName, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow)
     , m_socket(socket)
-    , m_companyName(companyName) // ⭐️ 회사 이름(RoomId) 저장
-    , m_myUserId(clientId)       // ⭐️ 클라이언트 ID 저장
+    , m_roomId(roomId)
+    , m_clientId(clientId)
+    , m_managerName(managerName)
 {
     ui->setupUi(this);
 
+    // 소켓의 readyRead 시그널을 이 창의 핸들러에 연결
     connect(m_socket, &QTcpSocket::readyRead, this, &MainWindow::handleServerMessage);
 
-    // 제품 정보, 주문 정보 탭 생성
+    // 제품 정보, 주문 정보 탭 생성 (기존 로직)
     ClientInfoForm_Prod* clientProd = new ClientInfoForm_Prod(this);
     ui->tabWidget->addTab(clientProd, tr("제품 정보"));
     ClientInfoForm* clientInfo = new ClientInfoForm(this);
@@ -32,7 +34,6 @@ MainWindow::MainWindow(QTcpSocket* socket, const QString& companyName, qint64 cl
 
     // 채팅 탭 생성 및 시그널 연결
     m_chatTab = new ClientInfoForm_Chat(this);
-    // ⭐️ 채팅 탭의 '전송 요청' 시그널을 MainWindow의 '전송' 슬롯에 연결
     connect(m_chatTab, &ClientInfoForm_Chat::messageSendRequested, this, &MainWindow::sendChatMessage);
     ui->tabWidget->addTab(m_chatTab, tr("채팅방"));
 
@@ -51,61 +52,70 @@ MainWindow::~MainWindow()
     delete ui;
 }
 
-// ⭐️ 서버 메시지 처리 (바이너리 프로토콜 파싱)
+// 서버로부터 온 채팅 메시지 처리
 void MainWindow::handleServerMessage()
 {
     m_buffer.append(m_socket->readAll());
 
-    while (true) {
+    while(true) {
         QDataStream in(&m_buffer, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Qt_5_15);
 
-        if (m_buffer.size() < sizeof(qint64)) break;
-        qint64 totalSize;
-        in >> totalSize;
+        if (m_buffer.size() < (3 * sizeof(qint64))) break;
+
+        qint64 dataType, totalSize, currentPacketSize;
+        in >> dataType >> totalSize >> currentPacketSize;
 
         if (m_buffer.size() < totalSize) break;
 
-        qint64 dataType;
-        in >> dataType;
-
         if (dataType == Protocol::Chat_Message) {
-            QString roomId;
-            QString formattedMessage;
-            in >> roomId >> formattedMessage;
+            QString filename; // roomId가 담겨 올 필드
+            in >> filename;
+            QByteArray payload;
+            payload = m_buffer.mid(in.device()->pos(), totalSize - in.device()->pos());
+            QJsonDocument doc = QJsonDocument::fromJson(payload);
 
-            // ⭐️ 자신과 같은 회사(RoomId)의 메시지만 표시
-            if (roomId == m_companyName) {
-                m_chatTab->appendMessage(formattedMessage);
+            if (doc.isObject()) {
+                QJsonObject chatObj = doc.object();
+                QString senderName = chatObj["senderName"].toString();
+                QString message = chatObj["message"].toString();
+
+                // 내 회사(RoomId) 채팅방의 메시지만 표시
+                if (filename == m_roomId) {
+                    QString formattedMessage = QString("[%1]: %2").arg(senderName, message);
+                    m_chatTab->appendMessage(formattedMessage);
+                }
             }
         }
         m_buffer.remove(0, totalSize);
     }
 }
 
-// ⭐️ 채팅 탭의 요청을 받아 실제 메시지를 전송
+// 채팅 탭의 요청을 받아 서버로 메시지 전송
 void MainWindow::sendChatMessage(const QString& message)
 {
-    // ⭐️ 메시지를 보낼 때 자신의 RoomId와 ClientId를 사용
-    writeData(Protocol::Chat_Message, m_companyName, m_myUserId, message);
-}
+    // 내가 보낸다는 정보(이름)를 JSON에 담음
+    QJsonObject chatObject;
+    chatObject["senderName"] = m_managerName;
+    chatObject["message"] = message;
+    QByteArray payload = QJsonDocument(chatObject).toJson();
 
-// ⭐️ QDataStream을 이용해 서버에 데이터를 전송하는 함수 (관리자와 동일)
-void MainWindow::writeData(qint64 dataType, const QString& roomId, qint64 clientId, const QString& message)
-{
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
+    // 서버에 보낼 최종 데이터 블록 생성
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_15);
 
-    out << qint64(0);
-    out << dataType;
-    out << roomId;
-    out << clientId;
-    out << message;
+    // [타입][크기][크기][파일이름(RoomId)][JSON Payload]
+    out << qint64(0) << qint64(0) << qint64(0) << m_roomId;
+    blockToSend.append(payload);
 
+    qint64 totalSize = blockToSend.size();
     out.device()->seek(0);
-    out << (qint64)block.size();
+    out << qint64(Protocol::Chat_Message) << totalSize << totalSize;
 
-    m_socket->write(block);
+    // 내가 보낸 메시지는 로컬에 바로 표시
+    m_chatTab->appendMessage(QString("[%1]: %2").arg(m_managerName, message));
+
+    m_socket->write(blockToSend);
     m_socket->flush();
 }

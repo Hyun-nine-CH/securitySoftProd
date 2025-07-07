@@ -4,32 +4,36 @@
 #include "admininfoform.h"
 #include "admininfoform_chat.h"
 #include <QDataStream>
+#include <QJsonDocument>
+#include <QJsonObject>
 
-// ⭐️ 데이터 타입 정의 (프로토콜)
 namespace Protocol {
 enum DataType : qint64 {
-    Chat_Message = 0x01,
-    // 다른 데이터 타입 추가 가능
+    Chat_Message = 0x08,
 };
 }
 
-MainWindow_Admin::MainWindow_Admin(QTcpSocket* socket, qint64 adminId, QWidget *parent)
+MainWindow_Admin::MainWindow_Admin(QTcpSocket* socket, qint64 clientId, const QString& managerName, QWidget *parent)
     : QMainWindow(parent)
     , ui(new Ui::MainWindow_Admin)
     , m_socket(socket)
-    , m_myUserId(adminId) // ⭐️ 관리자 ID 저장
+    , m_clientId(clientId)
+    , m_managerName(managerName)
 {
     ui->setupUi(this);
 
     connect(m_socket, &QTcpSocket::readyRead, this, &MainWindow_Admin::handleServerMessage);
 
-    // 고객/제품 관리 탭 생성은 동일
+    // 고객 관리, 제품 관리 탭 생성
     AdminInfoForm* clientTab = new AdminInfoForm(this);
     ui->tabWidget->addTab(clientTab, tr("고객 관리"));
     AdminInfoForm_Prod* prodTab = new AdminInfoForm_Prod(this);
     ui->tabWidget->addTab(prodTab, tr("제품 관리"));
 
-    // 탭 전환 시 알림 제거 기능
+    // 관리자 로그인 시, 관리자 전용 채팅방을 기본으로 생성합니다.
+    createOrSwitchToChatTab(ADMIN_CHAT_ROOM_ID);
+
+    // 탭 전환 시 알림 아이콘 제거 기능
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, [this](int index) {
         if (auto chatWidget = qobject_cast<AdminInfoForm_Chat*>(ui->tabWidget->widget(index))) {
             chatWidget->onChatTabActivated();
@@ -42,87 +46,89 @@ MainWindow_Admin::~MainWindow_Admin()
     delete ui;
 }
 
-// ⭐️ 서버 메시지 처리 (바이너리 프로토콜 파싱)
+// 서버로부터 온 메시지를 받아 올바른 탭에 분배
 void MainWindow_Admin::handleServerMessage()
 {
     m_buffer.append(m_socket->readAll());
 
-    while (true) {
+    while(true) {
         QDataStream in(&m_buffer, QIODevice::ReadOnly);
         in.setVersion(QDataStream::Qt_5_15);
 
-        // 1. 전체 데이터 크기를 읽을 만큼 데이터가 있는지 확인
-        if (m_buffer.size() < sizeof(qint64)) break;
-        qint64 totalSize;
-        in >> totalSize;
+        if (m_buffer.size() < (3 * sizeof(qint64))) break;
 
-        // 2. 전체 메시지가 도착했는지 확인
+        qint64 dataType, totalSize, currentPacketSize;
+        in >> dataType >> totalSize >> currentPacketSize;
+
         if (m_buffer.size() < totalSize) break;
 
-        // ⭐️ 메시지 하나를 완전히 수신했으므로 파싱 시작
-        qint64 dataType;
-        in >> dataType;
-
         if (dataType == Protocol::Chat_Message) {
-            QString roomId;
-            QString formattedMessage;
-            in >> roomId >> formattedMessage;
+            QString roomId; // 메시지가 온 회사 이름 또는 "@Admins"
+            in >> roomId;
+            QByteArray payload = m_buffer.mid(in.device()->pos(), totalSize - in.device()->pos());
+            QJsonDocument doc = QJsonDocument::fromJson(payload);
 
-            if (roomId.isEmpty()) continue;
+            if (doc.isObject()) {
+                QJsonObject chatObj = doc.object();
+                QString senderName = chatObj["senderName"].toString();
+                QString message = chatObj["message"].toString();
 
-            createOrSwitchToChatTab(roomId); // 채팅 탭 생성 또는 전환
-            if(m_chatTabs.contains(roomId)) {
-                m_chatTabs.value(roomId)->appendMessage(formattedMessage);
+                // 해당 채팅 탭을 찾거나 새로 생성
+                createOrSwitchToChatTab(roomId);
+                if (m_chatTabs.contains(roomId)) {
+                    QString formattedMessage = QString("[%1]: %2").arg(senderName, message);
+                    m_chatTabs.value(roomId)->appendMessage(formattedMessage);
+                }
             }
         }
-        // ⭐️ 처리한 메시지는 버퍼에서 제거
         m_buffer.remove(0, totalSize);
     }
 }
 
-// ⭐️ 채팅 탭의 요청을 받아 실제 메시지를 전송
+// 특정 회사 또는 관리자 채팅방에 메시지 전송
 void MainWindow_Admin::sendChatMessage(const QString& companyName, const QString& message)
 {
-    writeData(Protocol::Chat_Message, companyName, m_myUserId, message);
+    QJsonObject chatObject;
+    chatObject["senderName"] = m_managerName;
+    chatObject["message"] = message;
+    QByteArray payload = QJsonDocument(chatObject).toJson();
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+
+    out << qint64(0) << qint64(0) << qint64(0) << companyName; // companyName은 RoomId 역할
+    blockToSend.append(payload);
+
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Chat_Message) << totalSize << totalSize;
+
+    if (m_chatTabs.contains(companyName)) {
+        m_chatTabs.value(companyName)->appendMessage(QString("[%1]: %2").arg(m_managerName, message));
+    }
+
+    m_socket->write(blockToSend);
+    m_socket->flush();
 }
 
-// ⭐️ 새 채팅 탭을 만들거나 기존 탭으로 이동
+// 채팅 탭을 동적으로 생성하거나 기존 탭으로 전환하는 함수
 void MainWindow_Admin::createOrSwitchToChatTab(const QString& companyName)
 {
+    // 이미 탭이 존재하면 아무것도 하지 않음
     if (m_chatTabs.contains(companyName)) {
-        ui->tabWidget->setCurrentWidget(m_chatTabs.value(companyName));
         return;
     }
 
+    // 새 채팅 탭 생성
     AdminInfoForm_Chat* chatTab = new AdminInfoForm_Chat(companyName, this);
-    // ⭐️ 채팅 탭의 '전송 요청' 시그널을 MainWindow의 '전송' 슬롯에 연결
+
+    // 채팅 탭의 '전송 요청' 시그널을 MainWindow_Admin의 '전송' 슬롯에 연결
     connect(chatTab, &AdminInfoForm_Chat::messageSendRequested, this, &MainWindow_Admin::sendChatMessage);
 
     m_chatTabs.insert(companyName, chatTab);
-    int newIndex = ui->tabWidget->addTab(chatTab, QString("%1 채팅").arg(companyName));
-    ui->tabWidget->setCurrentIndex(newIndex);
-}
 
-
-// ⭐️ QDataStream을 이용해 서버에 데이터를 전송하는 함수
-void MainWindow_Admin::writeData(qint64 dataType, const QString& roomId, qint64 clientId, const QString& message)
-{
-    QByteArray block;
-    QDataStream out(&block, QIODevice::WriteOnly);
-    out.setVersion(QDataStream::Qt_5_15);
-
-    // ⭐️ [전체크기]는 나중에 채우기 위해 0으로 남겨둠
-    out << qint64(0);
-    // ⭐️ [데이터타입][RoomID][ClientID][메시지] 순서로 데이터 쓰기
-    out << dataType;
-    out << roomId;
-    out << clientId;
-    out << message;
-
-    // ⭐️ 맨 앞으로 가서 실제 블록 크기(=전체크기)를 씀
-    out.device()->seek(0);
-    out << (qint64)block.size();
-
-    m_socket->write(block);
-    m_socket->flush();
+    // 관리자 채팅방일 경우 탭 이름을 다르게 설정
+    QString tabName = (companyName == ADMIN_CHAT_ROOM_ID) ? tr("관리자 채팅") : QString("%1 채팅").arg(companyName);
+    ui->tabWidget->addTab(chatTab, tabName);
 }
