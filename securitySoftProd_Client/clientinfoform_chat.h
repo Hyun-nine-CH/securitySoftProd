@@ -2,7 +2,9 @@
 #define CLIENTINFOFORM_CHAT_H
 
 #include <QWidget>
-#include <QTcpSocket>
+
+// ⭐️ QTcpSocket 헤더는 더 이상 필요 없음
+// #include <QTcpSocket>
 
 namespace Ui {
 class ClientInfoForm_Chat;
@@ -13,24 +15,24 @@ class ClientInfoForm_Chat : public QWidget
     Q_OBJECT
 
 public:
-    // ⭐️ 생성자에서 companyName은 필요 없으므로 원래대로 복귀
-    explicit ClientInfoForm_Chat(QTcpSocket *socket, QWidget *parent = nullptr);
+    explicit ClientInfoForm_Chat(QWidget *parent = nullptr);
     ~ClientInfoForm_Chat();
 
-    // ⭐️ MainWindow가 호출할 수 있도록 public으로 변경
-    void appendMessage(const QString& message);
+    void appendMessage(const QString& formattedMessage);
     void onChatTabActivated();
 
+signals:
+    // ⭐️ MainWindow에게 메시지 전송을 요청하는 시그널
+    void messageSendRequested(const QString& message);
+
 private slots:
-    void sendMessage();
-    void handleSocketError(QAbstractSocket::SocketError socketError);
+    void on_sendButton_clicked();
 
 private:
     void showChatNotification();
     void clearChatNotification();
 
     Ui::ClientInfoForm_Chat *ui;
-    QTcpSocket* m_socket;
 };
 
 #endif // CLIENTINFOFORM_CHAT_H
