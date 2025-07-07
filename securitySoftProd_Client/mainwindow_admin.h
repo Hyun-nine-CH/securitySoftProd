@@ -5,7 +5,6 @@
 #include <QTcpSocket>
 #include <QMap>
 
-// 전방 선언
 class AdminInfoForm_Chat;
 namespace Ui { class MainWindow_Admin; }
 
@@ -14,21 +13,25 @@ class MainWindow_Admin : public QMainWindow
     Q_OBJECT
 
 public:
-    explicit MainWindow_Admin(QTcpSocket* socket, QWidget *parent = nullptr);
+    // ⭐️ 생성자에서 소켓과 관리자 ID를 받음
+    explicit MainWindow_Admin(QTcpSocket* socket, qint64 adminId, QWidget *parent = nullptr);
     ~MainWindow_Admin();
 
 private slots:
-    // ⭐️ 서버에서 오는 모든 메시지를 처리하는 단일 슬롯
     void handleServerMessage();
+    // ⭐️ 채팅 탭의 요청을 받아 메시지를 전송하는 슬롯
+    void sendChatMessage(const QString& companyName, const QString& message);
 
 private:
-    // ⭐️ 특정 회사의 채팅 탭을 만들거나 찾는 함수
     void createOrSwitchToChatTab(const QString& companyName);
+    // ⭐️ 데이터를 바이너리 형식으로 전송하는 헬퍼 함수
+    void writeData(qint64 dataType, const QString& roomId, qint64 clientId, const QString& message);
 
     Ui::MainWindow_Admin *ui;
     QTcpSocket* m_socket;
-    // ⭐️ Key: 회사이름, Value: 해당 회사 채팅창 위젯
+    qint64 m_myUserId; // 관리자 자신의 ID (e.g., 1001)
     QMap<QString, AdminInfoForm_Chat*> m_chatTabs;
+    QByteArray m_buffer; // ⭐️ 소켓 데이터 수신 버퍼
 };
 
 #endif // MAINWINDOW_ADMIN_H

@@ -1,22 +1,16 @@
 #include "clientinfoform_chat.h"
 #include "ui_clientinfoform_chat.h"
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QTabWidget>
 #include <QIcon>
 #include <QMessageBox>
 
-// 생성자 구현 변경
-ClientInfoForm_Chat::ClientInfoForm_Chat(QTcpSocket *socket, QWidget *parent)
+// ⭐️ 생성자에서 소켓 포인터를 받지 않음
+ClientInfoForm_Chat::ClientInfoForm_Chat(QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::ClientInfoForm_Chat)
-    , m_socket(socket)
 {
     ui->setupUi(this);
-
-    // 메시지 수신(readyRead) connect는 MainWindow에서 하므로 여기서는 삭제!
-    connect(ui->pushButton_client, &QPushButton::clicked, this, &ClientInfoForm_Chat::sendMessage);
-    connect(m_socket, &QTcpSocket::errorOccurred, this, &ClientInfoForm_Chat::handleSocketError);
+    connect(ui->pushButton_client, &QPushButton::clicked, this, &ClientInfoForm_Chat::on_sendButton_clicked);
 }
 
 ClientInfoForm_Chat::~ClientInfoForm_Chat()
@@ -24,31 +18,25 @@ ClientInfoForm_Chat::~ClientInfoForm_Chat()
     delete ui;
 }
 
-// ⭐️ sendMessage 함수를 이전 버전으로 복원
-void ClientInfoForm_Chat::sendMessage()
+// ⭐️ '전송' 버튼이 눌리면 MainWindow에 시그널을 보냄
+void ClientInfoForm_Chat::on_sendButton_clicked()
 {
     QString messageText = ui->lineEdit->text().trimmed();
-    if (messageText.isEmpty() || !m_socket) return;
+    if (messageText.isEmpty()) return;
 
-    QJsonObject messageObject;
-    messageObject["type"] = "chat";
-    // 클라이언트는 target_company를 보낼 필요 없음 (서버가 소켓으로 식별)
-    messageObject["message"] = messageText;
-
-    QByteArray data = QJsonDocument(messageObject).toJson(QJsonDocument::Compact) + "\n";
-    m_socket->write(data);
+    // ⭐️ 소켓에 직접 쓰는 대신 시그널 발생
+    emit messageSendRequested(messageText);
 
     ui->lineEdit->clear();
-    // ⭐️ "[나]"를 로컬에 추가하는 코드 복원!
+    // ⭐️ "[나]" 메시지는 로컬에 바로 표시
     ui->chatDisplay->append("[나] " + messageText);
 }
 
-// MainWindow에서 호출하는 메시지 표시 함수
-void ClientInfoForm_Chat::appendMessage(const QString& message)
+// ⭐️ MainWindow에서 포맷된 메시지를 받아 표시하는 함수
+void ClientInfoForm_Chat::appendMessage(const QString& formattedMessage)
 {
-    if (!message.trimmed().isEmpty()) {
-        ui->chatDisplay->append(message);
-        // 현재 활성화된 탭이 아니면 알림 표시
+    if (!formattedMessage.trimmed().isEmpty()) {
+        ui->chatDisplay->append(formattedMessage);
         if (auto p = parentWidget(); p) {
             if (auto tab = qobject_cast<QTabWidget*>(p); tab && tab->currentWidget() != this) {
                 showChatNotification();
@@ -57,12 +45,7 @@ void ClientInfoForm_Chat::appendMessage(const QString& message)
     }
 }
 
-void ClientInfoForm_Chat::handleSocketError(QAbstractSocket::SocketError socketError)
-{
-    // Q_UNUSED(socketError);
-    QMessageBox::critical(this, "Socket Error", m_socket->errorString());
-}
-
+// ⭐️ 아래 함수들은 UI 관련이므로 그대로 유지
 void ClientInfoForm_Chat::showChatNotification()
 {
     if (auto p = parentWidget(); p) {
