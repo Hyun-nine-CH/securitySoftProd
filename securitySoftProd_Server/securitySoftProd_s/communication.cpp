@@ -120,7 +120,7 @@ void CommuniCation::ReadClientData()
     case 0x09:emit RequestUserInfo (this);       break;
     case 0x10:AddOrderInfo         (buffer);     break;
     case 0x11:emit RequestOrderInfo(this);       break;
-    default:emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
+    default:emit ChattingMesg(ByteArray,getClientInfo()); break;
     }
     ByteArray.clear();
 }
@@ -202,4 +202,9 @@ void CommuniCation::Join(const QBuffer &buffer)
 void CommuniCation::AddOrderInfo(const QBuffer &buffer)
 {
     ProcessBuffer(buffer,ADD_ORDER);
+}
+
+void CommuniCation::AddChatLogData(const QBuffer &buffer)
+{
+    ProcessBuffer(buffer,ADD_LOG);
 }

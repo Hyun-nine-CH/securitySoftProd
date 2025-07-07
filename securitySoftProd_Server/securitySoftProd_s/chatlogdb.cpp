@@ -7,6 +7,7 @@
 ChatLogDB::ChatLogDB(DataManager *Dm, QObject *parent)
 :DataBase(Dm,parent)
 {
+    Clinfo   = new ClientInfo();
     FilePath = "MesgLogDB.json";
     FileName = "MesgLog DB";
 }
@@ -38,10 +39,12 @@ void ChatLogDB::AddData(const QByteArray &NewData)
     QJsonDocument &AllDoc = DbManager->getChatLogData();
     int LastNum = FindLastNum(AllDoc);
 
-    QJsonDocument New = QJsonDocument::fromJson(NewData);
+    QJsonDocument New;
     QJsonObject NewObj = New.object();
     //qDebug() << "Convert objec NewData : " << NewObj.keys();
     NewObj.insert("Id",LastNum);
+    NewObj.insert("UserId",getClientInfo()->getClientID());
+    NewObj.insert("Chat",QString::fromUtf8(NewData));
     New.setObject(NewObj);
 
     QJsonArray AllArr;
@@ -70,4 +73,14 @@ int ChatLogDB::FindLastNum(const QJsonDocument &Trace)
         qDebug() << "FindLastNum JSON 파싱 실패:" << parseError.errorString();
 
     return BigNum+1;
+}
+
+void ChatLogDB::setClientInfo(ClientInfo* UserInfo)
+{
+    Clinfo = UserInfo;
+}
+
+const ClientInfo* ChatLogDB::getClientInfo()
+{
+    return Clinfo;
 }

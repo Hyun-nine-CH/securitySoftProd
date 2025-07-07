@@ -39,9 +39,8 @@
     ClientInfo에서 roomid 변경 완료, 시점 변경완료(0x02 안지움)최종적으로 지울것
     클라이언트 DB 추가 기능 작업 가완료(테스트 안해봄)
     클라이언트 데이터 보내기 가완료 (테스트 안해봄)
-    주문정보 추가 기능 작업중
-    깃 ㅈ창남
-    이건 테스트 코드
+    주문정보 추가 기능 작업 가완료( 테스트 안해봄)
+    채팅로그 정보 추가기능 작업 가완료(테스트 안해봄)
 */
 
 Widget::Widget(QWidget *parent)
@@ -110,10 +109,10 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestJoin, this, &Widget::Join);//회원가입 요청
     connect(Comm, &CommuniCation::RequestUserInfo, this, &Widget::LoadUserInfo);//고객정보 조회
     connect(Comm, &CommuniCation::RequestOrderAdd, this, &Widget::OrderAdd);//주문정보 추가
-    connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 추가
+    connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 조회
 }
 
-void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
+void Widget::BroadCast(const QByteArray& MessageData, ClientInfo* UserInfo)
 {
     /*
         MessageData를 복사하여 전달
@@ -121,6 +120,7 @@ void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
         MessageData에 접근해서 크래시 나거나 데이터 오염됨
     */
     QByteArray messageCopy = MessageData;
+    DMan->AddChatLogData(MessageData,UserInfo);
     ListMutex->lock();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
         it != CInfoList.constEnd(); ++it){
@@ -128,8 +128,8 @@ void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
         CommuniCation* W = it.key();
         //같은 방이면 브로드캐스트 해라
         qDebug() << "compare : " << C->getClientRoomId();
-        qDebug() << "origin  : " << RoomId;
-        if(QString::compare(C->getClientRoomId(), RoomId) == 0)
+        qDebug() << "origin  : " << UserInfo->getClientRoomId();
+        if(QString::compare(C->getClientRoomId(), UserInfo->getClientRoomId()) == 0)
         {
             if(W)
             {
