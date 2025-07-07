@@ -23,8 +23,10 @@ private:
     QStandardItemModel* modelMain;
     QStandardItemModel* modelBefore;
     QStandardItemModel* modelAfter;
+    QStandardItemModel* modelDeletePreview;
 
     QStringList productNameList;
+    QStringList productIdList;
 
     void resetTableViewRows();
     void onSearchClicked();      // 검색 기능
@@ -32,6 +34,10 @@ private:
     void onDeleteClicked();      // 삭제 기능
     void saveProductsToJson();   // JSON 저장 기능
     void reassignIds();          // ID 자동 재정렬 기능
+
+private slots:
+    void copySelectedRowToBeforeTable(const QModelIndex& index);
+
 };
 
 #endif // ADMININFOFORM_PROD_H

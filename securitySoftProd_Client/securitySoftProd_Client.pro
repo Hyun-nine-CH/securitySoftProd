@@ -1,4 +1,4 @@
-QT       += core gui
+QT       += core gui network
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
@@ -10,29 +10,38 @@ CONFIG += c++17
 
 SOURCES += \
     admininfoform.cpp \
+    admininfoform_chat.cpp \
     admininfoform_prod.cpp \
     clientinfoform.cpp \
     clientinfoform_chat.cpp \
     clientinfoform_prod.cpp \
+    dialog_log.cpp \
+    dialog_signup.cpp \
     main.cpp \
     mainwindow.cpp \
     mainwindow_admin.cpp
 
 HEADERS += \
     admininfoform.h \
+    admininfoform_chat.h \
     admininfoform_prod.h \
     clientinfoform.h \
     clientinfoform_chat.h \
     clientinfoform_prod.h \
+    dialog_log.h \
+    dialog_signup.h \
     mainwindow.h \
     mainwindow_admin.h
 
 FORMS += \
     admininfoform.ui \
+    admininfoform_chat.ui \
     admininfoform_prod.ui \
     clientinfoform.ui \
     clientinfoform_chat.ui \
     clientinfoform_prod.ui \
+    dialog_log.ui \
+    dialog_signup.ui \
     mainwindow.ui \
     mainwindow_admin.ui
 
