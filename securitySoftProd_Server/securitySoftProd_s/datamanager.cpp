@@ -5,9 +5,11 @@ DataManager::DataManager(QObject *parent)
 {
     PDb = new ProductDB(this);
     CDb = new ClientDB(this);
+    ODb = new OrderDB(this);
 
     Db.insert("Product",PDb);
     Db.insert("Client" ,CDb);
+    Db.insert("Order"  ,ODb);
     if(LoadProductData() && LoadChatLogData() &&
        LoadClientData()  && LoadOrderData()){
         qDebug() << "Load All DB";
@@ -38,6 +40,11 @@ void DataManager::DelProductData(const QByteArray &DelData)
     PDb->DeleteData(DelData);
 }
 
+void DataManager::AddClientData(const QByteArray &NewData)
+{
+    CDb->AddData(NewData);
+}
+
 QJsonObject DataManager::IsClient(const QByteArray &IdPwData)
 {
     return CDb->Confirm(IdPwData);
@@ -54,7 +61,11 @@ bool DataManager::LoadClientData()
 
 bool DataManager::LoadOrderData()
 {
-    return true;
+    OrderData = CDb->LoadData();
+    if(!(OrderData.isEmpty())){
+        return true;
+    }
+    return false;
 }
 
 bool DataManager::LoadChatLogData()
@@ -81,15 +92,38 @@ bool DataManager::SaveProductData(const QString &filePath)
     return true;
 }
 
-// bool DataManager::SaveClientData(const QString &filePath)
-// {
-//     return true;
-// }
+bool DataManager::SaveClientData(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "파일을 열 수 없습니다: " << filePath;
+        return false;
+    }
+    QJsonDocument UserData = getClientData();
+    //qDebug() << "고객정보 세이브 해라 : " << UserData;
+    file.write(UserData.toJson(QJsonDocument::Indented));
+    file.close();
+    return true;
+}
 
-// bool DataManager::SaveOrderData(const QString &filePath)
-// {
-//     return true;
-// }
+bool DataManager::SaveOrderData(const QString &filePath)
+{
+    QFile file(filePath);
+    if (!file.open(QIODevice::WriteOnly)) {
+        qDebug() << "파일을 열 수 없습니다: " << filePath;
+        return false;
+    }
+    QJsonDocument OrderData = getOrderData();
+    //qDebug() << "주문정보 세이브 해라 : " << OrderData;
+    file.write(OrderData.toJson(QJsonDocument::Indented));
+    file.close();
+    return true;
+}
+
+void DataManager::AddOrderData(const QByteArray &NewData)
+{
+    ODb->AddData(NewData);
+}
 
 // bool DataManager::SaveChatLogData(const QString &filePath)
 // {
@@ -106,12 +140,12 @@ QJsonDocument &DataManager::getClientData()
     return ClientData;
 }
 
-// QJsonDocument &DataManager::getOrderData()
-// {
+QJsonDocument &DataManager::getOrderData()
+{
+    return OrderData;
+}
 
-// }
-
-// QJsonDocument &DataManager::getChatLogData()
-// {
-
-// }
+QJsonDocument &DataManager::getChatLogData()
+{
+    return ChatLogData;
+}

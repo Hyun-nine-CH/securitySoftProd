@@ -4,8 +4,7 @@
 
 CommuniCation::CommuniCation(QTcpSocket* socket, ClientInfo* myInfo,QObject* parent)
     :Socket(socket), CInfo(myInfo),WorkThread(this)
-{
-    // 중요: 소켓을 이 스레드로 이동시켜, 소켓 관련 시그널/슬롯이 이 스레드에서 실행되도록 합니다.
+{// 중요: 소켓을 이 스레드로 이동시켜, 소켓 관련 시그널/슬롯이 이 스레드에서 실행되도록 합니다.
     if (Socket) {
         CInfo->setClientSocket(Socket);
 
@@ -27,9 +26,61 @@ void CommuniCation::run()
     // 이 스레드의 이벤트 루프를 시작합니다.
     // m_socket->moveToThread(this)를 했기 때문에 readyRead 등의 시그널이 이 스레드에서 처리됩니다.
     exec(); // 이벤트 루프 실행 (disconnected 시그널 수신 시 종료될 수 있음)
-
     // exec()가 종료된 후 (예: QThread::quit() 호출 또는 이벤트 루프 종료 시)
     qDebug() << "ClientWorkerThread run() finished for socket:" << (Socket ? Socket->peerAddress().toString() : "N/A");
+}
+
+// 공통 처리 메서드 추가
+void CommuniCation::ProcessBuffer(const QBuffer &buffer, int requestType)
+{
+    if(ReceivePacket == 0){
+        ByteArray.remove(0, buffer.pos());
+        ReceivePacket = CurrentPacket;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }else{
+        qDebug() << "chat 내용 : " << ByteArray;
+        ReceivePacket += ByteArray.size();
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
+    }
+
+    if(ReceivePacket == TotalSize){
+        // 요청 타입에 따라 다른 메시지와 시그널 발생
+        switch(requestType) {
+        case MODI_PRODUCT: // ModiProductInfo
+            qDebug() << "product modify data receive completed";
+            qDebug() << "end 내용 : " << ByteArray;
+            emit ModifyProductDB(this, ByteArray);
+            break;
+        case ADD_PRODUCT: // AddProductInfo
+            qDebug() << "product add data receive completed";
+            emit RequestPdAdd(this, buffer);
+            break;
+        case DELETE_PRODUCT: // DelProductInfo
+            qDebug() << "product del data receive completed";
+            emit RequestPdDel(this, buffer);
+            break;
+        case CONFIRM_LOGIN: // ConfrimLogin
+            qDebug() << "Client login data receive completed";
+            emit RequestConfirm(this, buffer);
+            break;
+        case JOIN: // Join
+            qDebug() << "Client Join data receive completed";
+            emit RequestJoin(buffer);
+            break;
+        case ADD_ORDER: // AddOrderInfo
+            qDebug() << "Order Add data receive completed";
+            emit RequestOrderAdd(this, buffer);
+            break;
+        }
+
+        // 공통 초기화 코드
+        ReceivePacket = 0;
+        TotalSize = 0;
+        DataType = 0;
+        ByteArray.clear();
+    }
 }
 
 void CommuniCation::ReadClientData()
@@ -60,12 +111,15 @@ void CommuniCation::ReadClientData()
     qDebug() << "데이터 타입 : " << DataType;
     switch (DataType) {
     case 0x01:FileReceive          (buffer);     break;
-    case 0x02:ClientInitDataReceive(buffer);     break;
     case 0x03:emit RequestPdInfo   (this);       break;
     case 0x04:ModiProductInfo      (buffer);     break;
     case 0x05:AddProductInfo       (buffer);     break;
     case 0x06:DelProductInfo       (buffer);     break;
     case 0x07:ConfrimLogin         (buffer);     break;
+    case 0x08:Join                 (buffer);     break;
+    case 0x09:emit RequestUserInfo (this);       break;
+    case 0x10:AddOrderInfo         (buffer);     break;
+    case 0x11:emit RequestOrderInfo(this);       break;
     default:emit ChattingMesg(ByteArray,CInfo->getClientRoomId()); break;
     }
     ByteArray.clear();
@@ -109,32 +163,6 @@ ClientInfo* CommuniCation::getClientInfo()
     return CInfo;
 }
 
-void CommuniCation::ClientInitDataReceive(const QBuffer &buffer)
-{
-    if(ReceivePacket == 0){
-        ByteArray.remove(0, buffer.pos());
-        ReceivePacket = CurrentPacket;
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }else{
-        qDebug() << "chat 내용 : " << ByteArray;
-        ReceivePacket += ByteArray.size();
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }
-    if(ReceivePacket == TotalSize){
-        qDebug() << "client info receive completed";
-        CInfo->setClientData(ByteArray);
-        //qDebug() << "end 내용 : " << ByteArray;
-        CInfo->ChangeJsonData();
-        emit SendClientInfo(this,CInfo);
-        ReceivePacket = 0;
-        TotalSize = 0;
-        DataType = 0;
-        ByteArray.clear();
-    }
-}
-
 void CommuniCation::WriteData(const QByteArray& MessageData)
 {
     Socket->write(MessageData);
@@ -146,100 +174,32 @@ void CommuniCation::ClientDisconnected()
     emit Disconnected(Socket,this);
 }
 
-void CommuniCation::SendProductInfo()
-{
-    qDebug() << "Product Info Send";
-}
-
 void CommuniCation::ModiProductInfo(const QBuffer &buffer)
 {
-    if(ReceivePacket == 0){
-        ByteArray.remove(0, buffer.pos());
-        ReceivePacket = CurrentPacket;
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }else{
-        qDebug() << "chat 내용 : " << ByteArray;
-        ReceivePacket += ByteArray.size();
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }
-    if(ReceivePacket == TotalSize){
-        qDebug() << "product modify data receive completed";
-        qDebug() << "end 내용 : " << ByteArray;
-        emit ModifyProductDB(this,ByteArray);
-        ReceivePacket = 0;
-        TotalSize = 0;
-        DataType = 0;
-        ByteArray.clear();
-    }
+    ProcessBuffer(buffer,MODI_PRODUCT);
 }
 
 void CommuniCation::AddProductInfo(const QBuffer &buffer)
 {
-    if(ReceivePacket == 0){
-        ByteArray.remove(0, buffer.pos());
-        ReceivePacket = CurrentPacket;
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }else{
-        qDebug() << "chat 내용 : " << ByteArray;
-        ReceivePacket += ByteArray.size();
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }
-    if(ReceivePacket == TotalSize){
-        qDebug() << "product add data receive completed";
-        emit RequestPdAdd(this,buffer);
-        ReceivePacket = 0;
-        TotalSize = 0;
-        DataType = 0;
-        ByteArray.clear();
-    }
+    ProcessBuffer(buffer,ADD_PRODUCT);
 }
 
 void CommuniCation::DelProductInfo(const QBuffer &buffer)
 {
-    if(ReceivePacket == 0){
-        ByteArray.remove(0, buffer.pos());
-        ReceivePacket = CurrentPacket;
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }else{
-        qDebug() << "chat 내용 : " << ByteArray;
-        ReceivePacket += ByteArray.size();
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }
-    if(ReceivePacket == TotalSize){
-        qDebug() << "product del data receive completed";
-        emit RequestPdDel(this,buffer);
-        ReceivePacket = 0;
-        TotalSize = 0;
-        DataType = 0;
-        ByteArray.clear();
-    }
+    ProcessBuffer(buffer,DELETE_PRODUCT);
 }
 
 void CommuniCation::ConfrimLogin(const QBuffer &buffer)
 {
-    if(ReceivePacket == 0){
-        ByteArray.remove(0, buffer.pos());
-        ReceivePacket = CurrentPacket;
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }else{
-        qDebug() << "chat 내용 : " << ByteArray;
-        ReceivePacket += ByteArray.size();
-        qDebug() << "ReceivePacket : " << ReceivePacket;
-        qDebug() << "TotalSize : " << TotalSize;
-    }
-    if(ReceivePacket == TotalSize){
-        qDebug() << "Client login data receive completed";
-        emit RequestConfirm(this,buffer);
-        ReceivePacket = 0;
-        TotalSize = 0;
-        DataType = 0;
-        ByteArray.clear();
-    }
+    ProcessBuffer(buffer,CONFIRM_LOGIN);
+}
+
+void CommuniCation::Join(const QBuffer &buffer)
+{
+    ProcessBuffer(buffer,JOIN);
+}
+
+void CommuniCation::AddOrderInfo(const QBuffer &buffer)
+{
+    ProcessBuffer(buffer,ADD_ORDER);
 }

@@ -21,7 +21,7 @@ void ClientInfo::ChangeJsonData()
 
             // QJsonObject에서 값을 추출하여 할당
             setClientID(obj.value("ClientId").toString());
-            setClientRoomId(obj.value("company").toString());
+            setClientRoomId(obj.value("RoomId").toString());
             qDebug() << "JSON Parsing Succsess";
         } else {
             // 파싱 실패 또는 예상치 못한 JSON 형태 (객체가 아님)일 경우 처리

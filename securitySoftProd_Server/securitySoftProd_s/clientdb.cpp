@@ -11,27 +11,6 @@ ClientDB::ClientDB(DataManager *Dm, QObject *parent)
     FileName = "Client DB";
 }
 
-QByteArray ClientDB::SendData()
-{
-    ClientData.clear();
-    TotalSize = 0;
-    // QJsonDocument를 사용하여 JSON 데이터 파싱
-    QByteArray data = (DbManager->getClientData()).toJson();
-    QDataStream out(&ClientData,QIODevice::WriteOnly);
-
-    out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << FileName;
-
-    ClientData.append(data);
-    TotalSize += ClientData.size();
-
-    out.device()->seek(0);
-    qint64 dataType = 0x02;
-    out << dataType << TotalSize << TotalSize;
-
-    return ClientData;
-}
-
 QJsonDocument ClientDB::LoadData()
 {
     QFile loadFile(FilePath);
@@ -72,7 +51,7 @@ void ClientDB::AddData(const QByteArray &NewData)
 
     AllDoc.setArray(AllArr);
     //qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveProductData(FilePath);
+    DbManager->SaveClientData(FilePath);
 }
 
 QJsonObject ClientDB::Confirm(const QByteArray &IdPwData)

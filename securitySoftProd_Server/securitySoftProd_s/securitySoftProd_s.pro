@@ -9,21 +9,25 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    chatlogdb.cpp \
     clientdb.cpp \
     clientinfo.cpp \
     communication.cpp \
     database.cpp \
     datamanager.cpp \
     main.cpp \
+    orderdb.cpp \
     productdb.cpp \
     widget.cpp
 
 HEADERS += \
+    chatlogdb.h \
     clientdb.h \
     clientinfo.h \
     communication.h \
     database.h \
     datamanager.h \
+    orderdb.h \
     productdb.h \
     widget.h
 

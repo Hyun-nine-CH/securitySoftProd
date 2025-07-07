@@ -11,27 +11,6 @@ ProductDB::ProductDB(DataManager *Dm, QObject *parent)
     FileName = "Product DB";
 }
 
-QByteArray ProductDB::SendData()
-{
-    ProductData.clear();
-    TotalSize = 0;
-    // QJsonDocument를 사용하여 JSON 데이터 파싱
-    QByteArray data = (DbManager->getProductData()).toJson();
-    QDataStream out(&ProductData,QIODevice::WriteOnly);
-
-    out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << FileName;
-
-    ProductData.append(data);
-    TotalSize += ProductData.size();
-
-    out.device()->seek(0);
-    qint64 dataType = 0x02;
-    out << dataType << TotalSize << TotalSize;
-
-    return ProductData;
-}
-
 QJsonDocument ProductDB::LoadData()
 {
     QFile loadFile(FilePath);
