@@ -70,20 +70,22 @@ void Dialog_log::on_pushButton_login_clicked()
 
     // [데이터타입][ID][PW] 순서로 데이터 쓰기
     //out << qint64(Protocol::Login_Request);
-    QJsonObject Container;
-    Container["id"] = id;
-    Container["pw"] = pw;
+    QJsonObject jsonObject;
+    jsonObject["id"] = id;
+    jsonObject["pw"] = pw;
 
-    QJsonDocument jsonDoc(Container);
+    QJsonDocument jsonDoc(jsonObject);
     QByteArray block;
     QByteArray Contain;
+    QByteArray filename;
+    filename = "login info";
     block = jsonDoc.toJson();
 
     QDataStream out(&Contain, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << "login info";
+    out << qint64(0) << qint64(0) << qint64(0) << filename;
     Contain.append(block);
-    qint64 totalSize;
+    qint64 totalSize = 0;
     totalSize += Contain.size();
     // 맨 앞으로 가서 실제 블록 크기(=전체크기)를 씀
     out.device()->seek(0);
