@@ -1,23 +1,18 @@
 #include "admininfoform_chat.h"
 #include "ui_admininfoform_chat.h"
-#include <QJsonDocument>
-#include <QJsonObject>
 #include <QTabWidget>
 #include <QIcon>
 #include <QMessageBox>
 
-// 생성자 구현 변경
-AdminInfoForm_Chat::AdminInfoForm_Chat(QTcpSocket *socket, const QString& companyName, QWidget *parent)
+// ⭐️ 생성자 구현 변경
+AdminInfoForm_Chat::AdminInfoForm_Chat(const QString& companyName, QWidget *parent)
     : QWidget(parent)
     , ui(new Ui::AdminInfoForm_Chat)
-    , m_socket(socket)
-    , m_companyName(companyName) // 전달받은 회사 이름 저장
+    , m_companyName(companyName)
 {
     ui->setupUi(this);
-
-    // 메시지 수신(readyRead) connect는 MainWindow에서 하므로 여기서는 삭제!
-    connect(ui->pushButton_admin, &QPushButton::clicked, this, &AdminInfoForm_Chat::sendMessage);
-    connect(m_socket, &QTcpSocket::errorOccurred, this, &AdminInfoForm_Chat::handleSocketError);
+    // ⭐️ 위젯 내부의 버튼 클릭 시 on_sendButton_clicked 슬롯 호출
+    connect(ui->pushButton_admin, &QPushButton::clicked, this, &AdminInfoForm_Chat::on_sendButton_clicked);
 }
 
 AdminInfoForm_Chat::~AdminInfoForm_Chat()
@@ -25,31 +20,25 @@ AdminInfoForm_Chat::~AdminInfoForm_Chat()
     delete ui;
 }
 
-// ⭐️ sendMessage 함수를 이전 버전으로 복원
-void AdminInfoForm_Chat::sendMessage()
+// ⭐️ '전송' 버튼이 눌리면 MainWindow_Admin에 시그널을 보냄
+void AdminInfoForm_Chat::on_sendButton_clicked()
 {
     QString messageText = ui->lineEdit->text().trimmed();
-    if (messageText.isEmpty() || !m_socket) return;
+    if (messageText.isEmpty()) return;
 
-    QJsonObject messageObject;
-    messageObject["type"] = "chat";
-    messageObject["target_company"] = m_companyName; // 이 채팅방의 회사를 타겟으로 지정
-    messageObject["message"] = messageText;
-
-    QByteArray data = QJsonDocument(messageObject).toJson(QJsonDocument::Compact) + "\n";
-    m_socket->write(data);
+    // ⭐️ 소켓에 직접 쓰는 대신 시그널 발생
+    emit messageSendRequested(m_companyName, messageText);
 
     ui->lineEdit->clear();
-    // ⭐️ "[나]"를 로컬에 추가하는 코드 복원!
+    // ⭐️ "[나]" 메시지는 로컬에 바로 표시
     ui->chatDisplay->append("[나] " + messageText);
 }
 
-// MainWindow에서 호출하는 메시지 표시 함수
-void AdminInfoForm_Chat::appendMessage(const QString& message)
+// ⭐️ MainWindow에서 포맷된 메시지를 받아 표시하는 함수
+void AdminInfoForm_Chat::appendMessage(const QString& formattedMessage)
 {
-    if (!message.trimmed().isEmpty()) {
-        ui->chatDisplay->append(message);
-        // 현재 활성화된 탭이 아니면 알림 표시
+    if (!formattedMessage.trimmed().isEmpty()) {
+        ui->chatDisplay->append(formattedMessage);
         if (auto p = parentWidget(); p) {
             if (auto tab = qobject_cast<QTabWidget*>(p); tab && tab->currentWidget() != this) {
                 showChatNotification();
@@ -58,12 +47,7 @@ void AdminInfoForm_Chat::appendMessage(const QString& message)
     }
 }
 
-void AdminInfoForm_Chat::handleSocketError(QAbstractSocket::SocketError socketError)
-{
-    // Q_UNUSED(socketError);
-    QMessageBox::critical(this, "Socket Error", m_socket->errorString());
-}
-
+// ⭐️ 아래 함수들은 UI 관련이므로 그대로 유지
 void AdminInfoForm_Chat::showChatNotification()
 {
     if (auto p = parentWidget(); p) {
