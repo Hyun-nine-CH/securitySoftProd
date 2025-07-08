@@ -11,7 +11,6 @@ class ProductDB : public DataBase
 {
 public:
     ProductDB(DataManager *Dm, QObject *parent = nullptr);
-    QByteArray    SendData   ()                              override;
     QJsonDocument LoadData   ()                              override;
     void          AddData    (const QByteArray    &NewData)  override;
     void          ModifyData (const QByteArray    &ModiData) override;

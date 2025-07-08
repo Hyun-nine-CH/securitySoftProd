@@ -8,10 +8,10 @@ class ClientInfo
 public:
     ClientInfo();
 
-    QString     getClientID    ();
-    QString     getClientRoomId();
-    QTcpSocket* getClientSocket();
-    QByteArray  getClientData  ();
+    QString     getClientID    () const;
+    QString     getClientRoomId() const;
+    QTcpSocket* getClientSocket() const;
+    QByteArray  getClientData  () const;
     void        setClientData  (const QByteArray &Data);
     void        setClientID    (const QString    &Id);
     void        setClientRoomId(const QString    &RoomId);

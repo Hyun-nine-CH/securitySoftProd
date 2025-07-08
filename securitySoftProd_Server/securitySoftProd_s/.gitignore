@@ -13,7 +13,9 @@
 *.so.*
 *.dll
 *.dylib
-
+# .gitignore 파일에 추가
+*.pdb
+build/
 # Qt-es
 object_script.*.Release
 object_script.*.Debug

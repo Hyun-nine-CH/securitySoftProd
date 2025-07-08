@@ -10,7 +10,6 @@ class DataBase : public QObject
     Q_OBJECT
 public:
     explicit DataBase(DataManager *Dm, QObject *parent = nullptr);
-    virtual  QByteArray    SendData   ()                              = 0;
     virtual  QJsonDocument LoadData   ()                              = 0;
     virtual  void          AddData    (const QByteArray    &NewData) {};
     virtual  void          ModifyData (const QByteArray    &ModiData){};

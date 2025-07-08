@@ -6,6 +6,8 @@
 #include "database.h"
 #include "productdb.h"
 #include "clientdb.h"
+#include "orderdb.h"
+#include "chatlogdb.h"
 
 class DataManager : public QObject
 {
@@ -13,17 +15,12 @@ class DataManager : public QObject
 
 public:
     explicit DataManager(QObject *parent = nullptr);
-    // 각 데이터셋을 파일에 저장하는 메서드
-
-    // bool SaveClientData(const QString &filePath);
-    // bool SaveOrderData(const QString &filePath);
-    // bool SaveChatLogData(const QString &filePath);
 
     // 각 데이터셋에 대한 접근자 (getter)
     QJsonDocument& getProductData();
     QJsonDocument& getClientData(); //전체 고객 정보
-    // QJsonDocument& getOrderData();
-    // QJsonDocument& getChatLogData();
+    QJsonDocument& getOrderData();
+    QJsonDocument& getChatLogData();
     //ProductDB
     bool SaveProductData(const QString    &filePath);
     void AddProductData (const QByteArray &NewData);
@@ -35,10 +32,20 @@ public:
     void        AddClientData (const QByteArray &NewData);
     QJsonObject IsClient      (const QByteArray &IdPwData);
 
+    //Order DB
+    bool SaveOrderData(const QString    &filePath);
+    void AddOrderData (const QByteArray &NewData);
+
+    //ChatLog DB
+    bool SaveChatLogData(const QString    &filePath);
+    void AddChatLogData (const QByteArray &NewData, ClientInfo* UserInfo);
+
 private:
     QMap<QString,DataBase*> Db;
     ProductDB *PDb;
     ClientDB  *CDb;
+    OrderDB   *ODb;
+    ChatLogDB *MDb;
 
     QJsonDocument  ProductData;
     QJsonDocument  ClientData;
@@ -48,7 +55,6 @@ private:
     // 각 데이터셋을 파일에서 로드하는 메서드
     bool LoadProductData();
     bool LoadClientData();
-
     bool LoadOrderData();
     bool LoadChatLogData();
 

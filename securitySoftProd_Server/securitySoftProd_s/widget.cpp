@@ -32,6 +32,15 @@
     product modify 완성
     나중에 product에서 sendData 삭제할것
     product delete 작업 완료
+
+    20250707
+    클라이언트 로그인 프로토콜 맞춤
+    클라이언트 로그인 confirm 작업 완료
+    ClientInfo에서 roomid 변경 완료, 시점 변경완료(0x02 안지움)최종적으로 지울것
+    클라이언트 DB 추가 기능 작업 가완료(테스트 안해봄)
+    클라이언트 데이터 보내기 가완료 (테스트 안해봄)
+    주문정보 추가 기능 작업 가완료( 테스트 안해봄)
+    채팅로그 정보 추가기능 작업 가완료(테스트 안해봄)
 */
 
 Widget::Widget(QWidget *parent)
@@ -88,27 +97,23 @@ void Widget::ClientConnect()
     CInfoList.insert(Comm,CInfo);
     ListMutex->unlock();
     Comm->start(); // workerThread의 run() 메서드가 실행됩니다.
-    // 스레드 종료 시 해당 스레드 객체를 자동으로 삭제하도록 연결
-    connect(Comm, &QThread::finished, Comm, &QObject::deleteLater);
-    // 스레드에서 클라이언트 연결이 끊겼음을 알리는 시그널 연결 (서버에서 관리 용이)
-    connect(Comm, &CommuniCation::Disconnected, this, &Widget::DisConnectEvent);
-    //브로드캐스트 시점 신호
-    connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);
-    //클라이언트 정보 받아서 할당
-    connect(Comm, &CommuniCation::SendClientInfo, this, &Widget::SetCInfo);
-    //상품정보 수정 데이터매니저에게요청
-    connect(Comm, &CommuniCation::ModifyProductDB, this, &Widget::ProductModi);
-    //상품정보 조회 요청
-    connect(Comm, &CommuniCation::RequestPdInfo, this, &Widget::LoadProductDB);
-    //상품정보 추가 요청
-    connect(Comm, &CommuniCation::RequestPdAdd, this, &Widget::ProductAdd);
-    //상품정보 삭제 요청
-    connect(Comm, &CommuniCation::RequestPdDel, this, &Widget::ProductDel);
-    //로그인 정보 확인 요청
-    connect(Comm, &CommuniCation::RequestConfirm, this, &Widget::ConfirmLogin);
+    connect(Comm, &QThread::finished, Comm, &QObject::deleteLater);// 스레드 종료 시 해당 스레드 객체를 자동으로 삭제하도록 연결
+    connect(Comm, &CommuniCation::Disconnected, this, &Widget::DisConnectEvent);// 스레드에서 클라이언트 연결이 끊겼음을 알리는 시그널 연결 (서버에서 관리 용이)
+    connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);//브로드캐스트 시점 신호
+    connect(Comm, &CommuniCation::SendClientInfo, this, &Widget::SetCInfo);//클라이언트 정보 받아서 할당
+    connect(Comm, &CommuniCation::ModifyProductDB, this, &Widget::ProductModi);//상품정보 수정 데이터매니저에게요청
+    connect(Comm, &CommuniCation::RequestPdInfo, this, &Widget::LoadProductDB);//상품정보 조회 요청
+    connect(Comm, &CommuniCation::RequestPdAdd, this, &Widget::ProductAdd);//상품정보 추가 요청
+    connect(Comm, &CommuniCation::RequestPdDel, this, &Widget::ProductDel);//상품정보 삭제 요청
+    connect(Comm, &CommuniCation::RequestConfirm, this, &Widget::ConfirmLogin);//로그인 정보 확인 요청
+    connect(Comm, &CommuniCation::RequestJoin, this, &Widget::Join);//회원가입 요청
+    connect(Comm, &CommuniCation::RequestUserInfo, this, &Widget::LoadUserInfo);//고객정보 조회
+    connect(Comm, &CommuniCation::RequestOrderAdd, this, &Widget::OrderAdd);//주문정보 추가
+    connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 조회
+    connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
 }
 
-void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
+void Widget::BroadCast(const QByteArray& MessageData, ClientInfo* UserInfo)
 {
     /*
         MessageData를 복사하여 전달
@@ -116,6 +121,7 @@ void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
         MessageData에 접근해서 크래시 나거나 데이터 오염됨
     */
     QByteArray messageCopy = MessageData;
+    DMan->AddChatLogData(MessageData,UserInfo);
     ListMutex->lock();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
         it != CInfoList.constEnd(); ++it){
@@ -123,8 +129,8 @@ void Widget::BroadCast(const QByteArray& MessageData, const QString& RoomId)
         CommuniCation* W = it.key();
         //같은 방이면 브로드캐스트 해라
         qDebug() << "compare : " << C->getClientRoomId();
-        qDebug() << "origin  : " << RoomId;
-        if(QString::compare(C->getClientRoomId(), RoomId) == 0)
+        qDebug() << "origin  : " << UserInfo->getClientRoomId();
+        if(QString::compare(C->getClientRoomId(), UserInfo->getClientRoomId()) == 0)
         {
             if(W)
             {
@@ -179,6 +185,31 @@ void Widget::ConfirmLogin(CommuniCation *Thread, const QBuffer &MessageData)
     SendData(LoginInfo,Thread,CONFIRM);
 }
 
+void Widget::Join(const QBuffer &MessageData)
+{
+    DMan->AddClientData(MessageData.data());
+}
+
+void Widget::LoadUserInfo(CommuniCation *Thread)
+{
+    SendData((DMan->getClientData()).toJson(),Thread,USER_ALL);
+}
+
+void Widget::OrderAdd(CommuniCation *Thread, const QBuffer &MessageData)
+{
+    DMan->AddOrderData(MessageData.data());
+}
+
+void Widget::LoadOrderInfo(CommuniCation *Thread)
+{
+    SendData((DMan->getOrderData()).toJson(),Thread,ORDER_ALL);
+}
+
+void Widget::LoadChatLogInfo(CommuniCation *Thread)
+{
+    SendData((DMan->getChatLogData()).toJson(),Thread,CHAT_ALL);
+}
+
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)
 {
     QByteArray Convert   = Data;
@@ -194,9 +225,7 @@ void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint6
     out << dataType << Container.size() << Container.size();
     qDebug() << "send Data";
     qDebug() << Convert;
-    QMetaObject::invokeMethod(Thread,"WriteData", // 호출할 슬롯 이름 (문자열)
-                              Qt::QueuedConnection,  // 연결 타입 (필수)
-                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
+    QMetaObject::invokeMethod(Thread,"WriteData", Qt::QueuedConnection, Q_ARG(QByteArray, Container));
 }
 
 void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
