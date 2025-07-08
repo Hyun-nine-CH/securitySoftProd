@@ -45,6 +45,8 @@ void ChatLogDB::AddData(const QByteArray &NewData)
     NewObj.insert("Id",LastNum);
     NewObj.insert("UserId",getClientInfo()->getClientID());
     NewObj.insert("Chat",QString::fromUtf8(NewData));
+    NewObj.insert("Timestamp", \
+                  QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
     New.setObject(NewObj);
 
     QJsonArray AllArr;

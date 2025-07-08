@@ -23,7 +23,7 @@ protected:
 
 signals:
     void Disconnected       (QTcpSocket* Socket,CommuniCation* Thread);// 스레드에서 소켓 끊김을 알리는 시그널
-    void ChattingMesg       (const QByteArray& MessageData, ClientInfo* UserInfo);// 채팅 메시지 시그널
+    void ChattingMesg       (const QByteArray& MessageData, ClientInfo* UserInfo);// 채팅 메시지 시그널 + 채팅로그 저장
     void SendClientInfo     (CommuniCation* Thread,ClientInfo *Info);// 클라이언트 정보 넘기는 시그널
     void ModifyProductDB    (CommuniCation* Thread,const QByteArray& MessageData);// 상품데이터 수정 정보 넘기는 시그널
     void RequestPdInfo      (CommuniCation* Thread);// 상품데이터 전체 정보 넘기는 시그널
@@ -34,7 +34,6 @@ signals:
     void RequestUserInfo    (CommuniCation* Thread);// 고객정보 요청
     void RequestOrderAdd    (CommuniCation* Thread,const QBuffer& MessageData);// 주문정보 추가
     void RequestOrderInfo   (CommuniCation* Thread);// 주문정보 조회
-    void RequestChatLogAdd  (CommuniCation* Thread,const QBuffer& MessageData);// 채팅로그 추가
     void RequestChatLogInfo (CommuniCation* Thread);// 채팅로그 조회
 
 private slots:
@@ -75,7 +74,6 @@ private:
     void ConfrimLogin         (const QBuffer &buffer);//로그인 정보 확인
     void Join                 (const QBuffer &buffer);//회원정보 추가
     void AddOrderInfo         (const QBuffer &buffer);// 주문정보 추가
-    void AddChatLogData       (const QBuffer &buffer);// 채팅로그 추가
 };
 
 #endif // COMMUNICATION_H

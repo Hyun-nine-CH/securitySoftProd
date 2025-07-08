@@ -110,16 +110,17 @@ void CommuniCation::ReadClientData()
     //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
     qDebug() << "데이터 타입 : " << DataType;
     switch (DataType) {
-    case 0x01:FileReceive          (buffer);     break;
-    case 0x03:emit RequestPdInfo   (this);       break;
-    case 0x04:ModiProductInfo      (buffer);     break;
-    case 0x05:AddProductInfo       (buffer);     break;
-    case 0x06:DelProductInfo       (buffer);     break;
-    case 0x07:ConfrimLogin         (buffer);     break;
-    case 0x08:Join                 (buffer);     break;
-    case 0x09:emit RequestUserInfo (this);       break;
-    case 0x10:AddOrderInfo         (buffer);     break;
-    case 0x11:emit RequestOrderInfo(this);       break;
+    case 0x01:FileReceive            (buffer);     break;
+    case 0x03:emit RequestPdInfo     (this);       break;
+    case 0x04:ModiProductInfo        (buffer);     break;
+    case 0x05:AddProductInfo         (buffer);     break;
+    case 0x06:DelProductInfo         (buffer);     break;
+    case 0x07:ConfrimLogin           (buffer);     break;
+    case 0x08:Join                   (buffer);     break;
+    case 0x09:emit RequestUserInfo   (this);       break;
+    case 0x10:AddOrderInfo           (buffer);     break;
+    case 0x11:emit RequestOrderInfo  (this);       break;
+    case 0x12:emit RequestChatLogInfo(this);       break;
     default:emit ChattingMesg(ByteArray,getClientInfo()); break;
     }
     ByteArray.clear();
@@ -202,9 +203,4 @@ void CommuniCation::Join(const QBuffer &buffer)
 void CommuniCation::AddOrderInfo(const QBuffer &buffer)
 {
     ProcessBuffer(buffer,ADD_ORDER);
-}
-
-void CommuniCation::AddChatLogData(const QBuffer &buffer)
-{
-    ProcessBuffer(buffer,ADD_LOG);
 }

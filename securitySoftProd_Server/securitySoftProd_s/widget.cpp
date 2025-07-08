@@ -110,6 +110,7 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestUserInfo, this, &Widget::LoadUserInfo);//고객정보 조회
     connect(Comm, &CommuniCation::RequestOrderAdd, this, &Widget::OrderAdd);//주문정보 추가
     connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 조회
+    connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
 }
 
 void Widget::BroadCast(const QByteArray& MessageData, ClientInfo* UserInfo)
@@ -202,6 +203,11 @@ void Widget::OrderAdd(CommuniCation *Thread, const QBuffer &MessageData)
 void Widget::LoadOrderInfo(CommuniCation *Thread)
 {
     SendData((DMan->getOrderData()).toJson(),Thread,ORDER_ALL);
+}
+
+void Widget::LoadChatLogInfo(CommuniCation *Thread)
+{
+    SendData((DMan->getChatLogData()).toJson(),Thread,CHAT_ALL);
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

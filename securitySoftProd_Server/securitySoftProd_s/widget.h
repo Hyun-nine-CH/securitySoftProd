@@ -39,7 +39,7 @@ private slots:
     void LoadUserInfo(CommuniCation* Thread);// 고객정보 요청
     void OrderAdd(CommuniCation* Thread,const QBuffer& MessageData);// 주문정보 추가
     void LoadOrderInfo(CommuniCation* Thread);// 주문정보 조회
-    // 채팅로그 조회
+    void LoadChatLogInfo(CommuniCation* Thread);// 채팅로그 조회
 
 private:
     QLabel     *InfoLabel;
@@ -70,6 +70,7 @@ private:
     const qint64 USER_ALL  = 0x09;
     const qint64 ORDER_ADD = 0x10;
     const qint64 ORDER_ALL = 0x11;
+    const qint64 CHAT_ALL  = 0x12;
 
     void SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand);
 };
