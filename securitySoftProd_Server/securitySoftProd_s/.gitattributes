@@ -1,1 +1,3 @@
 *.pdb filter=lfs diff=lfs merge=lfs -text
+*.json filter=lfs diff=lfs merge=lfs -text
+c4b59aec2dc70f94937258ee44ba6f530ef39c12 filter=lfs diff=lfs merge=lfs -text

@@ -14,6 +14,8 @@ DataManager::DataManager(QObject *parent)
     if(LoadProductData() && LoadChatLogData() &&
        LoadClientData()  && LoadOrderData()){
         qDebug() << "Load All DB";
+    }else{
+        qDebug() << "Fail DB";
     }
 }
 
@@ -21,6 +23,7 @@ bool DataManager::LoadProductData()
 {
     ProductData = PDb->LoadData();
     if(!(ProductData.isEmpty())){
+        qDebug() << "Load Product Data";
         return true;
     }
     return false;
@@ -55,6 +58,7 @@ bool DataManager::LoadClientData()
 {
     ClientData = CDb->LoadData();
     if(!(ClientData.isEmpty())){
+        qDebug() << "Load Client Data";
         return true;
     }
     return false;
@@ -64,6 +68,7 @@ bool DataManager::LoadOrderData()
 {
     OrderData = CDb->LoadData();
     if(!(OrderData.isEmpty())){
+        qDebug() << "Load Order Data";
         return true;
     }
     return false;
@@ -73,6 +78,7 @@ bool DataManager::LoadChatLogData()
 {
     ChatLogData = MDb->LoadData();
     if(!(ChatLogData.isEmpty())){
+        qDebug() << "Load ChatLog Data";
         return true;
     }
     return false;
