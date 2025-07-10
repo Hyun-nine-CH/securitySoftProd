@@ -2,10 +2,14 @@
 #define MAINWINDOW_H
 
 #include <QMainWindow>
-#include <QTcpSocket>
-#include <QByteArray>
+#include <QJsonObject>
 
+// 전방 선언
+class QTcpSocket;
 class ClientInfoForm_Chat;
+class ClientInfoForm_Prod;
+class ClientInfoForm; // 주문하기 탭
+
 namespace Ui { class MainWindow; }
 
 class MainWindow : public QMainWindow
@@ -13,26 +17,37 @@ class MainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    // 생성자에서 로그인 정보를 받도록 변경
-    explicit MainWindow(QTcpSocket* socket, const QString& roomId, qint64 clientId, const QString& managerName, QWidget *parent = nullptr);
+    // 생성자에서 소켓과 로그인 성공 시 받은 사용자 정보 전체를 받음
+    explicit MainWindow(QTcpSocket* socket, const QJsonObject& userInfo, QWidget *parent = nullptr);
     ~MainWindow();
 
 private slots:
-    // 서버에서 오는 모든 메시지를 처리하는 단일 슬롯
+    // 서버로부터 오는 모든 메시지를 처리하는 중앙 처리 슬롯
     void handleServerMessage();
-    // 채팅 탭의 요청을 받아 메시지를 전송하는 슬롯
+
+    // 각 탭 위젯으로부터 오는 요청을 처리하는 슬롯들
     void sendChatMessage(const QString& message);
+    void requestProductList();
+    void searchProducts(const QString& name, const QString& price, const QString& dueDate);
+    void submitOrder(const QJsonObject& orderData);
+
+    // 툴바 아이콘 클릭 시 탭을 전환하는 슬롯들
+    void on_actionSecurityProd_Info_triggered();
+    void on_actionOrder_Info_triggered();
+    void on_actionChatting_Room_triggered();
 
 private:
+    // 서버에 데이터를 전송하는 공용 헬퍼 함수
+    void sendDataToServer(qint64 dataType, const QJsonObject& payload = QJsonObject(), const QString& filename = "");
+
     Ui::MainWindow *ui;
-    QTcpSocket* m_socket;
-    QByteArray  m_buffer; // 소켓 데이터 수신 버퍼
+    QTcpSocket* m_socket;     // main.cpp로부터 받은 유일한 소켓
+    QJsonObject m_userInfo;   // 로그인한 사용자의 정보
+    QByteArray m_buffer;
 
-    // 로그인 시 받은 사용자 정보
-    QString m_roomId;      // 자신의 소속 회사 (e.g., "A Com")
-    qint64  m_clientId;    // 자신의 ID (e.g., 1)
-    QString m_managerName; // 자신의 이름 (e.g., "김철수")
-
+    // 각 탭 위젯의 포인터를 멤버 변수로 관리
+    ClientInfoForm_Prod* m_prodTab;
+    ClientInfoForm* m_orderTab;
     ClientInfoForm_Chat* m_chatTab;
 };
 

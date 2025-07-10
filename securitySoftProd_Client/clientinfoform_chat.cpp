@@ -1,36 +1,37 @@
-#include "clientinfoform_chat.h"
-#include "ui_clientinfoform_chat.h"
+#include "admininfoform_chat.h"
+#include "ui_admininfoform_chat.h"
 #include <QTabWidget>
 #include <QIcon>
 
-ClientInfoForm_Chat::ClientInfoForm_Chat(QWidget *parent)
+AdminInfoForm_Chat::AdminInfoForm_Chat(const QString& companyName, QWidget *parent)
     : QWidget(parent)
-    , ui(new Ui::ClientInfoForm_Chat)
+    , ui(new Ui::AdminInfoForm_Chat)
+    , m_companyName(companyName)
 {
     ui->setupUi(this);
-    // UI의 pushButton_client가 클릭되면 on_pushButton_client_clicked 슬롯이 호출됨
-    connect(ui->pushButton_client, &QPushButton::clicked, this, &ClientInfoForm_Chat::on_pushButton_client_clicked);
+    // UI의 pushButton_admin이 클릭되면 on_pushButton_admin_clicked 슬롯이 호출됨
+    connect(ui->pushButton_admin, &QPushButton::clicked, this, &AdminInfoForm_Chat::on_pushButton_admin_clicked);
 }
 
-ClientInfoForm_Chat::~ClientInfoForm_Chat()
+AdminInfoForm_Chat::~AdminInfoForm_Chat()
 {
     delete ui;
 }
 
-// '전송' 버튼이 눌리면 MainWindow에 시그널을 보냄
-void ClientInfoForm_Chat::on_pushButton_client_clicked()
+// '전송' 버튼이 눌리면 MainWindow_Admin에 시그널을 보냄
+void AdminInfoForm_Chat::on_pushButton_admin_clicked()
 {
     QString messageText = ui->lineEdit->text().trimmed();
     if (messageText.isEmpty()) return;
 
-    // 소켓에 직접 쓰는 대신 시그널 발생
-    emit messageSendRequested(messageText);
+    // 어느 회사(m_companyName)에게 보내는지와 메시지 내용을 함께 시그널로 보냄
+    emit messageSendRequested(m_companyName, messageText);
 
     ui->lineEdit->clear();
 }
 
-// MainWindow에서 포맷된 메시지를 받아 표시하는 함수
-void ClientInfoForm_Chat::appendMessage(const QString& formattedMessage)
+// MainWindow_Admin에서 포맷된 메시지를 받아 표시하는 함수
+void AdminInfoForm_Chat::appendMessage(const QString& formattedMessage)
 {
     if (!formattedMessage.trimmed().isEmpty()) {
         ui->chatDisplay->append(formattedMessage);
@@ -44,7 +45,7 @@ void ClientInfoForm_Chat::appendMessage(const QString& formattedMessage)
 }
 
 // --- 아래 함수들은 UI 알림 관련이므로 변경 없음 ---
-void ClientInfoForm_Chat::showChatNotification()
+void AdminInfoForm_Chat::showChatNotification()
 {
     if (auto p = parentWidget(); p) {
         if (auto tabWidget = qobject_cast<QTabWidget*>(p)) {
@@ -56,7 +57,7 @@ void ClientInfoForm_Chat::showChatNotification()
     }
 }
 
-void ClientInfoForm_Chat::clearChatNotification()
+void AdminInfoForm_Chat::clearChatNotification()
 {
     if (auto p = parentWidget(); p) {
         if (auto tabWidget = qobject_cast<QTabWidget*>(p)) {
@@ -68,7 +69,7 @@ void ClientInfoForm_Chat::clearChatNotification()
     }
 }
 
-void ClientInfoForm_Chat::onChatTabActivated()
+void AdminInfoForm_Chat::onChatTabActivated()
 {
     clearChatNotification();
 }
