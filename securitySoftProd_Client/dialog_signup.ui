@@ -78,7 +78,7 @@
     <string>Address</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit">
+  <widget class="QLineEdit" name="CompanyName">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -88,7 +88,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit_2">
+  <widget class="QLineEdit" name="Dep_Name">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -98,7 +98,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit_3">
+  <widget class="QLineEdit" name="Client_Name">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -108,7 +108,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit_4">
+  <widget class="QLineEdit" name="Phone_Num">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -118,7 +118,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit_5">
+  <widget class="QLineEdit" name="Address">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -141,7 +141,7 @@
     <string>ID</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit_6">
+  <widget class="QLineEdit" name="ID">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -164,7 +164,7 @@
     <string>PW</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit_7">
+  <widget class="QLineEdit" name="PW">
    <property name="geometry">
     <rect>
      <x>240</x>
@@ -174,7 +174,7 @@
     </rect>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton">
+  <widget class="QPushButton" name="pushButton_IDcheck">
    <property name="geometry">
     <rect>
      <x>510</x>
@@ -187,7 +187,7 @@
     <string>중복 검사</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_2">
+  <widget class="QPushButton" name="pushButton_SignUp">
    <property name="geometry">
     <rect>
      <x>290</x>
@@ -200,7 +200,7 @@
     <string>가입하기</string>
    </property>
   </widget>
-  <widget class="QPushButton" name="pushButton_3">
+  <widget class="QPushButton" name="pushButton_DoubleCheck">
    <property name="geometry">
     <rect>
      <x>510</x>
@@ -213,7 +213,7 @@
     <string>확인</string>
    </property>
   </widget>
-  <widget class="QLineEdit" name="lineEdit_8">
+  <widget class="QLineEdit" name="PW_check">
    <property name="geometry">
     <rect>
      <x>240</x>
