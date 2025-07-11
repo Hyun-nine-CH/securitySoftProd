@@ -113,23 +113,36 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
 }
 
-void Widget::BroadCast(const QByteArray& MessageData, ClientInfo* UserInfo)
+void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
 {
     /*
         MessageData를 복사하여 전달
         그대로 받게 되면 다른 클라이언트에서 이 코드를 실행할때
         MessageData에 접근해서 크래시 나거나 데이터 오염됨
     */
-    QByteArray messageCopy = MessageData;
-    DMan->AddChatLogData(MessageData,UserInfo);
+    QByteArray messageCopy = MessageData.data();
+    QJsonDocument Mesg = QJsonDocument::fromJson(messageCopy);
+    QJsonObject MesgObj = Mesg.object();
+
+    DMan->AddChatLogData(MesgObj["message"].toString().toUtf8(),UserInfo);
     ListMutex->lock();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
         it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
         CommuniCation* W = it.key();
         //같은 방이면 브로드캐스트 해라
-        qDebug() << "compare : " << C->getClientRoomId();
-        qDebug() << "origin  : " << UserInfo->getClientRoomId();
+        // qDebug() << "compare : " << C->getClientRoomId();
+        // qDebug() << "origin  : " << UserInfo->getClientRoomId();
+        QByteArray Container;
+
+        QDataStream out(&Container,QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_5_15);
+        out << qint64(0) << qint64(0) << qint64(0) << "filename";
+        Container.append(messageCopy);
+
+        out.device()->seek(0);
+        qint64 dataType = CHAT_MESG;
+        out << dataType << Container.size() << Container.size();
         if(QString::compare(C->getClientRoomId(), UserInfo->getClientRoomId()) == 0)
         {
             if(W)
@@ -139,7 +152,7 @@ void Widget::BroadCast(const QByteArray& MessageData, ClientInfo* UserInfo)
                 // 대상 스레드의 이벤트 루프에서 안전하게 실행됩니다.
                 QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
                                           Qt::QueuedConnection,  // 연결 타입 (필수)
-                                          Q_ARG(QByteArray, messageCopy)); // 슬롯에 전달할 인자
+                                          Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
                 qDebug() << "메시지 전송 요청됨: " << W->metaObject()->className();
             }
         }

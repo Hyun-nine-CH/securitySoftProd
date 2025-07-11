@@ -73,6 +73,10 @@ void CommuniCation::ProcessBuffer(const QBuffer &buffer, int requestType)
             qDebug() << "Order Add data receive completed";
             emit RequestOrderAdd(this, buffer);
             break;
+        case CHAT_MESG: // AddOrderInfo
+            qDebug() << "chat message receive completed";
+            emit ChattingMesg(buffer,getClientInfo());
+            break;
         }
 
         // 공통 초기화 코드
@@ -121,7 +125,7 @@ void CommuniCation::ReadClientData()
     case 0x10:AddOrderInfo           (buffer);     break;
     case 0x11:emit RequestOrderInfo  (this);       break;
     case 0x12:emit RequestChatLogInfo(this);       break;
-    default:emit ChattingMesg(ByteArray,getClientInfo()); break;
+    case 0x13:ChattingParse          (buffer);     break;
     }
     ByteArray.clear();
 }
@@ -203,4 +207,9 @@ void CommuniCation::Join(const QBuffer &buffer)
 void CommuniCation::AddOrderInfo(const QBuffer &buffer)
 {
     ProcessBuffer(buffer,ADD_ORDER);
+}
+
+void CommuniCation::ChattingParse(const QBuffer &buffer)
+{
+    ProcessBuffer(buffer,CHAT_MESG);
 }
