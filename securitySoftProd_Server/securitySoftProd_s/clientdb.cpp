@@ -71,7 +71,7 @@ QJsonObject ClientDB::Confirm(const QByteArray &IdPwData)
     }
 
     if (AllDoc.isNull() || !AllDoc.isArray()) { // DB 문서가 유효한 JSON 배열인지 확인
-        qWarning() << "클라이언트 데이터가 유효한 JSON 배열이 아닙니다.";
+        qWarning() << "working directory에 clientinfoDB 추가하셨나요?";
     }
 
     for (int i = 0; i < AllArray.size(); i++) {

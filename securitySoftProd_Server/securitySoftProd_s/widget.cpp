@@ -121,7 +121,11 @@ void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
         MessageData에 접근해서 크래시 나거나 데이터 오염됨
     */
     QByteArray messageCopy = MessageData.data();
+    qDebug() << "서버에서 받은 chat mesg : " << messageCopy;
     QJsonDocument Mesg = QJsonDocument::fromJson(messageCopy);
+    if(Mesg.isNull()){
+            qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
+    }
     QJsonObject MesgObj = Mesg.object();
 
     DMan->AddChatLogData(MesgObj["message"].toString().toUtf8(),UserInfo);
