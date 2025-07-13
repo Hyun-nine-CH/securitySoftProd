@@ -115,7 +115,8 @@ void Dialog_log::on_pushButton_login_clicked() {
     QByteArray blockToSend;
     QDataStream out(&blockToSend, QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << "login info";
+    QByteArray filename =  "login info";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
     blockToSend.append(payload);
     qint64 totalSize = blockToSend.size();
     out.device()->seek(0);
@@ -167,7 +168,7 @@ void Dialog_log::onReadyRead() {
         // 페이로드 추출
         QByteArray payload = m_buffer.mid(in.device()->pos(), totalSize - in.device()->pos());
         qDebug() << "JSON 페이로드 크기:" << payload.size() << "바이트";
-
+        qDebug() << "payload : "<< payload;
         // JSON 파싱
         QJsonDocument doc = QJsonDocument::fromJson(payload);
         qDebug() << "JSON 파싱 완료";

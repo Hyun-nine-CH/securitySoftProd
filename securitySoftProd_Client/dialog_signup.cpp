@@ -225,7 +225,6 @@ void Dialog_SignUp::onReadyRead()
         // 페이로드 추출
         QByteArray payload = m_buffer.mid(in.device()->pos(), totalSize - in.device()->pos());
         qDebug() << "JSON 페이로드 크기:" << payload.size() << "바이트";
-
         // JSON 파싱
         QJsonDocument doc = QJsonDocument::fromJson(payload);
         qDebug() << "JSON 파싱 완료";

@@ -138,10 +138,10 @@ void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
         // qDebug() << "compare : " << C->getClientRoomId();
         // qDebug() << "origin  : " << UserInfo->getClientRoomId();
         QByteArray Container;
-
+        QByteArray filename = "filename";
         QDataStream out(&Container,QIODevice::WriteOnly);
         out.setVersion(QDataStream::Qt_5_15);
-        out << qint64(0) << qint64(0) << qint64(0) << "filename";
+        out << qint64(0) << qint64(0) << qint64(0) << filename;
         Container.append(messageCopy);
 
         out.device()->seek(0);
@@ -231,10 +231,10 @@ void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint6
 {
     QByteArray Convert   = Data;
     QByteArray Container;
-
+    QByteArray filename = "filename";
     QDataStream out(&Container,QIODevice::WriteOnly);
     out.setVersion(QDataStream::Qt_5_15);
-    out << qint64(0) << qint64(0) << qint64(0) << "filename";
+    out << qint64(0) << qint64(0) << qint64(0) << filename;
     Container.append(Convert);
 
     out.device()->seek(0);
