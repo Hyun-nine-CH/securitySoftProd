@@ -124,7 +124,7 @@ void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
     qDebug() << "서버에서 받은 chat mesg : " << messageCopy;
     QJsonDocument Mesg = QJsonDocument::fromJson(messageCopy);
     if(Mesg.isNull()){
-        qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
+            qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
     }
     QJsonObject MesgObj = Mesg.object();
 
