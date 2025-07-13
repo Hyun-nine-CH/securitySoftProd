@@ -3,7 +3,6 @@
 
 #include <QWidget>
 #include <QJsonArray>
-#include <QStandardItemModel>
 
 namespace Ui {
 class ClientInfoForm_Prod;
@@ -17,20 +16,25 @@ public:
     explicit ClientInfoForm_Prod(QWidget *parent = nullptr);
     ~ClientInfoForm_Prod();
 
-public slots:
+    // 제품 목록 표시 함수
     void displayProductList(const QJsonArray& productArray);
 
+    // 서버에서 받은 데이터 처리
+    void handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename);
+
 signals:
+    // 제품 목록 요청 시그널
     void productListRequested();
+
+    // 제품 검색 요청 시그널
     void searchProductsRequested(const QString& name, const QString& price, const QString& dueDate);
 
 private slots:
-    // UI의 '검색하기' 버튼 (objectName: pushButton)과 연결될 슬롯
     void on_pushButton_clicked();
+    void on_pushButton_Reset_clicked();
 
 private:
     Ui::ClientInfoForm_Prod *ui;
-    QStandardItemModel* model;
 };
 
 #endif // CLIENTINFOFORM_PROD_H

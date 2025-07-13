@@ -2,7 +2,8 @@
 #define CLIENTINFOFORM_H
 
 #include <QWidget>
-#include <QJsonObject> // QJsonObject 사용을 위해 추가
+#include <QJsonArray>
+#include <QJsonObject>
 
 namespace Ui {
 class ClientInfoForm;
@@ -16,13 +17,26 @@ public:
     explicit ClientInfoForm(QWidget *parent = nullptr);
     ~ClientInfoForm();
 
+    // 주문 목록 표시 함수
+    void displayOrderList(const QJsonArray& orderArray);
+
+    // 서버에서 받은 데이터 처리
+    void handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename);
+
 signals:
-    // '주문하기' 버튼 클릭 시 MainWindow에 주문 정보를 전달하기 위한 시그널
+    // 주문 제출 시그널
     void orderSubmitted(const QJsonObject& orderData);
 
+    // 주문 목록 요청 시그널
+    void orderListRequested();
+
+    // 주문 검색 요청 시그널
+    void searchOrdersRequested(const QString& productName, const QString& price, const QString& dueDate);
+
 private slots:
-    // UI의 '주문하기' 버튼(objectName: pushButton_order)과 연결될 슬롯
     void on_pushButton_order_clicked();
+    void on_pushButton_search_clicked();
+    void on_pushButton_Reset_clicked();
 
 private:
     Ui::ClientInfoForm *ui;

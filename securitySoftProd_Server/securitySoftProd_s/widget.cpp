@@ -74,8 +74,8 @@ Widget::Widget(QWidget *parent)
 
     if(!TcpServer->listen(QHostAddress::Any, 50000)){
         QMessageBox::critical(this,tr("Echo server"),\
-                  tr("Unable to start the server: %1")\
-                      .arg(TcpServer->errorString()));
+                                                      tr("Unable to start the server: %1")\
+                                                          .arg(TcpServer->errorString()));
         close();
         return;
     }
@@ -131,7 +131,7 @@ void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
     DMan->AddChatLogData(MesgObj["message"].toString().toUtf8(),UserInfo);
     ListMutex->lock();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
-        it != CInfoList.constEnd(); ++it){
+                                                                                         it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
         CommuniCation* W = it.key();
         //같은 방이면 브로드캐스트 해라

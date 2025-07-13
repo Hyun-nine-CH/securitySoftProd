@@ -16,15 +16,22 @@ public:
     explicit AdminInfoForm_OL(QWidget *parent = nullptr);
     ~AdminInfoForm_OL();
 
-public slots:
+    // 주문 목록 표시 함수
     void displayOrderList(const QJsonArray& orderArray);
 
+    // 서버에서 받은 데이터 처리
+    void handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename);
+
 signals:
+    // 주문 목록 요청 시그널
     void orderListRequested();
-    void searchOrdersRequested(const QString& productName, const QString& dueDate);
+
+    // 주문 검색 요청 시그널
+    void searchOrdersRequested(const QString& productName, const QString& price, const QString& dueDate);
 
 private slots:
-    void on_pushButton_DS_clicked();
+    void on_pushButton_OS_clicked();
+    void on_pushButton_OS_Reset_clicked();
 
 private:
     Ui::AdminInfoForm_OL *ui;

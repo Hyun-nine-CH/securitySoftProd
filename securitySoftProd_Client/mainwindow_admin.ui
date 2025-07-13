@@ -84,6 +84,9 @@
    <property name="text">
     <string>Client Info</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+C</string>
+   </property>
   </action>
   <action name="actionSecurityProd_Info">
    <property name="icon">
@@ -92,6 +95,9 @@
    </property>
    <property name="text">
     <string>SecurityProd Info</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+P</string>
    </property>
   </action>
   <action name="actionOrder_Info">
@@ -102,6 +108,9 @@
    <property name="text">
     <string>Order Info</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+O</string>
+   </property>
   </action>
   <action name="actionChatting_Room">
    <property name="icon">
@@ -111,6 +120,9 @@
    <property name="text">
     <string>Chatting Room</string>
    </property>
+   <property name="shortcut">
+    <string>Ctrl+R</string>
+   </property>
   </action>
   <action name="actionQuit">
    <property name="icon">
@@ -119,6 +131,9 @@
    </property>
    <property name="text">
     <string>Quit</string>
+   </property>
+   <property name="shortcut">
+    <string>Ctrl+Q</string>
    </property>
   </action>
  </widget>
