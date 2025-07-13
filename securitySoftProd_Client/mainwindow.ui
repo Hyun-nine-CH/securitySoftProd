@@ -97,7 +97,7 @@
     <string>Order Info</string>
    </property>
    <property name="shortcut">
-    <string>Ctrl+D</string>
+    <string>Ctrl+O</string>
    </property>
   </action>
   <action name="actionQuit">

@@ -2,6 +2,7 @@
 #define ADMININFOFORM_CHAT_H
 
 #include <QWidget>
+#include <QByteArray>
 
 namespace Ui {
 class AdminInfoForm_Chat;
@@ -15,22 +16,27 @@ public:
     explicit AdminInfoForm_Chat(const QString& companyName, QWidget *parent = nullptr);
     ~AdminInfoForm_Chat();
 
+    // 메시지 표시 함수
     void appendMessage(const QString& formattedMessage);
+
+    // 알림 관련 함수들
+    void showChatNotification();
+    void clearChatNotification();
     void onChatTabActivated();
 
+    // 서버에서 받은 데이터 처리
+    void handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename);
+
 signals:
-    // MainWindow_Admin에게 메시지 전송을 요청하는 시그널
-    void messageSendRequested(const QString& companyName, const QString& message);
+    // 메시지 전송 요청 시그널 (회사명과 메시지 내용 전달)
+    void messageSendRequested(const QString& roomId, const QString& message);
 
 private slots:
     void on_pushButton_admin_clicked();
 
 private:
-    void showChatNotification();
-    void clearChatNotification();
-
     Ui::AdminInfoForm_Chat *ui;
-    QString m_companyName; // 이 채팅 탭이 담당하는 회사 이름
+    QString m_companyName; // 이 채팅방이 속한 회사명 (roomId)
 };
 
 #endif // ADMININFOFORM_CHAT_H

@@ -1,28 +1,35 @@
 #include "clientinfoform_prod.h"
 #include "ui_clientinfoform_prod.h"
-#include <QDebug>
-#include <QHeaderView>
+#include <QJsonArray>
 #include <QJsonObject>
-#include <QStandardItemModel>
+#include <QTableWidgetItem>
+#include <QDebug>
+#include <QTimer>
+#include "Protocol.h"
 
 ClientInfoForm_Prod::ClientInfoForm_Prod(QWidget *parent) :
     QWidget(parent),
-    ui(new Ui::ClientInfoForm_Prod),
-    model(new QStandardItemModel(this)) // 모델 생성
+    ui(new Ui::ClientInfoForm_Prod)
 {
     ui->setupUi(this);
 
-    // 검색 버튼 연결
+    // 테이블 위젯 설정
+    ui->tableWidget->setColumnCount(3); // 제품명, 가격, 납기일
+    QStringList headers;
+    headers << "제품명" << "가격" << "납기일";
+    ui->tableWidget->setHorizontalHeaderLabels(headers);
+
+    // 테이블 위젯 열 너비 설정
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
+
+    // 버튼 연결
     connect(ui->pushButton, &QPushButton::clicked, this, &ClientInfoForm_Prod::on_pushButton_clicked);
+    connect(ui->pushButton_Reset, &QPushButton::clicked, this, &ClientInfoForm_Prod::on_pushButton_Reset_clicked);
 
-    // 테이블뷰에 모델 설정
-    model->setColumnCount(3);
-    model->setHorizontalHeaderLabels({"제품명", "가격", "만료일"});
-    ui->tableView->setModel(model);
-    ui->tableView->horizontalHeader()->setSectionResizeMode(QHeaderView::Stretch);
-
-    // 시작 시 전체 제품 목록 요청
-    emit productListRequested();
+    // 초기 제품 목록 요청 시그널 발생
+    QTimer::singleShot(500, this, [this]() {
+        emit productListRequested();
+    });
 }
 
 ClientInfoForm_Prod::~ClientInfoForm_Prod()
@@ -32,30 +39,59 @@ ClientInfoForm_Prod::~ClientInfoForm_Prod()
 
 void ClientInfoForm_Prod::on_pushButton_clicked()
 {
+    // 검색 조건 수집
     QString name = ui->ProdName->text().trimmed();
     QString price = ui->Price->text().trimmed();
     QString dueDate = ui->Due->text().trimmed();
 
-    qDebug() << "Searching products with criteria:" << name << price << dueDate;
-
+    // 검색 요청 시그널 발생
     emit searchProductsRequested(name, price, dueDate);
 }
 
-void ClientInfoForm_Prod::displayProductList(const QJsonArray &productArray)
+void ClientInfoForm_Prod::on_pushButton_Reset_clicked()
 {
-    qDebug() << "Received product list to display:" << productArray;
+    // 검색 입력란 초기화
+    ui->ProdName->clear();
+    ui->Price->clear();
+    ui->Due->clear();
 
-    model->removeRows(0, model->rowCount()); // 기존 행 삭제
+    // 전체 목록 다시 요청
+    emit productListRequested();
+}
 
-    for (const QJsonValue &value : productArray) {
-        QJsonObject obj = value.toObject();
+void ClientInfoForm_Prod::displayProductList(const QJsonArray& productArray)
+{
+    // 테이블 초기화
+    ui->tableWidget->setRowCount(0);
 
-        QList<QStandardItem*> rowItems;
-        rowItems << new QStandardItem(obj["Name"].toString());
-        rowItems << new QStandardItem(QString::number(obj["Price"].toInt()));
-        rowItems << new QStandardItem(obj["ExpiryDate"].toString());
+    // 제품 목록 표시
+    for (int i = 0; i < productArray.size(); ++i) {
+        QJsonObject product = productArray[i].toObject();
 
-        model->appendRow(rowItems);
+        int row = ui->tableWidget->rowCount();
+        ui->tableWidget->insertRow(row);
+
+        // 제품명
+        QTableWidgetItem* nameItem = new QTableWidgetItem(product["name"].toString());
+        ui->tableWidget->setItem(row, 0, nameItem);
+
+        // 가격
+        QTableWidgetItem* priceItem = new QTableWidgetItem(product["price"].toString());
+        ui->tableWidget->setItem(row, 1, priceItem);
+
+        // 납기일
+        QTableWidgetItem* dueDateItem = new QTableWidgetItem(product["dueDate"].toString());
+        ui->tableWidget->setItem(row, 2, dueDateItem);
     }
 }
 
+void ClientInfoForm_Prod::handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename)
+{
+    QJsonDocument doc = QJsonDocument::fromJson(payload);
+
+    if (dataType == Protocol::Response_Product_List) {
+        if (doc.isArray()) {
+            displayProductList(doc.array());
+        }
+    }
+}

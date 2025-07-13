@@ -23,6 +23,7 @@ SOURCES += \
     mainwindow_admin.cpp
 
 HEADERS += \
+    Protocol.h \
     admininfoform.h \
     admininfoform_chat.h \
     admininfoform_ol.h \
