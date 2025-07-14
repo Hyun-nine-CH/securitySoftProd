@@ -24,17 +24,17 @@ Dialog_SignUp::Dialog_SignUp(QTcpSocket* socket, QWidget *parent) :
     ui->PW_check->setEchoMode(QLineEdit::Password);
 
     // 버튼과 슬롯 연결
-    connect(ui->pushButton_SignUp, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_SignUp_clicked);
-    connect(ui->pushButton_IDcheck, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_IDcheck_clicked);
-    connect(ui->pushButton_DoubleCheck, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_DoubleCheck_clicked);
+    //connect(ui->pushButton_SignUp, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_SignUp_clicked);
+    //connect(ui->pushButton_IDcheck, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_IDcheck_clicked);
+    //connect(ui->pushButton_DoubleCheck, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_DoubleCheck_clicked);
 
     // 소켓 시그널 연결 - 서버 응답 처리
-    if (m_socket) {
-        connect(m_socket, &QTcpSocket::readyRead, this, &Dialog_SignUp::onReadyRead);
-        qDebug() << "회원가입 다이얼로그에서 소켓 readyRead 시그널 연결됨";
-    } else {
-        qDebug() << "경고: 회원가입 다이얼로그에 전달된 소켓이 nullptr입니다!";
-    }
+    // if (m_socket) {
+    //     connect(m_socket, &QTcpSocket::readyRead, this, &Dialog_SignUp::onReadyRead);
+    //     qDebug() << "회원가입 다이얼로그에서 소켓 readyRead 시그널 연결됨";
+    // } else {
+    //     qDebug() << "경고: 회원가입 다이얼로그에 전달된 소켓이 nullptr입니다!";
+    // }
 }
 
 Dialog_SignUp::~Dialog_SignUp()
@@ -79,15 +79,15 @@ void Dialog_SignUp::on_pushButton_IDcheck_clicked()
 
     qDebug() << "서버로 ID 중복 확인 요청 전송 중... ID:" << id;
 
-    // 소켓으로 데이터 전송
-    if (m_socket && m_socket->isOpen()) {
-        m_socket->write(blockToSend);
-        m_socket->flush();
-        qDebug() << "ID 중복 확인 요청 전송 완료";
-    } else {
-        qDebug() << "오류: 소켓이 열려있지 않아 ID 중복 확인 요청을 보낼 수 없습니다.";
-        QMessageBox::critical(this, "연결 오류", "서버와 연결이 끊어졌습니다.");
-    }
+    // // 소켓으로 데이터 전송
+    // if (m_socket && m_socket->isOpen()) {
+    //     m_socket->write(blockToSend);
+    //     m_socket->flush();
+    //     qDebug() << "ID 중복 확인 요청 전송 완료";
+    // } else {
+    //     qDebug() << "오류: 소켓이 열려있지 않아 ID 중복 확인 요청을 보낼 수 없습니다.";
+    //     QMessageBox::critical(this, "연결 오류", "서버와 연결이 끊어졌습니다.");
+    // }
 
     // 서버 응답은 onReadyRead()에서 처리
 }
@@ -177,99 +177,99 @@ void Dialog_SignUp::on_pushButton_SignUp_clicked()
     out << qint64(Protocol::Join_Request) << totalSize << totalSize;
 
     // 5. 소켓으로 데이터 전송
-    if (m_socket && m_socket->isOpen()) {
-        qDebug() << "서버로 회원가입 요청 전송 중... (프로토콜:" << Protocol::Join_Request << ", 크기:" << totalSize << "바이트)";
-        m_socket->write(blockToSend);
-        m_socket->flush();
-        qDebug() << "회원가입 요청 전송 완료";
+    // if (m_socket && m_socket->isOpen()) {
+    //     qDebug() << "서버로 회원가입 요청 전송 중... (프로토콜:" << Protocol::Join_Request << ", 크기:" << totalSize << "바이트)";
+    //     m_socket->write(blockToSend);
+    //     m_socket->flush();
+    //     qDebug() << "회원가입 요청 전송 완료";
 
-        // 서버 응답은 onReadyRead()에서 처리
-        // 여기서는 바로 창을 닫지 않고, 서버 응답을 기다림
-        QMessageBox::information(this, "처리 중", "회원가입 요청을 처리 중입니다. 잠시만 기다려주세요.");
-    } else {
-        qDebug() << "오류: 소켓이 열려있지 않아 회원가입 요청을 보낼 수 없습니다.";
-        QMessageBox::critical(this, "연결 오류", "서버와 연결이 끊어졌습니다.");
-    }
+    //     // 서버 응답은 onReadyRead()에서 처리
+    //     // 여기서는 바로 창을 닫지 않고, 서버 응답을 기다림
+    //     QMessageBox::information(this, "처리 중", "회원가입 요청을 처리 중입니다. 잠시만 기다려주세요.");
+    // } else {
+    //     qDebug() << "오류: 소켓이 열려있지 않아 회원가입 요청을 보낼 수 없습니다.";
+    //     QMessageBox::critical(this, "연결 오류", "서버와 연결이 끊어졌습니다.");
+    // }
 }
 
 void Dialog_SignUp::onReadyRead()
 {
     qDebug() << "회원가입 다이얼로그: 서버로부터 데이터 수신 시작";
-    m_buffer.append(m_socket->readAll());
+    //m_buffer.append(m_socket->readAll());
     qDebug() << "현재 버퍼 크기:" << m_buffer.size() << "바이트";
 
-    while(true) {
-        QDataStream in(&m_buffer, QIODevice::ReadOnly);
-        in.setVersion(QDataStream::Qt_5_15);
+    // while(true) {
+    //     QDataStream in(&m_buffer, QIODevice::ReadOnly);
+    //     in.setVersion(QDataStream::Qt_5_15);
 
-        // 헤더 크기 확인
-        if (m_buffer.size() < (3 * sizeof(qint64))) {
-            qDebug() << "헤더 크기 부족 - 더 많은 데이터 대기 중";
-            break;
-        }
+    //     // 헤더 크기 확인
+    //     if (m_buffer.size() < (3 * sizeof(qint64))) {
+    //         qDebug() << "헤더 크기 부족 - 더 많은 데이터 대기 중";
+    //         break;
+    //     }
 
-        qint64 dataType, totalSize, currentPacketSize;
-        in >> dataType >> totalSize >> currentPacketSize;
-        qDebug() << "수신된 패킷 정보 - 데이터 타입:" << dataType << ", 전체 크기:" << totalSize << "바이트";
+    //     qint64 dataType, totalSize, currentPacketSize;
+    //     in >> dataType >> totalSize >> currentPacketSize;
+    //     qDebug() << "수신된 패킷 정보 - 데이터 타입:" << dataType << ", 전체 크기:" << totalSize << "바이트";
 
-        // 전체 패킷 크기 확인
-        if (m_buffer.size() < totalSize) {
-            qDebug() << "패킷 데이터 부족 - 현재:" << m_buffer.size() << "바이트, 필요:" << totalSize << "바이트";
-            break;
-        }
+    //     // 전체 패킷 크기 확인
+    //     if (m_buffer.size() < totalSize) {
+    //         qDebug() << "패킷 데이터 부족 - 현재:" << m_buffer.size() << "바이트, 필요:" << totalSize << "바이트";
+    //         break;
+    //     }
 
-        QString filename;
-        in >> filename;
-        qDebug() << "파일명:" << filename;
+    //     QString filename;
+    //     in >> filename;
+    //     qDebug() << "파일명:" << filename;
 
-        // 페이로드 추출
-        QByteArray payload = m_buffer.mid(in.device()->pos(), totalSize - in.device()->pos());
-        qDebug() << "JSON 페이로드 크기:" << payload.size() << "바이트";
-        // JSON 파싱
-        QJsonDocument doc = QJsonDocument::fromJson(payload);
-        qDebug() << "JSON 파싱 완료";
+    //     // 페이로드 추출
+    //     QByteArray payload = m_buffer.mid(in.device()->pos(), totalSize - in.device()->pos());
+    //     qDebug() << "JSON 페이로드 크기:" << payload.size() << "바이트";
+    //     // JSON 파싱
+    //     QJsonDocument doc = QJsonDocument::fromJson(payload);
+    //     qDebug() << "JSON 파싱 완료";
 
-        if (doc.isObject()) {
-            QJsonObject responseObj = doc.object();
+    //     if (doc.isObject()) {
+    //         QJsonObject responseObj = doc.object();
 
-            // 응답 타입에 따라 처리
-            if (dataType == Protocol::ID_Check_Request) {
-                // ID 중복 확인 응답 처리
-                bool isAvailable = responseObj["available"].toBool();
+    //         // 응답 타입에 따라 처리
+    //         if (dataType == Protocol::ID_Check_Request) {
+    //             // ID 중복 확인 응답 처리
+    //             bool isAvailable = responseObj["available"].toBool();
 
-                if (isAvailable) {
-                    QMessageBox::information(this, "ID 확인", "사용 가능한 ID입니다.");
-                    m_idChecked = true;
-                    qDebug() << "ID 중복 확인 성공: 사용 가능";
-                } else {
-                    QMessageBox::warning(this, "ID 확인", "이미 사용 중인 ID입니다. 다른 ID를 입력해주세요.");
-                    m_idChecked = false;
-                    qDebug() << "ID 중복 확인 실패: 이미 사용 중";
-                }
-            }
-            else if (dataType == Protocol::Join_Request) {
-                // 회원가입 요청 응답 처리
-                bool success = responseObj["success"].toBool();
+    //             if (isAvailable) {
+    //                 QMessageBox::information(this, "ID 확인", "사용 가능한 ID입니다.");
+    //                 m_idChecked = true;
+    //                 qDebug() << "ID 중복 확인 성공: 사용 가능";
+    //             } else {
+    //                 QMessageBox::warning(this, "ID 확인", "이미 사용 중인 ID입니다. 다른 ID를 입력해주세요.");
+    //                 m_idChecked = false;
+    //                 qDebug() << "ID 중복 확인 실패: 이미 사용 중";
+    //             }
+    //         }
+    //         else if (dataType == Protocol::Join_Request) {
+    //             // 회원가입 요청 응답 처리
+    //             bool success = responseObj["success"].toBool();
 
-                if (success) {
-                    QMessageBox::information(this, "회원가입 완료", "회원가입이 성공적으로 완료되었습니다.\n로그인 창에서 로그인해주세요.");
-                    qDebug() << "회원가입 성공: 창 닫기";
-                    this->accept(); // 창을 '성공' 상태로 닫음
-                } else {
-                    QString errorMsg = responseObj["message"].toString();
-                    if (errorMsg.isEmpty()) {
-                        errorMsg = "회원가입 처리 중 오류가 발생했습니다.";
-                    }
-                    QMessageBox::warning(this, "회원가입 실패", errorMsg);
-                    qDebug() << "회원가입 실패:" << errorMsg;
-                }
-            }
-        } else {
-            qDebug() << "JSON 파싱 실패 또는 빈 객체";
-        }
+    //             if (success) {
+    //                 QMessageBox::information(this, "회원가입 완료", "회원가입이 성공적으로 완료되었습니다.\n로그인 창에서 로그인해주세요.");
+    //                 qDebug() << "회원가입 성공: 창 닫기";
+    //                 this->accept(); // 창을 '성공' 상태로 닫음
+    //             } else {
+    //                 QString errorMsg = responseObj["message"].toString();
+    //                 if (errorMsg.isEmpty()) {
+    //                     errorMsg = "회원가입 처리 중 오류가 발생했습니다.";
+    //                 }
+    //                 QMessageBox::warning(this, "회원가입 실패", errorMsg);
+    //                 qDebug() << "회원가입 실패:" << errorMsg;
+    //             }
+    //         }
+    //     } else {
+    //         qDebug() << "JSON 파싱 실패 또는 빈 객체";
+    //     }
 
-        // 처리 완료된 데이터 제거
-        m_buffer.remove(0, totalSize);
-        qDebug() << "처리된 데이터 제거 후 버퍼 크기:" << m_buffer.size() << "바이트";
-    }
+    //     // 처리 완료된 데이터 제거
+    //     m_buffer.remove(0, totalSize);
+    //     qDebug() << "처리된 데이터 제거 후 버퍼 크기:" << m_buffer.size() << "바이트";
+    // }
 }

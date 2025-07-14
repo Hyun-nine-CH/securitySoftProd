@@ -12,8 +12,8 @@
 #include <QTimer> // QTimer::singleShot 사용을 위해 추가
 #include "Protocol.h"
 
-MainWindow::MainWindow(QTcpSocket* socket, const QJsonObject& userInfo, QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow), m_socket(socket), m_userInfo(userInfo)
+MainWindow::MainWindow(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow)
 {
     ui->setupUi(this);
 

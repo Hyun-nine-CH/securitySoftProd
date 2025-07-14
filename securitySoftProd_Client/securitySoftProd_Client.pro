@@ -16,6 +16,7 @@ SOURCES += \
     clientinfoform.cpp \
     clientinfoform_chat.cpp \
     clientinfoform_prod.cpp \
+    communication.cpp \
     dialog_log.cpp \
     dialog_signup.cpp \
     main.cpp \
@@ -31,6 +32,7 @@ HEADERS += \
     clientinfoform.h \
     clientinfoform_chat.h \
     clientinfoform_prod.h \
+    communication.h \
     dialog_log.h \
     dialog_signup.h \
     mainwindow.h \

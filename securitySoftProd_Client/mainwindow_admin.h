@@ -20,7 +20,7 @@ class MainWindow_Admin : public QMainWindow
 
 public:
     // 생성자에서 소켓과 로그인 성공 시 받은 사용자 정보 전체를 받음
-    explicit MainWindow_Admin(QTcpSocket* socket, const QJsonObject& userInfo, QWidget *parent = nullptr);
+    explicit MainWindow_Admin(QWidget *parent = nullptr);
     ~MainWindow_Admin();
 
 private slots:

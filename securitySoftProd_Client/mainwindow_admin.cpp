@@ -15,8 +15,8 @@
 #include <QTabWidget>
 #include "Protocol.h"
 
-MainWindow_Admin::MainWindow_Admin(QTcpSocket* socket, const QJsonObject& userInfo, QWidget *parent)
-    : QMainWindow(parent), ui(new Ui::MainWindow_Admin), m_socket(socket), m_userInfo(userInfo)
+MainWindow_Admin::MainWindow_Admin(QWidget *parent)
+    : QMainWindow(parent), ui(new Ui::MainWindow_Admin)
 {
     ui->setupUi(this);
 
