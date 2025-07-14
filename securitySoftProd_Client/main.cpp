@@ -18,10 +18,12 @@ int main(int argc, char *argv[])
     if (loginDialog->exec() == QDialog::Accepted)
     {
         int clientId = Communication::getInstance()->getUserInfo()["ClientId"].toInteger();
+        //qDebug() << "로그인 성공 후 ClientId : " << clientId;
         if (clientId >= 1000) {
-            MainWindow_Admin* adminWin = new MainWindow_Admin();
-            adminWin->setAttribute(Qt::WA_DeleteOnClose);
-            adminWin->show();
+            //MainWindow_Admin* adminWin = new MainWindow_Admin();
+            //adminWin->setAttribute(Qt::WA_DeleteOnClose);
+            //adminWin->show();
+            qDebug() << "관리자 로그인";
         } else {
             MainWindow* clientWin = new MainWindow();
             clientWin->setAttribute(Qt::WA_DeleteOnClose);

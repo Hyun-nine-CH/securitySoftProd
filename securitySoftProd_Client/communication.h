@@ -10,7 +10,7 @@ class Communication : public QObject
 {
     Q_OBJECT
 public:
-    static Communication* getInstance(QObject *parent = nullptr);
+    static Communication* getInstance();
     ~Communication();
 
     QJsonObject getUserInfo() const;
@@ -20,7 +20,7 @@ public:
     Communication& operator=(const Communication&) = delete;
 
 private:
-    explicit Communication(QObject *parent = nullptr);
+    explicit Communication();
     QTcpSocket* socket;
     QByteArray  m_buffer;
     QJsonObject m_userInfo;

@@ -21,7 +21,8 @@ public:
 
 private slots:
     void on_pushButton_login_clicked();
-    void LoginConfirm();
+    void LoginPass();
+    void LoginFail();
 
 private:
     Ui::Dialog_log *ui;

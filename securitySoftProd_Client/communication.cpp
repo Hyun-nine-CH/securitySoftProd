@@ -5,11 +5,11 @@
 
 Communication* Communication::instance = nullptr; // 정적 멤버 초기화
 
-Communication* Communication::getInstance(QObject *parent) {
+Communication* Communication::getInstance() {
     if (!instance) {
-        instance = new Communication(parent);
+        instance = new Communication();
     }else {
-        qDebug() << "Dialog_log 싱글톤 인스턴스 재사용";
+        //qDebug() << "싱글톤 인스턴스 재사용";
     }
     return instance;
 }
@@ -24,8 +24,7 @@ QJsonObject Communication::getUserInfo() const
     return m_userInfo;
 }
 
-Communication::Communication(QObject *parent)
-: QObject(parent)
+Communication::Communication()
 {
     socket = new QTcpSocket(this);
 
@@ -75,7 +74,7 @@ void Communication::ProcessBuffer(const QBuffer &buffer, int requestType)
                 emit LoginFail();
             }
 
-            qDebug() << "User Info : " << m_buffer;
+            //qDebug() << "User Info : " << m_buffer;
             //emit ModifyProductDB(this, ByteArray);
             break;
         }

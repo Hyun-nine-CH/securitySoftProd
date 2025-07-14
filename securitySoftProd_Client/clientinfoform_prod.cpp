@@ -27,9 +27,9 @@ ClientInfoForm_Prod::ClientInfoForm_Prod(QWidget *parent) :
     connect(ui->pushButton_Reset, &QPushButton::clicked, this, &ClientInfoForm_Prod::on_pushButton_Reset_clicked);
 
     // 초기 제품 목록 요청 시그널 발생
-    QTimer::singleShot(500, this, [this]() {
-        emit productListRequested();
-    });
+    // QTimer::singleShot(500, this, [this]() {
+    //     emit productListRequested();
+    // });
 }
 
 ClientInfoForm_Prod::~ClientInfoForm_Prod()
