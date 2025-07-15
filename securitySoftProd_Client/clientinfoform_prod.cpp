@@ -72,7 +72,6 @@ void ClientInfoForm_Prod::displayProductList(const QBuffer &buffer)
     QJsonArray productArray = QJsonDocument::fromJson(arr).array();
     //통신
 
-
     // 테이블 초기화
     ui->tableWidget->setRowCount(0);
 
@@ -88,7 +87,7 @@ void ClientInfoForm_Prod::displayProductList(const QBuffer &buffer)
         ui->tableWidget->setItem(row, 0, nameItem);
 
         // 가격
-        QTableWidgetItem* priceItem = new QTableWidgetItem(product["가격(원)"].toString());
+        QTableWidgetItem* priceItem = new QTableWidgetItem(product["가격"].toString());
         ui->tableWidget->setItem(row, 1, priceItem);
 
         // 납기일

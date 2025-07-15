@@ -31,17 +31,17 @@ MainWindow::MainWindow(QWidget *parent)
     //connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::on_actionQuit_triggered);
 
     // 1. 제품 정보 탭 생성 및 시그널 연결 (Prod 탭은 아직 분할되지 않았다고 가정)
-    m_prodTab = new ClientInfoForm_Prod(this);
-    connect(m_prodTab, &ClientInfoForm_Prod::productListRequested, this, &MainWindow::requestProductList);
-    connect(m_prodTab, &ClientInfoForm_Prod::searchProductsRequested, this, &MainWindow::searchProducts);
-    ui->tabWidget->addTab(m_prodTab, tr("제품 정보"));
+    //m_prodTab = new ClientInfoForm_Prod(this);
+    // connect(m_prodTab, &ClientInfoForm_Prod::productListRequested, this, &MainWindow::requestProductList);
+    // connect(m_prodTab, &ClientInfoForm_Prod::searchProductsRequested, this, &MainWindow::searchProducts);
+    // ui->tabWidget->addTab(m_prodTab, tr("제품 정보"));
 
     // 2. 주문 하기 탭 생성 및 시그널 연결 (Order 탭은 아직 분할되지 않았다고 가정)
-    //m_orderTab = new ClientInfoForm(this);
+    m_orderTab = new ClientInfoForm(this);
     //connect(m_orderTab, &ClientInfoForm::orderSubmitted, this, &MainWindow::submitOrder);
     //connect(m_orderTab, &ClientInfoForm::orderListRequested, this, &MainWindow::requestOrderList);
     //connect(m_orderTab, &ClientInfoForm::searchOrdersRequested, this, &MainWindow::searchOrders);
-    //ui->tabWidget->addTab(m_orderTab, tr("주문 하기"));
+    ui->tabWidget->addTab(m_orderTab, tr("주문 하기"));
 
     // 3. 채팅방 탭 생성 (책임 분할 적용)
     // 채팅 탭이 직접 소켓과 유저 정보를 받아 통신을 처리합니다.
@@ -99,7 +99,7 @@ void MainWindow::on_actionQuit_triggered() {
 void MainWindow::onTabChanged(int index)
 {
     if (index == 0) {
-        m_prodTab->handleIncomingData();// 데이터로드
+        m_orderTab->handleIncomingData();// 데이터로드
     } else if (index == 1) {
         // 두 번째 탭이 선택되었고 아직 데이터가 로드되지 않았다면
         // Communication::getInstance().requestTab2Data();
