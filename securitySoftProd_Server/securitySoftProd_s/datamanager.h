@@ -31,6 +31,7 @@ public:
     bool        SaveClientData(const QString    &filePath);
     void        AddClientData (const QByteArray &NewData);
     QJsonObject IsClient      (const QByteArray &IdPwData);
+    QJsonObject IsId          (const QByteArray &IdPwData);
 
     //Order DB
     bool SaveOrderData(const QString    &filePath);

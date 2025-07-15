@@ -19,9 +19,10 @@ public:
     Communication(const Communication&) = delete;
     Communication& operator=(const Communication&) = delete;
 
-    void RequestProductInfo(); //제품목록 요청 신호 받기
-    void SendChatMesg(const QString &mesg);       //채팅메시지 신호 받기
-
+    void RequestProductInfo(); //제품목록 요청 신호
+    void SendChatMesg(const QString &mesg); //채팅메시지 신호
+    void SendIdCheck(const QByteArray &idcheck); //아이디 중복 서버에 체크해달라고
+    void SendJoinData(const QByteArray &idcheck);//회원가입 데이터
 private:
     explicit Communication();
     QTcpSocket* socket;
@@ -34,7 +35,7 @@ private:
 
     enum RequestType {
         LOGIN = 1,
-
+        ID_CHECK,
     };
 
     void ProcessBuffer(const QBuffer &buffer, int requestType);
@@ -48,6 +49,7 @@ public slots:
 
 private slots:
     void Login(const QBuffer &buffer); //로그인
+    void IdChekc(const QBuffer &buffer); //아이디중복체크에 대한 결과값
     void StartComm();
     //void SignUp(); //
     void onReadyRead();
@@ -58,6 +60,7 @@ signals:
     void LoginFail();
     void ReceiveProductInfo(const QBuffer &buffer);
     void ReceiveChat(const QBuffer &buffer);
+    void IdCheckResult(bool IsDupli);
     //void ReceiveUserInfo();
     //void SendAddUser();
 

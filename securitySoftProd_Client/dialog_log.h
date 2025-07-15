@@ -21,6 +21,7 @@ public:
 
 private slots:
     void on_pushButton_login_clicked();
+    void on_pushButton_signUp_clicked();
     void LoginPass();
     void LoginFail();
 

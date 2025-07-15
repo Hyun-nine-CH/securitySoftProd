@@ -77,8 +77,11 @@ void CommuniCation::ProcessBuffer(const QBuffer &buffer, int requestType)
             qDebug() << "chat message receive completed";
             emit ChattingMesg(buffer,getClientInfo());
             break;
+        case ID_CHECK:
+            qDebug() << "id check data receive completed";
+            emit RequestIdCheck(this,buffer);
+            break;
         }
-
         // 공통 초기화 코드
         ReceivePacket = 0;
         TotalSize = 0;
@@ -126,6 +129,7 @@ void CommuniCation::ReadClientData()
     case 0x11:emit RequestOrderInfo  (this);       break;
     case 0x12:emit RequestChatLogInfo(this);       break;
     case 0x13:ChattingParse          (buffer);     break;
+    case 0x14:DuplicIdCheck          (buffer);     break;
     }
     ByteArray.clear();
 }
@@ -212,4 +216,9 @@ void CommuniCation::AddOrderInfo(const QBuffer &buffer)
 void CommuniCation::ChattingParse(const QBuffer &buffer)
 {
     ProcessBuffer(buffer,CHAT_MESG);
+}
+
+void CommuniCation::DuplicIdCheck(const QBuffer &buffer)
+{
+    ProcessBuffer(buffer,ID_CHECK);
 }

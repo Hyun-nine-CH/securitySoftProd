@@ -23,8 +23,6 @@ Dialog_log::Dialog_log(QWidget *parent)
     ui->lineEdit_pw->setEchoMode(QLineEdit::Password);
     // 2. 비밀번호 입력란에 이벤트 필터 설치 (Enter 키 감지용)
     ui->lineEdit_pw->installEventFilter(this);
-
-    qDebug() << "Dialog_log 초기화 완료";
 }
 
 Dialog_log::~Dialog_log() {
@@ -39,6 +37,12 @@ void Dialog_log::on_pushButton_login_clicked() {
     Communication::getInstance()->SendLoginConfirm(id,pw);
     connect(Communication::getInstance(),&Communication::LoginSuccess,this,&Dialog_log::LoginPass);
     connect(Communication::getInstance(),&Communication::LoginFail,this,&Dialog_log::LoginFail);
+}
+
+void Dialog_log::on_pushButton_signUp_clicked()
+{
+    Dialog_SignUp signUpDialog(this);
+    signUpDialog.exec();
 }
 
 void Dialog_log::LoginPass()

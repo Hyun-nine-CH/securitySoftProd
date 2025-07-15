@@ -40,6 +40,7 @@ private slots:
     void OrderAdd(CommuniCation* Thread,const QBuffer& MessageData);// 주문정보 추가
     void LoadOrderInfo(CommuniCation* Thread);// 주문정보 조회
     void LoadChatLogInfo(CommuniCation* Thread);// 채팅로그 조회
+    void CheckId(CommuniCation* Thread,const QBuffer& MessageData);//아이디 중복조회
 
 private:
     QLabel     *InfoLabel;
@@ -72,6 +73,7 @@ private:
     const qint64 ORDER_ALL = 0x11;
     const qint64 CHAT_ALL  = 0x12;
     const qint64 CHAT_MESG = 0x13;
+    const qint64 ID_CHECK  = 0x14;
 
     void SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand);
 };

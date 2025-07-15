@@ -111,6 +111,7 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestOrderAdd, this, &Widget::OrderAdd);//주문정보 추가
     connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 조회
     connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
+    connect(Comm, &CommuniCation::RequestIdCheck, this, &Widget::CheckId);//아이디 중복 체크
 }
 
 void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
@@ -224,6 +225,14 @@ void Widget::LoadOrderInfo(CommuniCation *Thread)
 void Widget::LoadChatLogInfo(CommuniCation *Thread)
 {
     SendData((DMan->getChatLogData()).toJson(),Thread,CHAT_ALL);
+}
+
+void Widget::CheckId(CommuniCation *Thread, const QBuffer &MessageData)
+{
+    QJsonObject   IdResult = DMan->IsId(MessageData.data());
+    QJsonDocument doc(IdResult);
+    QByteArray    result = doc.toJson();
+    SendData(result,Thread,ID_CHECK);
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

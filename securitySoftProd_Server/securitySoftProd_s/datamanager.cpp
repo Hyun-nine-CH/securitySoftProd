@@ -54,6 +54,11 @@ QJsonObject DataManager::IsClient(const QByteArray &IdPwData)
     return CDb->Confirm(IdPwData);
 }
 
+QJsonObject DataManager::IsId(const QByteArray &IdPwData)
+{
+    return CDb->IdCheck(IdPwData);
+}
+
 bool DataManager::LoadClientData()
 {
     ClientData = CDb->LoadData();

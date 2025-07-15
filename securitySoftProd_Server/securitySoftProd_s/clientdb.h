@@ -14,6 +14,7 @@ public:
     QJsonDocument LoadData   ()                              override;
     void          AddData    (const QByteArray &NewData)     override;
     QJsonObject Confirm      (const QByteArray &IdPwData);
+    QJsonObject IdCheck      (const QByteArray &IdPwData);
 
 private:
     QByteArray ClientData;

@@ -98,3 +98,45 @@ QJsonObject ClientDB::Confirm(const QByteArray &IdPwData)
     // 루프를 모두 돌았는데도 일치하는 ID/PW 조합을 찾지 못하면 false 반환
     return Err.object();
 }
+
+QJsonObject ClientDB::IdCheck(const QByteArray &IdPwData)
+{
+    QJsonDocument &AllDoc  = DbManager->getClientData();
+    QJsonDocument New      = QJsonDocument::fromJson(IdPwData);
+    QJsonObject   ConFObj  = New.object();
+    QString       TargetId = ConFObj["id"].toString();
+    QJsonArray    AllArray = AllDoc.array();
+    QJsonObject jsonObject; // 클라이언트에 보낼 메시지
+    if (New.isNull() || !New.isObject()) { // 입력 데이터가 유효한 JSON 객체인지 확인
+        qWarning() << "입력 데이터가 유효한 JSON 객체가 아닙니다.";
+        qDebug() << "아니다 : " << IdPwData;
+    }
+    // 키 존재 여부 확인 후 값 추출
+    if (!ConFObj.contains("id")) {
+        qWarning() << "입력 데이터에 'id' 키가 없습니다.";
+    }
+
+    if (AllDoc.isNull() || !AllDoc.isArray()) { // DB 문서가 유효한 JSON 배열인지 확인
+        qWarning() << "working directory에 clientinfoDB 추가하셨나요?";
+    }
+
+    jsonObject["IdCheck"] = "unique";
+
+    for (int i = 0; i < AllArray.size(); i++) {
+        QJsonValueRef itemRef = AllArray[i]; // QJsonValueRef를 사용하여 불필요한 복사 방지
+        if (!itemRef.isObject()) { // 배열의 각 항목이 객체인지 확인
+            qWarning() << "배열의 " << i << "번째 항목이 객체가 아닙니다. 스킵합니다.";
+            continue; // 객체가 아니면 다음 항목으로 넘어감
+        }
+        QJsonObject item = itemRef.toObject();
+
+        // "Id" 키 존재 여부 확인 후 비교
+        if (item.contains("id") && item["id"].toString() == TargetId) {
+            qDebug() << "일치 인덱스:" << i;
+            jsonObject["IdCheck"] = "duplicate"; // 2. QJsonObject에 키-값 쌍을 추가합니다.
+            return jsonObject;
+        }
+        // ID가 일치하지 않거나, ID는 일치해도 PW가 일치하지 않으면 계속 루프를 진행하여 다음 항목을 확인합니다.
+    }
+    return jsonObject;
+}

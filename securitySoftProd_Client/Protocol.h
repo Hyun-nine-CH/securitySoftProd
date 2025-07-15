@@ -34,7 +34,7 @@ enum DataType : qint64 {
     Chatting_Parse = 0x13, // 서버의 ChattingParse에 해당 (새로 추가)
 
     // 클라이언트 전용 코드 (충돌 방지를 위해 높은 값 사용)
-    ID_Check_Request = 0x22, // 원래 0x09였지만 충돌 방지를 위해 변경
+    ID_Check_Request = 0x14, // 아이디중복 요청
     Chat_Message = 0x20, // 서버의 default에 맞춤
     Chat_History_Response = 0x21, // 임시 값
 

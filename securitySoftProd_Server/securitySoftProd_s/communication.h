@@ -35,6 +35,7 @@ signals:
     void RequestOrderAdd    (CommuniCation* Thread,const QBuffer& MessageData);// 주문정보 추가
     void RequestOrderInfo   (CommuniCation* Thread);// 주문정보 조회
     void RequestChatLogInfo (CommuniCation* Thread);// 채팅로그 조회
+    void RequestIdCheck     (CommuniCation* Thread,const QBuffer& MessageData); //아이디 중복체크
 
 private slots:
     void ReadClientData    (); // 소켓에서 데이터 읽기
@@ -64,6 +65,7 @@ private:
         ADD_ORDER,
         ADD_LOG,
         CHAT_MESG,
+        ID_CHECK
     };
 
     void ProcessBuffer        (const QBuffer &buffer, int requestType);
@@ -74,8 +76,9 @@ private:
     void DelProductInfo       (const QBuffer &buffer);//상품 삭제
     void ConfrimLogin         (const QBuffer &buffer);//로그인 정보 확인
     void Join                 (const QBuffer &buffer);//회원정보 추가
-    void AddOrderInfo         (const QBuffer &buffer);// 주문정보 추가
-    void ChattingParse        (const QBuffer &buffer);// 채팅 메시지 파싱
+    void AddOrderInfo         (const QBuffer &buffer);//주문정보 추가
+    void ChattingParse        (const QBuffer &buffer);//채팅 메시지 파싱
+    void DuplicIdCheck        (const QBuffer &buffer);//아이디 중복
 };
 
 #endif // COMMUNICATION_H

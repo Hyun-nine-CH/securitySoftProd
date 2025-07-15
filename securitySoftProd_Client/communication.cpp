@@ -73,9 +73,13 @@ void Communication::ProcessBuffer(const QBuffer &buffer, int requestType)
                 qDebug() << "Login Fail";
                 emit LoginFail();
             }
-
-            //qDebug() << "User Info : " << m_buffer;
-            //emit ModifyProductDB(this, ByteArray);
+            break;
+        case ID_CHECK:
+            QJsonDocument doc = QJsonDocument::fromJson(m_buffer);
+            if(doc.object()["IdCheck"] == "unique")
+                emit IdCheckResult(false);
+            else
+                emit IdCheckResult(true);
             break;
         }
 
@@ -160,6 +164,11 @@ void Communication::Login(const QBuffer &buffer)
     ProcessBuffer(buffer, LOGIN);
 }
 
+void Communication::IdChekc(const QBuffer &buffer)
+{
+    ProcessBuffer(buffer, ID_CHECK);
+}
+
 void Communication::StartComm()
 {
     qDebug() << "서버연결 완료";
@@ -219,6 +228,18 @@ void Communication::SendChatMesg(const QString &mesg)
     qDebug() << "메시지 전송 완료";
 }
 
+void Communication::SendIdCheck(const QByteArray &idcheck)
+{
+    socket->write(idcheck);
+    qDebug() << "아이디 중복 데이터 전송 완료";
+}
+
+void Communication::SendJoinData(const QByteArray &idcheck)
+{
+    socket->write(idcheck);
+    qDebug() << "회원가입 데이터 전송 완료";
+}
+
 void Communication::onReadyRead()
 {
     //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
@@ -244,12 +265,13 @@ void Communication::onReadyRead()
     //case 0x05:AddProductInfo         (buffer);     break;
     //case 0x06:DelProductInfo         (buffer);     break;
     case 0x07:Login         (buffer);     break;
-    //case 0x08:Join                   (buffer);     break;
+    //case 0x08:SignUp                   (buffer);     break;
     //case 0x09:emit RequestUserInfo   (this);       break;
     //case 0x10:AddOrderInfo           (buffer);     break;
     //case 0x11:emit RequestOrderInfo  (this);       break;
     //case 0x12:emit RequestChatLogInfo(this);       break;
     case 0x13:emit ReceiveChat(buffer);       break;
+    case 0x14:IdChekc(buffer);       break;
     }
     m_buffer.clear();
 }
