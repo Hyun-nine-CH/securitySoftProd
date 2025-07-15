@@ -121,7 +121,7 @@ void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
         MessageData에 접근해서 크래시 나거나 데이터 오염됨
     */
     QByteArray messageCopy = MessageData.data();
-    qDebug() << "서버에서 받은 chat mesg : " << messageCopy;
+    //qDebug() << "서버에서 받은 chat mesg : " << messageCopy;
     QJsonDocument Mesg = QJsonDocument::fromJson(messageCopy);
     if(Mesg.isNull()){
             qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
@@ -130,8 +130,7 @@ void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
 
     DMan->AddChatLogData(MesgObj["message"].toString().toUtf8(),UserInfo);
     ListMutex->lock();
-    for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();\
-                                                                                         it != CInfoList.constEnd(); ++it){
+    for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
         CommuniCation* W = it.key();
         //같은 방이면 브로드캐스트 해라
@@ -157,7 +156,7 @@ void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
                 QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
                                           Qt::QueuedConnection,  // 연결 타입 (필수)
                                           Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
-                qDebug() << "메시지 전송 요청됨: " << W->metaObject()->className();
+                //qDebug() << "메시지 전송 요청됨: " << W->metaObject()->className();
             }
         }
     }
@@ -240,8 +239,8 @@ void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint6
     out.device()->seek(0);
     qint64 dataType = Comand;
     out << dataType << Container.size() << Container.size();
-    qDebug() << "send Data";
-    qDebug() << Convert;
+    //qDebug() << "send Data";
+    //qDebug() << Convert;
     QMetaObject::invokeMethod(Thread,"WriteData", Qt::QueuedConnection, Q_ARG(QByteArray, Container));
 }
 

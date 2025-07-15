@@ -27,7 +27,7 @@ MainWindow::MainWindow(QWidget *parent)
     // 툴바 액션(아이콘 버튼)과 탭 전환 슬롯 연결
     connect(ui->actionSecurityProd_Info, &QAction::triggered, this, &MainWindow::on_actionSecurityProd_Info_triggered);
     //connect(ui->actionOrder_Info, &QAction::triggered, this, &MainWindow::on_actionOrder_Info_triggered);
-    //connect(ui->actionChatting_Room, &QAction::triggered, this, &MainWindow::on_actionChatting_Room_triggered);
+    connect(ui->actionChatting_Room, &QAction::triggered, this, &MainWindow::on_actionChatting_Room_triggered);
     //connect(ui->actionQuit, &QAction::triggered, this, &MainWindow::on_actionQuit_triggered);
 
     // 1. 제품 정보 탭 생성 및 시그널 연결 (Prod 탭은 아직 분할되지 않았다고 가정)
@@ -45,9 +45,9 @@ MainWindow::MainWindow(QWidget *parent)
 
     // 3. 채팅방 탭 생성 (책임 분할 적용)
     // 채팅 탭이 직접 소켓과 유저 정보를 받아 통신을 처리합니다.
-    //m_chatTab = new ClientInfoForm_Chat(m_socket, m_userInfo, this);
+    m_chatTab = new ClientInfoForm_Chat();
     // m_chatTab으로부터 messageSendRequested 시그널을 받을 필요 없음 (이제 chatTab이 직접 보냄)
-    //ui->tabWidget->addTab(m_chatTab, tr("채팅방"));
+    ui->tabWidget->addTab(m_chatTab, tr("채팅방"));
     // QTabWidget의 시그널 연결
     connect(ui->tabWidget, &QTabWidget::currentChanged, this, &MainWindow::onTabChanged);
     ui->tabWidget->setCurrentIndex(0); // 기본으로 첫 번째 탭을 보여줌
@@ -73,7 +73,7 @@ MainWindow::~MainWindow() {
 // --- 툴바 액션 슬롯 구현 ---
 void MainWindow::on_actionSecurityProd_Info_triggered() { ui->tabWidget->setCurrentWidget(m_prodTab); }
 //void MainWindow::on_actionOrder_Info_triggered() { ui->tabWidget->setCurrentWidget(m_orderTab); }
-//void MainWindow::on_actionChatting_Room_triggered() { ui->tabWidget->setCurrentWidget(m_chatTab); }
+void MainWindow::on_actionChatting_Room_triggered() { ui->tabWidget->setCurrentWidget(m_chatTab); }
 
 void MainWindow::on_actionQuit_triggered() {
     // 서버에 로그아웃 메시지 전송
@@ -98,16 +98,12 @@ void MainWindow::on_actionQuit_triggered() {
 
 void MainWindow::onTabChanged(int index)
 {
-    if (index == 0 && !tab1DataLoaded) {
-        // 첫 번째 탭이 선택되었고 아직 데이터가 로드되지 않았다면
-        // Communication::getInstance().requestTab1Data(); // 서버에 데이터 요청
-        // ui->tab1Widget->loadData(); // 탭 위젯 자체에 로드 요청
-        tab1DataLoaded = true;
-    } else if (index == 1 && !tab2DataLoaded) {
+    if (index == 0) {
+        m_prodTab->handleIncomingData();// 데이터로드
+    } else if (index == 1) {
         // 두 번째 탭이 선택되었고 아직 데이터가 로드되지 않았다면
         // Communication::getInstance().requestTab2Data();
         // ui->tab2Widget->loadData();
-        tab2DataLoaded = true;
     }
 }
 

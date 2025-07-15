@@ -19,6 +19,9 @@ public:
     Communication(const Communication&) = delete;
     Communication& operator=(const Communication&) = delete;
 
+    void RequestProductInfo(); //제품목록 요청 신호 받기
+    void SendChatMesg(const QString &mesg);       //채팅메시지 신호 받기
+
 private:
     explicit Communication();
     QTcpSocket* socket;
@@ -53,6 +56,8 @@ private slots:
 signals:
     void LoginSuccess();
     void LoginFail();
+    void ReceiveProductInfo(const QBuffer &buffer);
+    void ReceiveChat(const QBuffer &buffer);
     //void ReceiveUserInfo();
     //void SendAddUser();
 

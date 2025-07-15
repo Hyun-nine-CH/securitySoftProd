@@ -170,6 +170,55 @@ QTcpSocket *Communication::getSocket()
     return socket;
 }
 
+void Communication::RequestProductInfo()
+{
+    qDebug() << "제품목록 요청 데이터 생성 중...";
+    QJsonObject ProductObject;
+    ProductObject["product"] = "Request Product";
+    QByteArray payload = QJsonDocument(ProductObject).toJson();
+
+    qDebug() << "제품목록 요청 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "Product info";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Request_Product_List) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 제품목록 요청 전송 중... (프로토콜:" << Protocol::Request_Product_List << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "제품목록 요청 전송 완료";
+}
+
+void Communication::SendChatMesg(const QString &mesg)
+{
+    qDebug() << "메시지 보내는 중...";
+    QJsonObject ChatObject;
+    ChatObject["message"] = mesg;
+    ChatObject["nickname"] = getUserInfo()["id"].toString();
+    QByteArray payload = QJsonDocument(ChatObject).toJson();
+
+    qDebug() << "메시지 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "mesg";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Chatting_Parse) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 메시지 전송 중... (프로토콜:" << Protocol::Chatting_Parse << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "메시지 전송 완료";
+}
+
 void Communication::onReadyRead()
 {
     //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
@@ -190,7 +239,7 @@ void Communication::onReadyRead()
     //qDebug() << "데이터 타입 : " << DataType;
     switch (DataType) {
     //case 0x01:FileReceive            (buffer);     break;
-    //case 0x03:emit RequestPdInfo     (this);       break;
+    case 0x03:emit ReceiveProductInfo  (buffer);       break;
     //case 0x04:ModiProductInfo        (buffer);     break;
     //case 0x05:AddProductInfo         (buffer);     break;
     //case 0x06:DelProductInfo         (buffer);     break;
@@ -200,7 +249,7 @@ void Communication::onReadyRead()
     //case 0x10:AddOrderInfo           (buffer);     break;
     //case 0x11:emit RequestOrderInfo  (this);       break;
     //case 0x12:emit RequestChatLogInfo(this);       break;
-    //default:emit ChattingMesg(m_buffer,getClientInfo()); break;
+    case 0x13:emit ReceiveChat(buffer);       break;
     }
     m_buffer.clear();
 }

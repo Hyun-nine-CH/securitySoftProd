@@ -32,7 +32,7 @@ private slots:
     // 툴바 아이콘 클릭 시 탭을 전환하는 슬롯들
     void on_actionSecurityProd_Info_triggered();
     //void on_actionOrder_Info_triggered();
-    //void on_actionChatting_Room_triggered();
+    void on_actionChatting_Room_triggered();
     void on_actionQuit_triggered(); // 종료 버튼 슬롯 추가
 
     //탭 바뀔때마다 데이터 로드

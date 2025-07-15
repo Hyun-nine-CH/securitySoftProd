@@ -6,6 +6,7 @@
 #include <QDebug>
 #include <QTimer>
 #include "Protocol.h"
+#include "communication.h"
 
 ClientInfoForm_Prod::ClientInfoForm_Prod(QWidget *parent) :
     QWidget(parent),
@@ -26,6 +27,9 @@ ClientInfoForm_Prod::ClientInfoForm_Prod(QWidget *parent) :
     connect(ui->pushButton, &QPushButton::clicked, this, &ClientInfoForm_Prod::on_pushButton_clicked);
     connect(ui->pushButton_Reset, &QPushButton::clicked, this, &ClientInfoForm_Prod::on_pushButton_Reset_clicked);
 
+    //통신클래스 연결
+    connect(this, &ClientInfoForm_Prod::productListRequested,Communication::getInstance(),&Communication::RequestProductInfo);
+    connect(Communication::getInstance(), &Communication::ReceiveProductInfo,this,&ClientInfoForm_Prod::displayProductList);
     // 초기 제품 목록 요청 시그널 발생
     // QTimer::singleShot(500, this, [this]() {
     //     emit productListRequested();
@@ -59,8 +63,16 @@ void ClientInfoForm_Prod::on_pushButton_Reset_clicked()
     emit productListRequested();
 }
 
-void ClientInfoForm_Prod::displayProductList(const QJsonArray& productArray)
+void ClientInfoForm_Prod::displayProductList(const QBuffer &buffer)
 {
+    //통신
+    qDebug() << "테이블 디스플레이 :" << buffer.data();
+    QByteArray arr = buffer.data();
+    arr.remove(0, buffer.pos());
+    QJsonArray productArray = QJsonDocument::fromJson(arr).array();
+    //통신
+
+
     // 테이블 초기화
     ui->tableWidget->setRowCount(0);
 
@@ -72,26 +84,20 @@ void ClientInfoForm_Prod::displayProductList(const QJsonArray& productArray)
         ui->tableWidget->insertRow(row);
 
         // 제품명
-        QTableWidgetItem* nameItem = new QTableWidgetItem(product["name"].toString());
+        QTableWidgetItem* nameItem = new QTableWidgetItem(product["제품 이름"].toString());
         ui->tableWidget->setItem(row, 0, nameItem);
 
         // 가격
-        QTableWidgetItem* priceItem = new QTableWidgetItem(product["price"].toString());
+        QTableWidgetItem* priceItem = new QTableWidgetItem(product["가격(원)"].toString());
         ui->tableWidget->setItem(row, 1, priceItem);
 
         // 납기일
-        QTableWidgetItem* dueDateItem = new QTableWidgetItem(product["dueDate"].toString());
+        QTableWidgetItem* dueDateItem = new QTableWidgetItem(product["만료일"].toString());
         ui->tableWidget->setItem(row, 2, dueDateItem);
     }
 }
 
-void ClientInfoForm_Prod::handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename)
+void ClientInfoForm_Prod::handleIncomingData()
 {
-    QJsonDocument doc = QJsonDocument::fromJson(payload);
-
-    if (dataType == Protocol::Response_Product_List) {
-        if (doc.isArray()) {
-            displayProductList(doc.array());
-        }
-    }
+    emit productListRequested();
 }
