@@ -11,10 +11,10 @@ class OrderDB : public DataBase
 {
 public:
     OrderDB(DataManager *Dm, QObject *parent = nullptr);
-    QJsonDocument LoadData   ()                              override;
-    void          AddData    (const QByteArray    &NewData)  override;
-    int           FindLastNum(const QJsonDocument &Trace)    override;
-
+    QJsonDocument LoadData    ()                              override;
+    void          AddData     (const QByteArray    &NewData)  override;
+    int           FindLastNum (const QJsonDocument &Trace)    override;
+    QJsonDocument LoadThatData(int ClientId);
 private:
     QByteArray OrderData;
     const QString FileId = "주문 번호";

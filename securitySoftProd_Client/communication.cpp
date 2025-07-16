@@ -203,6 +203,30 @@ void Communication::RequestProductInfo()
     qDebug() << "제품목록 요청 전송 완료";
 }
 
+void Communication::RequestOrderInfo()
+{
+    qDebug() << "주문목록 요청 데이터 생성 중...";
+    QJsonObject OrderObject;
+    OrderObject["Order"] = "Client Order List";
+    QByteArray payload = QJsonDocument(OrderObject).toJson();
+
+    qDebug() << "주문목록 요청 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "Product info";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Request_That_Order) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 주문목록 요청 전송 중... (프로토콜:" << Protocol::Request_Product_List << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "주문목록 요청 전송 완료";
+}
+
 void Communication::SendChatMesg(const QString &mesg)
 {
     qDebug() << "메시지 보내는 중...";
@@ -271,7 +295,8 @@ void Communication::onReadyRead()
     //case 0x11:emit RequestOrderInfo  (this);       break;
     //case 0x12:emit RequestChatLogInfo(this);       break;
     case 0x13:emit ReceiveChat(buffer);       break;
-    case 0x14:IdChekc(buffer);       break;
+    case 0x14:IdChekc(buffer);                break;
+    case 0x15:emit ReceiveOrderInfo(buffer);  break;
     }
     m_buffer.clear();
 }

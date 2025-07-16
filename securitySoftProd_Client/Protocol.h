@@ -28,6 +28,7 @@ enum DataType : qint64 {
     Submit_Order = 0x0F,
     Add_Order = 0x10, // 서버의 AddOrderInfo에 해당
     Request_Order_Info = 0x11, // 서버의 RequestOrderInfo에 해당
+    Request_That_Order = 0x15, //고객의 주문정보 조회
 
     // 채팅 관련
     Chat_History_Request = 0x12, // 서버의 RequestChatLogInfo에 맞춤

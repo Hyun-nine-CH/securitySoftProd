@@ -36,6 +36,7 @@ public:
     //Order DB
     bool SaveOrderData(const QString    &filePath);
     void AddOrderData (const QByteArray &NewData);
+    QJsonDocument LoadThatOrderData(int ClientId);
 
     //ChatLog DB
     bool SaveChatLogData(const QString    &filePath);

@@ -112,6 +112,7 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 조회
     connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
     connect(Comm, &CommuniCation::RequestIdCheck, this, &Widget::CheckId);//아이디 중복 체크
+    connect(Comm, &CommuniCation::RequestThatOrder, this, &Widget::LoadThaOrderInfo);//특정 고객 주문 조회
 }
 
 void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
@@ -233,6 +234,19 @@ void Widget::CheckId(CommuniCation *Thread, const QBuffer &MessageData)
     QJsonDocument doc(IdResult);
     QByteArray    result = doc.toJson();
     SendData(result,Thread,ID_CHECK);
+}
+
+void Widget::LoadThaOrderInfo(CommuniCation *Thread, ClientInfo *UserInfo)
+{
+    qDebug() << "고객의 주문 리스트";
+    ClientInfo* user = CInfoList.value(Thread);
+    if (user != nullptr) {
+        qDebug() << "고객 아이디 : " << user->getClientID();
+    } else {
+        qDebug() << "경고: ClientInfo* user 포인터가 nullptr입니다. (Thread 인덱스: " << Thread << ")";
+    }
+    QByteArray Convert   =  (DMan->LoadThatOrderData(user->getClientID())).toJson();
+    SendData(Convert,Thread,ORDER_LI);
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

@@ -20,13 +20,13 @@ void ClientInfo::ChangeJsonData()
             QJsonObject obj = doc.object();
 
             // QJsonObject에서 값을 추출하여 할당
-            setClientID(obj.value("ClientId").toString());
+            setClientID(obj.value("ClientId").toInt());
             setClientRoomId(obj.value("company").toString());
             qDebug() << "JSON Parsing Succsess";
         } else {
             // 파싱 실패 또는 예상치 못한 JSON 형태 (객체가 아님)일 경우 처리
             // 예: 기본값 설정 또는 오류 로깅
-            CId = "UnknownUser";
+            CId = 0;
             RId = "default";
             qDebug() << "Failed to parse ClientInfo InfoData or it's not a JSON object.";
             qDebug() << "JSON 파싱 실패:" << parseError.errorString();
@@ -36,11 +36,11 @@ void ClientInfo::ChangeJsonData()
     }
 }
 
-QString ClientInfo::getClientID() const{
+int ClientInfo::getClientID() const{
     return CId;
 }
 
-void ClientInfo::setClientID(const QString &Id)
+void ClientInfo::setClientID(const int &Id)
 {
     CId = Id;
 }

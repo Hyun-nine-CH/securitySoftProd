@@ -141,6 +141,11 @@ void DataManager::AddOrderData(const QByteArray &NewData)
     ODb->AddData(NewData);
 }
 
+QJsonDocument DataManager::LoadThatOrderData(int ClientId)
+{
+    return ODb->LoadThatData(ClientId);
+}
+
 bool DataManager::SaveChatLogData(const QString &filePath)
 {
     QFile file(filePath);
