@@ -36,7 +36,7 @@ signals:
     void RequestOrderInfo   (CommuniCation* Thread);// 주문정보 조회
     void RequestChatLogInfo (CommuniCation* Thread);// 채팅로그 조회
     void RequestIdCheck     (CommuniCation* Thread,const QBuffer& MessageData); //아이디 중복체크
-    void RequestThatOrder   (CommuniCation* Thread,ClientInfo *Info); //그 고객에 대한 주문정보 조회
+    void RequestThatOrder   (CommuniCation* Thread); //그 고객에 대한 주문정보 조회
 
 private slots:
     void ReadClientData    (); // 소켓에서 데이터 읽기

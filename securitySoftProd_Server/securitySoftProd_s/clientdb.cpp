@@ -42,7 +42,7 @@ void ClientDB::AddData(const QByteArray &NewData)
     QJsonDocument New = QJsonDocument::fromJson(NewData);
     QJsonObject NewObj = New.object();
     //qDebug() << "Convert objec NewData : " << NewObj.keys();
-    NewObj.insert("Id",LastNum);
+    NewObj.insert("ClientId",LastNum);
     New.setObject(NewObj);
 
     QJsonArray AllArr;

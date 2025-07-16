@@ -41,7 +41,7 @@ private slots:
     void LoadOrderInfo(CommuniCation* Thread);// 주문정보 조회
     void LoadChatLogInfo(CommuniCation* Thread);// 채팅로그 조회
     void CheckId(CommuniCation* Thread,const QBuffer& MessageData);//아이디 중복조회
-    void LoadThaOrderInfo(CommuniCation* Thread,ClientInfo* UserInfo);
+    void LoadThaOrderInfo(CommuniCation* Thread);
 
 private:
     QLabel     *InfoLabel;

@@ -130,7 +130,7 @@ void CommuniCation::ReadClientData()
     case 0x12:emit RequestChatLogInfo(this);                    break;
     case 0x13:ChattingParse          (buffer);                  break;
     case 0x14:DuplicIdCheck          (buffer);                  break;
-    case 0x15:emit RequestThatOrder  (this,getClientInfo());    break;
+    case 0x15:emit RequestThatOrder  (this);    break;
     }
     ByteArray.clear();
 }

@@ -34,14 +34,14 @@ QJsonDocument OrderDB::LoadData()
 
 void OrderDB::AddData(const QByteArray &NewData)
 {
-    //qDebug() << "원본 NewData:" << NewData;
+    qDebug() << "원본 NewData:" << NewData;
     QJsonDocument &AllDoc = DbManager->getOrderData();
-    int LastNum = FindLastNum(AllDoc);
+    //int LastNum = FindLastNum(AllDoc);
 
     QJsonDocument New = QJsonDocument::fromJson(NewData);
     QJsonObject NewObj = New.object();
     //qDebug() << "Convert objec NewData : " << NewObj.keys();
-    NewObj.insert("Id",LastNum);
+    //NewObj.insert("ClientId",LastNum);
     New.setObject(NewObj);
 
     QJsonArray AllArr;
@@ -49,8 +49,8 @@ void OrderDB::AddData(const QByteArray &NewData)
     AllArr.append(NewObj);
 
     AllDoc.setArray(AllArr);
-    //qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveProductData(FilePath);
+    qDebug() << "추가 : "<< AllDoc;
+    DbManager->SaveOrderData(FilePath);
 }
 
 int OrderDB::FindLastNum(const QJsonDocument &Trace)

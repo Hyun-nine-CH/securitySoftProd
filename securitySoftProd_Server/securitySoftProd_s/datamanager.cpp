@@ -71,7 +71,7 @@ bool DataManager::LoadClientData()
 
 bool DataManager::LoadOrderData()
 {
-    OrderData = CDb->LoadData();
+    OrderData = ODb->LoadData();
     if(!(OrderData.isEmpty())){
         qDebug() << "Load Order Data";
         return true;

@@ -17,7 +17,7 @@ public:
     QJsonDocument LoadThatData(int ClientId);
 private:
     QByteArray OrderData;
-    const QString FileId = "주문 번호";
+    const QString FileId = "ClientId";
 };
 
 #endif // ORDERDB_H

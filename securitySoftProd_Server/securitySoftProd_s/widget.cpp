@@ -216,6 +216,14 @@ void Widget::LoadUserInfo(CommuniCation *Thread)
 void Widget::OrderAdd(CommuniCation *Thread, const QBuffer &MessageData)
 {
     DMan->AddOrderData(MessageData.data());
+    ClientInfo* user = CInfoList.value(Thread);
+    if (user != nullptr) {
+        qDebug() << "고객 아이디 : " << user->getClientID();
+    } else {
+        qDebug() << "경고: ClientInfo* user 포인터가 nullptr입니다. (Thread 인덱스: " << Thread << ")";
+    }
+    QByteArray Convert   =  (DMan->LoadThatOrderData(user->getClientID())).toJson();
+    SendData(Convert,Thread,ORDER_LI);
 }
 
 void Widget::LoadOrderInfo(CommuniCation *Thread)
@@ -236,7 +244,7 @@ void Widget::CheckId(CommuniCation *Thread, const QBuffer &MessageData)
     SendData(result,Thread,ID_CHECK);
 }
 
-void Widget::LoadThaOrderInfo(CommuniCation *Thread, ClientInfo *UserInfo)
+void Widget::LoadThaOrderInfo(CommuniCation *Thread)
 {
     qDebug() << "고객의 주문 리스트";
     ClientInfo* user = CInfoList.value(Thread);

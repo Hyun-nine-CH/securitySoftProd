@@ -1,6 +1,6 @@
 #include "mainwindow.h"
 #include "ui_mainwindow.h"
-#include "clientinfoform_prod.h"
+//#include "clientinfoform_prod.h"
 #include "clientinfoform.h" // ClientInfoForm_Order 대신 일반 ClientInfoForm 사용
 #include "clientinfoform_chat.h"
 #include <QTcpSocket>
@@ -36,7 +36,7 @@ MainWindow::MainWindow(QWidget *parent)
     // connect(m_prodTab, &ClientInfoForm_Prod::searchProductsRequested, this, &MainWindow::searchProducts);
     // ui->tabWidget->addTab(m_prodTab, tr("제품 정보"));
 
-    // 2. 주문 하기 탭 생성 및 시그널 연결 (Order 탭은 아직 분할되지 않았다고 가정)
+    // 2. 주문 하기 탭 생성 및 시그널 연결
     m_orderTab = new ClientInfoForm(this);
     //connect(m_orderTab, &ClientInfoForm::orderSubmitted, this, &MainWindow::submitOrder);
     //connect(m_orderTab, &ClientInfoForm::orderListRequested, this, &MainWindow::requestOrderList);
@@ -99,6 +99,8 @@ void MainWindow::on_actionQuit_triggered() {
 void MainWindow::onTabChanged(int index)
 {
     if (index == 0) {
+        m_orderTab->getToolBox()->setCurrentIndex(0);
+        m_orderTab->ProductTableSet();
         m_orderTab->handleIncomingData();// 데이터로드
     } else if (index == 1) {
         // 두 번째 탭이 선택되었고 아직 데이터가 로드되지 않았다면

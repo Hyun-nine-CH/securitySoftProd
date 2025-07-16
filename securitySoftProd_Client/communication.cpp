@@ -264,6 +264,12 @@ void Communication::SendJoinData(const QByteArray &idcheck)
     qDebug() << "회원가입 데이터 전송 완료";
 }
 
+void Communication::SendOrderData(const QByteArray &data)
+{
+    socket->write(data);
+    qDebug() << "주문 데이터 전송 완료";
+}
+
 void Communication::onReadyRead()
 {
     //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
