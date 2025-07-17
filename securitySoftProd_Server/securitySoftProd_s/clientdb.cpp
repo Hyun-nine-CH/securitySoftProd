@@ -28,7 +28,6 @@ QJsonDocument ClientDB::LoadData()
     // QJsonDocument를 사용하여 JSON 데이터 파싱
     QJsonParseError parseError;
     QJsonDocument   jsonDoc     = QJsonDocument::fromJson(jsonData, &parseError);
-    QByteArray      data        = jsonDoc.toJson();
 
     return jsonDoc;
 }
@@ -38,7 +37,6 @@ void ClientDB::AddData(const QByteArray &NewData)
     //qDebug() << "원본 NewData:" << NewData;
     QJsonDocument &AllDoc = DbManager->getClientData();
     int LastNum = FindLastNum(AllDoc);
-
     QJsonDocument New = QJsonDocument::fromJson(NewData);
     QJsonObject NewObj = New.object();
     //qDebug() << "Convert objec NewData : " << NewObj.keys();
@@ -51,7 +49,7 @@ void ClientDB::AddData(const QByteArray &NewData)
 
     AllDoc.setArray(AllArr);
     //qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveData(FilePath);
+    DbManager->SaveData(FilePath,DBType::CLIENT);
 }
 
 QJsonObject ClientDB::Confirm(const QByteArray &IdPwData)

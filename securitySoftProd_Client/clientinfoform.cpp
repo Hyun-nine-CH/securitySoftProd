@@ -140,8 +140,10 @@ void ClientInfoForm::displayProductList(const QBuffer &buffer)
         ui->tableWidget->setItem(row, 0, nameItem);
 
         // 가격
-        QString price = QString::number(product["price"].toInt());
-        QTableWidgetItem* priceItem = new QTableWidgetItem(price);
+        int price = product["price"].toInt();
+        QLocale locale(QLocale::Korean);
+        QString formattedPrice = locale.toString(price);
+        QTableWidgetItem* priceItem = new QTableWidgetItem(formattedPrice);
         ui->tableWidget->setItem(row, 1, priceItem);
 
         // 납기일
@@ -196,8 +198,10 @@ void ClientInfoForm::displayOrderList(const QBuffer &buffer)
             ui->tableWidget->setItem(row, 5, pd);
 
             // 가격
-            QString price = QString::number(Order["price"].toInt());
-            QTableWidgetItem* priceItem = new QTableWidgetItem(price);
+            int price = Order["price"].toInt();
+            QLocale locale(QLocale::Korean);
+            QString formattedPrice = locale.toString(price);
+            QTableWidgetItem* priceItem = new QTableWidgetItem(formattedPrice);
             ui->tableWidget->setItem(row, 6, priceItem);
 
             // 만료일

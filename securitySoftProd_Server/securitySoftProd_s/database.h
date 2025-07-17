@@ -24,4 +24,12 @@ protected:
 
 };
 
+enum class DBType
+{
+    ORDER   = 1,
+    PRODUCT = 2,
+    CLIENT  = 3,
+    CHATLOG = 4
+};
+
 #endif // DATABASE_H

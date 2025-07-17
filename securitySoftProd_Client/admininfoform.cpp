@@ -5,7 +5,6 @@
 #include <QTableWidgetItem>
 #include <QDebug>
 #include <QTimer>
-#include "Protocol.h"
 #include "communication.h"
 
 AdminInfoForm::AdminInfoForm(QWidget *parent) :

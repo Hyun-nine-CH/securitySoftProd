@@ -7,6 +7,7 @@
 #include <QFile>
 #include <QBuffer>
 #include <QMutex>
+#include <QSharedPointer>
 
 #include "clientinfo.h"
 #include "productdb.h"
@@ -16,14 +17,14 @@ class CommuniCation : public QThread
     Q_OBJECT
 public:
     CommuniCation(QTcpSocket* socket, ClientInfo* myInfo,QObject* parent = nullptr);
-    ClientInfo* getClientInfo();
+    QSharedPointer<ClientInfo> getClientInfo();
 
 protected:
     void run() override; // 스레드에서 실행될 주요 로직
 
 signals:
     void Disconnected       (QTcpSocket* Socket,CommuniCation* Thread);// 스레드에서 소켓 끊김을 알리는 시그널
-    void ChattingMesg       (const QBuffer& MessageData, ClientInfo* UserInfo);// 채팅 메시지 시그널 + 채팅로그 저장
+    void ChattingMesg       (const QBuffer& MessageData, QSharedPointer<ClientInfo> UserInfo);// 채팅 메시지 시그널 + 채팅로그 저장
     void SendClientInfo     (CommuniCation* Thread,ClientInfo *Info);// 클라이언트 정보 넘기는 시그널
     void ModifyProductDB    (CommuniCation* Thread,const QByteArray& MessageData);// 상품데이터 수정 정보 넘기는 시그널
     void RequestPdInfo      (CommuniCation* Thread);// 상품데이터 전체 정보 넘기는 시그널
@@ -53,7 +54,7 @@ private:
     qint64     ReceivePacket;
     QTcpSocket *Socket;
 
-    ClientInfo *CInfo;
+    QSharedPointer<ClientInfo> CInfo;
     QThread    WorkThread;
     ProductDB  *PdDb;
 

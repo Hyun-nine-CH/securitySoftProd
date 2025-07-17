@@ -8,7 +8,6 @@
 #include <QMessageBox>
 #include <QLocale>
 #include <QDate>
-#include "Protocol.h"
 #include "communication.h"
 
 AdminInfoForm_Prod::AdminInfoForm_Prod(QWidget *parent) :

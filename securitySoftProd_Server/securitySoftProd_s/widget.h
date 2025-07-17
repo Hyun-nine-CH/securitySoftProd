@@ -28,7 +28,7 @@ private slots:
     void ClientConnect  ();// 클라이언트 연결시
 
     void DisConnectEvent(QTcpSocket* Socket,CommuniCation* Thread);// 클라이언트 종료시
-    void BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo);// 채팅 메시지 받았을 때
+    void BroadCast(QByteArray ChatData,QString chatRoomId, QSharedPointer<ClientInfo> UserInfo);// 채팅 메시지 받았을 때
     void SetCInfo(CommuniCation* Thread,ClientInfo* Info);// 클라이언트 정보 완성되서 넘길때
     void ProductModi(CommuniCation* Thread,const QByteArray& MessageData);// 상품정보 수정 요청 들어왔을때
     void LoadProductDB(CommuniCation* Thread);// 상품정보 조회 요청 들어왔을때
@@ -41,7 +41,8 @@ private slots:
     void LoadOrderInfo(CommuniCation* Thread);// 주문정보 조회
     void LoadChatLogInfo(CommuniCation* Thread);// 채팅로그 조회
     void CheckId(CommuniCation* Thread,const QBuffer& MessageData);//아이디 중복조회
-    void LoadThaOrderInfo(CommuniCation* Thread);
+    void LoadThatOrderInfo(CommuniCation* Thread); //개인 고객 주문정보 조회
+    void ChatLogAdd(const QBuffer &MessageData, QSharedPointer<ClientInfo> UserInfo);//채팅로그 저장
 
 private:
     QLabel     *InfoLabel;

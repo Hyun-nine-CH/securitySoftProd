@@ -2,6 +2,7 @@
 #define DATAMANAGER_H
 
 #include <QObject>
+#include <QBuffer>
 
 #include "database.h"
 #include "productdb.h"
@@ -23,7 +24,7 @@ public:
     QJsonDocument& getChatLogData();
 
     //공통
-    bool SaveData(const QString    &filePath);
+    bool SaveData(const QString &filePath, DBType Type, QSharedPointer<ClientInfo> userInfo = nullptr);
 
     //ProductDB
     void AddProductData (const QByteArray &NewData);
@@ -40,7 +41,9 @@ public:
     QJsonDocument LoadThatOrderData(int ClientId);
 
     //ChatLog DB
-    void AddChatLogData (const QByteArray &NewData, ClientInfo* UserInfo);
+    void AddChatLogData      (const QBuffer &NewData, QSharedPointer<ClientInfo> UserInfo);
+    void AdminAddChatLogData (const QBuffer &NewData, QString RoomId);
+    void setChatLogUserInfo  (QSharedPointer<ClientInfo> UserInfo);
 
 private:
     QMap<QString,DataBase*> Db;
@@ -53,12 +56,17 @@ private:
     QJsonDocument  ClientData;
     QJsonDocument  OrderData;
     QJsonDocument  ChatLogData;
+    QByteArray     AddChatData;
+    QString        ChatroomId;
 
     // 각 데이터셋을 파일에서 로드하는 메서드
     bool LoadProductData();
     bool LoadClientData();
     bool LoadOrderData();
     bool LoadChatLogData();
+private slots:
+    void ReceiveAddData(QByteArray add, QString rId);
+signals:
+    void ChatLogSaveFinished(QByteArray ChatData,QString rid, QSharedPointer<ClientInfo> UserInfo);
 };
-
 #endif // DATAMANAGER_H

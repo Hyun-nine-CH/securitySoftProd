@@ -20,12 +20,6 @@ enum DataType : qint64 {
 
     // 사용자/제품/주문 정보 관련
     Request_User_Info = 0x09, // 서버의 RequestUserInfo에 해당
-    Response_Product_List = 0x0A,
-    Request_Client_List = 0x0B,
-    Response_Client_List = 0x0C,
-    Request_Order_List = 0x0D,
-    Response_Order_List = 0x0E,
-    Submit_Order = 0x0F,
     Add_Order = 0x10, // 서버의 AddOrderInfo에 해당
     Request_Order_Info = 0x11, // 서버의 RequestOrderInfo에 해당
     Request_That_Order = 0x15, //고객의 주문정보 조회
@@ -38,9 +32,6 @@ enum DataType : qint64 {
     ID_Check_Request = 0x14, // 아이디중복 요청
     Chat_Message = 0x20, // 서버의 default에 맞춤
     Chat_History_Response = 0x21, // 임시 값
-
-    // 로그아웃 관련
-    Logout_Request = 0x23 // 원래 0x10이었지만 Add_Order와 충돌해서 변경
 };
 }
 

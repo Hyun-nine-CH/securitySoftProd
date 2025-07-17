@@ -3,6 +3,7 @@
 
 #include <QWidget>
 #include <QByteArray>
+#include <QBuffer>
 
 namespace Ui {
 class AdminInfoForm_Chat;
@@ -17,24 +18,15 @@ public:
     ~AdminInfoForm_Chat();
 
     // 메시지 표시 함수
-    void appendMessage(const QString& formattedMessage);
+    void appendMessage(const QBuffer& formattedMessage);
 
     // 알림 관련 함수들
     void showChatNotification();
     void clearChatNotification();
     void onChatTabActivated();
 
-    // 서버에서 받은 데이터 처리
-    void handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename);
-
-signals:
-    // 메시지 전송 요청 시그널 (회사명과 메시지 내용 전달)
-    void messageSendRequested(const QString& roomId, const QString& message);
-    void clientListRequested();
-
 private slots:
-    //void on_pushButton_admin_clicked();
-    void displayRoomList();
+    void on_pushButton_admin_clicked();
 
 private:
     Ui::AdminInfoForm_Chat *ui;

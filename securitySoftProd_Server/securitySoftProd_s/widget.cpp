@@ -3,6 +3,7 @@
 #include <QtWidgets>
 #include <QDataStream>
 #include <QJsonDocument>
+#include <QSharedPointer>
 
 #include "widget.h"
 
@@ -41,6 +42,9 @@
     클라이언트 데이터 보내기 가완료 (테스트 안해봄)
     주문정보 추가 기능 작업 가완료( 테스트 안해봄)
     채팅로그 정보 추가기능 작업 가완료(테스트 안해봄)
+
+    20250717
+    최종 채팅 안정화 및 파일전송 작업중
 */
 
 Widget::Widget(QWidget *parent)
@@ -99,7 +103,7 @@ void Widget::ClientConnect()
     Comm->start(); // workerThread의 run() 메서드가 실행됩니다.
     connect(Comm, &QThread::finished, Comm, &QObject::deleteLater);// 스레드 종료 시 해당 스레드 객체를 자동으로 삭제하도록 연결
     connect(Comm, &CommuniCation::Disconnected, this, &Widget::DisConnectEvent);// 스레드에서 클라이언트 연결이 끊겼음을 알리는 시그널 연결 (서버에서 관리 용이)
-    connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);//브로드캐스트 시점 신호
+    connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::ChatLogAdd);//브로드캐스트 시점 신호
     connect(Comm, &CommuniCation::SendClientInfo, this, &Widget::SetCInfo);//클라이언트 정보 받아서 할당
     connect(Comm, &CommuniCation::ModifyProductDB, this, &Widget::ProductModi);//상품정보 수정 데이터매니저에게요청
     connect(Comm, &CommuniCation::RequestPdInfo, this, &Widget::LoadProductDB);//상품정보 조회 요청
@@ -112,44 +116,44 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 조회
     connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
     connect(Comm, &CommuniCation::RequestIdCheck, this, &Widget::CheckId);//아이디 중복 체크
-    connect(Comm, &CommuniCation::RequestThatOrder, this, &Widget::LoadThaOrderInfo);//특정 고객 주문 조회
+    connect(Comm, &CommuniCation::RequestThatOrder, this, &Widget::LoadThatOrderInfo);//특정 고객 주문 조회
+    connect(DMan, &DataManager::ChatLogSaveFinished, this, &Widget::BroadCast);
 }
 
-void Widget::BroadCast(const QBuffer &MessageData, ClientInfo* UserInfo)
+void Widget::BroadCast(QByteArray ChatData,QString chatRoomId, QSharedPointer<ClientInfo> UserInfo)
 {
-    /*
-        MessageData를 복사하여 전달
-        그대로 받게 되면 다른 클라이언트에서 이 코드를 실행할때
-        MessageData에 접근해서 크래시 나거나 데이터 오염됨
-    */
-    QByteArray messageCopy = MessageData.data();
-    //qDebug() << "서버에서 받은 chat mesg : " << messageCopy;
-    QJsonDocument Mesg = QJsonDocument::fromJson(messageCopy);
-    if(Mesg.isNull()){
-            qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
-    }
-    QJsonObject MesgObj = Mesg.object();
-
-    DMan->AddChatLogData(MesgObj["message"].toString().toUtf8(),UserInfo);
+    UserInfo->ChangeJsonData();
+    QString AOrCMesg;
+    if(!(chatRoomId.isEmpty()))
+        AOrCMesg = chatRoomId;
+    else
+        AOrCMesg = UserInfo->getClientRoomId();
     ListMutex->lock();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
         CommuniCation* W = it.key();
         //같은 방이면 브로드캐스트 해라
-        // qDebug() << "compare : " << C->getClientRoomId();
-        // qDebug() << "origin  : " << UserInfo->getClientRoomId();
-        QByteArray Container;
-        QByteArray filename = "filename";
-        QDataStream out(&Container,QIODevice::WriteOnly);
-        out.setVersion(QDataStream::Qt_5_15);
-        out << qint64(0) << qint64(0) << qint64(0) << filename;
-        Container.append(messageCopy);
+        qDebug() << "compare : " << C->getClientRoomId();
+        qDebug() << "origin  : " << UserInfo->getClientRoomId();
 
-        out.device()->seek(0);
-        qint64 dataType = CHAT_MESG;
-        out << dataType << Container.size() << Container.size();
-        if(QString::compare(C->getClientRoomId(), UserInfo->getClientRoomId()) == 0)
+        if(QString::compare(C->getClientRoomId(), AOrCMesg) == 0)
         {
+            QJsonObject ChatObject;
+            ChatObject["message"] = QString::fromUtf8(ChatData);
+            ChatObject["nickname"] = UserInfo->getClientNick();
+            QByteArray payload = QJsonDocument(ChatObject).toJson();
+
+            QByteArray Container;
+            QByteArray filename = "filename";
+            QDataStream out(&Container,QIODevice::WriteOnly);
+            out.setVersion(QDataStream::Qt_5_15);
+            out << qint64(0) << qint64(0) << qint64(0) << filename;
+            Container.append(payload);
+
+            out.device()->seek(0);
+            qint64 dataType = CHAT_MESG;
+            out << dataType << Container.size() << Container.size();
+
             if(W)
             {
                 // QMetaObject::invokeMethod를 사용하여 대상 스레드의 슬롯 호출
@@ -244,7 +248,7 @@ void Widget::CheckId(CommuniCation *Thread, const QBuffer &MessageData)
     SendData(result,Thread,ID_CHECK);
 }
 
-void Widget::LoadThaOrderInfo(CommuniCation *Thread)
+void Widget::LoadThatOrderInfo(CommuniCation *Thread)
 {
     qDebug() << "고객의 주문 리스트";
     ClientInfo* user = CInfoList.value(Thread);
@@ -255,6 +259,32 @@ void Widget::LoadThaOrderInfo(CommuniCation *Thread)
     }
     QByteArray Convert   =  (DMan->LoadThatOrderData(user->getClientID())).toJson();
     SendData(Convert,Thread,ORDER_LI);
+}
+
+void Widget::ChatLogAdd(const QBuffer &MessageData,QSharedPointer<ClientInfo> UserInfo)
+{
+    /*
+        MessageData를 복사하여 전달
+        그대로 받게 되면 다른 클라이언트에서 이 코드를 실행할때
+        MessageData에 접근해서 크래시 나거나 데이터 오염됨
+    */
+    QByteArray messageCopy = MessageData.data();
+    //qDebug() << "서버에서 받은 chat mesg : " << messageCopy;
+    QJsonDocument Mesg = QJsonDocument::fromJson(messageCopy);
+    if(Mesg.isNull()){
+        qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
+    }
+    QJsonObject MesgObj = Mesg.object();
+    UserInfo->ChangeJsonData();
+    DMan->setChatLogUserInfo(UserInfo);
+    if(MesgObj.contains("RoomId")){
+        QString AOrCMesg;
+        AOrCMesg = MesgObj.value("RoomId").toString();
+        DMan->AdminAddChatLogData(MessageData,AOrCMesg);
+    }
+    else
+        DMan->AddChatLogData(MessageData,UserInfo);
+
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

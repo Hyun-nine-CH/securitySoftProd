@@ -50,7 +50,7 @@ void ProductDB::AddData(const QByteArray &NewData)
 
     AllDoc.setArray(AllArr);
     //qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveData(FilePath);
+    DbManager->SaveData(FilePath,DBType::PRODUCT);
 }
 
 void ProductDB::ModifyData(const QByteArray &ModiData)
@@ -99,7 +99,7 @@ void ProductDB::ModifyData(const QByteArray &ModiData)
     }
 
     AllDoc.setArray(AllArray);
-    DbManager->SaveData(FilePath);
+    DbManager->SaveData(FilePath,DBType::PRODUCT);
 }
 
 void ProductDB::DeleteData(const QByteArray &DelData)
@@ -142,7 +142,7 @@ void ProductDB::DeleteData(const QByteArray &DelData)
     }
 
     AllDoc.setArray(NewArray);
-    DbManager->SaveData(FilePath);
+    DbManager->SaveData(FilePath,DBType::PRODUCT);
 }
 
 int ProductDB::FindLastNum(const QJsonDocument &Trace)

@@ -413,6 +413,26 @@ void Communication::SendChatMesg(const QString &mesg)
     qDebug() << "메시지 전송 완료";
 }
 
+void Communication::SendChatMesg_ad(const QByteArray &mesg)
+{
+
+    qDebug() << "관리자 메시지 JSON 생성됨:" << QString(mesg);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "admin mesg";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(mesg);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Chatting_Parse) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 관리자 메시지 전송 중... (프로토콜:" << Protocol::Chatting_Parse << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "관리자 메시지 전송 완료";
+}
+
 void Communication::SendIdCheck(const QByteArray &idcheck)
 {
     socket->write(idcheck);

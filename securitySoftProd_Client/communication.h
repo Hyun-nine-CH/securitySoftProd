@@ -21,6 +21,7 @@ public:
 
 
     void SendChatMesg(const QString &mesg); //채팅메시지 신호
+    void SendChatMesg_ad(const QByteArray &mesg);
     void SendIdCheck(const QByteArray &idcheck); //아이디 중복 서버에 체크해달라고
     void SendJoinData(const QByteArray &idcheck);//회원가입 데이터
     void SendOrderData(const QByteArray &data);

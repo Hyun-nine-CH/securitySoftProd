@@ -6,7 +6,7 @@ CommuniCation::CommuniCation(QTcpSocket* socket, ClientInfo* myInfo,QObject* par
     :Socket(socket), CInfo(myInfo),WorkThread(this)
 {// 중요: 소켓을 이 스레드로 이동시켜, 소켓 관련 시그널/슬롯이 이 스레드에서 실행되도록 합니다.
     if (Socket) {
-        CInfo->setClientSocket(Socket);
+        //CInfo->setClientSocket(Socket);
 
         TotalSize     = 0;
         CurrentPacket = 0;
@@ -168,7 +168,7 @@ void CommuniCation::FileReceive(const QBuffer &buffer)
     }
 }
 
-ClientInfo* CommuniCation::getClientInfo()
+QSharedPointer<ClientInfo> CommuniCation::getClientInfo()
 {
     return CInfo;
 }

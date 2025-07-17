@@ -17,7 +17,7 @@ AdminInfoForm_OL::AdminInfoForm_OL(QWidget *parent) :
     //connect(ui->pushButton_OS, &QPushButton::clicked, this, &AdminInfoForm_OL::on_pushButton_OS_clicked);
     //connect(ui->pushButton_OS_Reset, &QPushButton::clicked, this, &AdminInfoForm_OL::on_pushButton_OS_Reset_clicked);
     //통신클래스 연결
-    connect(this, &AdminInfoForm_OL::orderListRequested,Communication::getInstance(),&Communication::RequestProductInfo);
+    connect(this, &AdminInfoForm_OL::orderListRequested,Communication::getInstance(),&Communication::RequestAllOrderInfo);
     connect(Communication::getInstance(), &Communication::ReceiveAllOrderInfo,this,&AdminInfoForm_OL::displayOrderList);
 
 }
@@ -106,15 +106,18 @@ void AdminInfoForm_OL::displayOrderList(const QBuffer& buffer)
         ui->tableWidget->setItem(row, 4, addressItem);
 
         // 구매한 제품
-        QTableWidgetItem* productItem = new QTableWidgetItem(order["productName"].toString());
+        QTableWidgetItem* productItem = new QTableWidgetItem(order["productname"].toString());
         ui->tableWidget->setItem(row, 5, productItem);
 
         // 구매한 가격
-        QTableWidgetItem* priceItem = new QTableWidgetItem(order["price"].toString());
+        int price = order["price"].toInt();
+        QLocale locale(QLocale::Korean);
+        QString formattedPrice = locale.toString(price);
+        QTableWidgetItem* priceItem = new QTableWidgetItem(formattedPrice);
         ui->tableWidget->setItem(row, 6, priceItem);
 
         // 만료일
-        QTableWidgetItem* dueDateItem = new QTableWidgetItem(order["dueDate"].toString());
+        QTableWidgetItem* dueDateItem = new QTableWidgetItem(order["expire"].toString());
         ui->tableWidget->setItem(row, 7, dueDateItem);
     }
 }

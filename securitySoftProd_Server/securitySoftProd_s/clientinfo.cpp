@@ -22,6 +22,7 @@ void ClientInfo::ChangeJsonData()
             // QJsonObject에서 값을 추출하여 할당
             setClientID(obj.value("ClientId").toInt());
             setClientRoomId(obj.value("RoomId").toString());
+            setClientNick(obj.value("id").toString());
             qDebug() << "JSON Parsing Succsess";
         } else {
             // 파싱 실패 또는 예상치 못한 JSON 형태 (객체가 아님)일 경우 처리
@@ -32,7 +33,7 @@ void ClientInfo::ChangeJsonData()
             qDebug() << "JSON 파싱 실패:" << parseError.errorString();
             qDebug() << "받은 데이터:" << InfoData;
         }
-        setClientSocket(socket);
+        //setClientSocket(socket);
     }
 }
 
@@ -49,18 +50,28 @@ QString ClientInfo::getClientRoomId() const{
     return RId;
 }
 
+QString ClientInfo::getClientNick() const
+{
+    return ID;
+}
+
 void ClientInfo::setClientRoomId(const QString &RoomId)
 {
     RId = RoomId;
 }
 
-QTcpSocket* ClientInfo::getClientSocket() const{
-    return socket;
-}
+// QTcpSocket* ClientInfo::getClientSocket() const{
+//     return socket;
+// }
 
-void ClientInfo::setClientSocket(QTcpSocket *soc)
+// void ClientInfo::setClientSocket(QTcpSocket *soc)
+// {
+//     this->socket = soc;
+// }
+
+void ClientInfo::setClientNick(const QString &nick)
 {
-    this->socket = soc;
+    this->ID = nick;
 }
 
 QByteArray ClientInfo::getClientData() const{

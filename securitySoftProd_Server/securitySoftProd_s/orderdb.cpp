@@ -50,7 +50,7 @@ void OrderDB::AddData(const QByteArray &NewData)
 
     AllDoc.setArray(AllArr);
     qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveData(FilePath);
+    DbManager->SaveData(FilePath,DBType::ORDER);
 }
 
 int OrderDB::FindLastNum(const QJsonDocument &Trace)
