@@ -28,7 +28,6 @@ QJsonDocument ProductDB::LoadData()
     // QJsonDocument를 사용하여 JSON 데이터 파싱
     QJsonParseError parseError;
     QJsonDocument   jsonDoc     = QJsonDocument::fromJson(jsonData, &parseError);
-    QByteArray      data        = jsonDoc.toJson();
 
     return jsonDoc;
 }
@@ -42,7 +41,7 @@ void ProductDB::AddData(const QByteArray &NewData)
     QJsonDocument New = QJsonDocument::fromJson(NewData);
     QJsonObject NewObj = New.object();
     //qDebug() << "Convert objec NewData : " << NewObj.keys();
-    NewObj.insert("Id",LastNum);
+    NewObj.insert(FileId,QString::number(LastNum));
     New.setObject(NewObj);
 
     QJsonArray AllArr;
@@ -51,7 +50,7 @@ void ProductDB::AddData(const QByteArray &NewData)
 
     AllDoc.setArray(AllArr);
     //qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveProductData(FilePath);
+    DbManager->SaveData(FilePath);
 }
 
 void ProductDB::ModifyData(const QByteArray &ModiData)
@@ -62,7 +61,7 @@ void ProductDB::ModifyData(const QByteArray &ModiData)
     QJsonDocument New       = QJsonDocument::fromJson(ModiData);
     QJsonObject   modifyObj = New.object();
 
-    int  targetId = modifyObj[FileId].toInt();
+    int  targetId = modifyObj.value(FileId).toString().toInt();
     bool found    = false;
 
     QJsonArray AllArray = AllDoc.array();
@@ -70,7 +69,7 @@ void ProductDB::ModifyData(const QByteArray &ModiData)
         QJsonObject item = AllArray[i].toObject();
 
         // productId가 일치하는 항목 찾기
-        if (item.contains(FileId) && item[FileId].toInt() == targetId) {
+        if (item.contains(FileId) && item.value(FileId).toString().toInt() == targetId) {
             qDebug() << "일치 인덱스:" << i;
             found = true;
 
@@ -100,7 +99,7 @@ void ProductDB::ModifyData(const QByteArray &ModiData)
     }
 
     AllDoc.setArray(AllArray);
-    DbManager->SaveProductData(FilePath);
+    DbManager->SaveData(FilePath);
 }
 
 void ProductDB::DeleteData(const QByteArray &DelData)
@@ -112,15 +111,15 @@ void ProductDB::DeleteData(const QByteArray &DelData)
 
     if(New.isObject()){ // 한개 삭제할때
         QJsonObject   DelObj = New.object();
-        int           TargetId  = DelObj[FileId].toInt();
+        int           TargetId  = DelObj.value(FileId).toString().toInt();
 
         for (int i = 0; i < AllArray.size(); i++) {
             QJsonObject item = AllArray[i].toObject();
 
-            if (item.contains(FileId) && item[FileId].toInt() == TargetId)
-                continue;
-
-            NewArray.append(item);
+            if (item.contains(FileId) && item.value(FileId).toString().toInt() != TargetId)
+                NewArray.append(item);
+            else
+                qDebug() << "삭제 : " << item.value(FileId).toString().toInt();
         }
     } else if(New.isArray()){ //여러개 삭제할때
         QJsonArray   Delarr = New.array();
@@ -131,7 +130,7 @@ void ProductDB::DeleteData(const QByteArray &DelData)
             for (int j = 0; j < Delarr.size(); j++) {
                 QJsonObject Del = Delarr[j].toObject();
                 if(item.contains(FileId) && \
-                   item[FileId].toInt() == Del[FileId].toInt()){
+                   item.value(FileId).toString().toInt() == Del.value(FileId).toString().toInt()){
                     found = true;
                     break;
                 }
@@ -143,25 +142,31 @@ void ProductDB::DeleteData(const QByteArray &DelData)
     }
 
     AllDoc.setArray(NewArray);
-    DbManager->SaveProductData(FilePath);
+    DbManager->SaveData(FilePath);
 }
 
 int ProductDB::FindLastNum(const QJsonDocument &Trace)
 {
-    QJsonParseError parseError;
     int BigNum = 0;
+
     if (!Trace.isNull() && Trace.isArray()) {
         QJsonArray arr = Trace.array();
-        for(int i = 0; i < arr.size()-1; i++) {
-            QJsonObject first = arr[i].toObject();
-            QJsonObject second = arr[i+1].toObject();
-            first.value(FileId).toInt() < second.value(FileId).toInt() ? \
-            BigNum = second.value(FileId).toInt() : BigNum = first.value(FileId).toInt();
-        }
-        qDebug() << "JSON Parsing Succsess";
-    } else
-        qDebug() << "FindLastNum JSON 파싱 실패:" << parseError.errorString();
+        if (arr.isEmpty()) {
+            qDebug() << "JSON 배열이 비어있습니다.";
+        } else {
+            BigNum = arr[0].toObject().value(FileId).toString().toInt();
 
-    return BigNum+1;
+            for (int i = 1; i < arr.size(); ++i) {
+                QJsonObject currentObject = arr[i].toObject();
+                int currentFileId = currentObject.value(FileId).toString().toInt();
+                if (currentFileId > BigNum)
+                    BigNum = currentFileId;
+            }
+            qDebug() << "JSON Parsing Success. Max FileId found:" << BigNum;
+        }
+    } else {
+        qDebug() << "FindLastNum JSON 파싱 실패: Trace가 유효한 배열이 아니거나 null입니다.";
+    }
+    return BigNum + 1;
 }
 

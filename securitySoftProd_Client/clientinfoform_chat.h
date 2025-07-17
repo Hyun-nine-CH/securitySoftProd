@@ -24,17 +24,18 @@ public:
     //void appendMessage(const QString& formattedMessage);
 
     // 알림 관련 함수들
-    void showChatNotification();
-    void clearChatNotification();
-    void onChatTabActivated();
+    // void showChatNotification();
+    // void clearChatNotification();
+    // void onChatTabActivated();
 
     // 서버에서 받은 데이터 처리
     void handleIncomingData(qint64 dataType, const QByteArray& payload, const QString& filename);
 
 private slots:
-    void on_pushButton_client_clicked();
-    void on_pushButton_fileClient_clicked();
-    void appendMessage(const QBuffer &buffer);
+    // void on_pushButton_client_clicked();
+    // void on_pushButton_fileClient_clicked();
+    // void appendMessage(const QBuffer &buffer);
+    //void on_pushButton_admin_clicked();
 
 private:
     Ui::ClientInfoForm_Chat *ui;

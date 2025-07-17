@@ -51,7 +51,7 @@ void ClientDB::AddData(const QByteArray &NewData)
 
     AllDoc.setArray(AllArr);
     //qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveClientData(FilePath);
+    DbManager->SaveData(FilePath);
 }
 
 QJsonObject ClientDB::Confirm(const QByteArray &IdPwData)

@@ -33,6 +33,8 @@ private:
     qint64      CurrentPacket;
     qint64      DataType;
     qint64      ReceivePacket;
+    bool        isFirst = true;
+    bool        isRoomInit = true;
 
     enum RequestType {
         LOGIN = 1,
@@ -43,11 +45,19 @@ private:
     void setUserInfo(const QByteArray &buffer);
 
     static Communication* instance;
+    void Receive_Product(const QBuffer &buffer);
+    void Receive_UserInfo(const QBuffer &buffer);
 
 public slots:
     void SendLoginConfirm(const QString& id, const QString& pw);
     void RequestProductInfo(); //제품목록 요청 신호
-    void RequestOrderInfo();
+    void RequestProductInfo_ad(); //제품목록 요청 신호
+    void RequestOrderInfo(); //주문조회 요청 신호
+    void RequestAllOrderInfo(); // 모든 주문조회 요청 신호
+    void RequestUserInfo(); //고객목록 요청 신호
+    void RequestProductAdd(const QJsonObject& productData); //제품추가 요청 신호
+    void RequestProductDel(const QJsonObject& productData); //제품삭제 요청 신호
+    void RequestProductMod(const QJsonObject& productData); //제품수정 요청 신호
 
 private slots:
     void Login(const QBuffer &buffer); //로그인
@@ -61,9 +71,14 @@ signals:
     void LoginSuccess();
     void LoginFail();
     void ReceiveProductInfo(const QBuffer &buffer);
+    void ReceiveProductInfo_ad(const QBuffer &buffer);
+    void ReceiveUserInfo(const QBuffer &buffer);
     void ReceiveOrderInfo(const QBuffer &buffer);
+    void ReceiveAllOrderInfo(const QBuffer &buffer);
     void ReceiveChat(const QBuffer &buffer);
     void IdCheckResult(bool IsDupli);
+    void FinishInit();
+    void ReceviceChatRoomInfo(const QBuffer &buffer);
     //void ReceiveUserInfo();
     //void SendAddUser();
 

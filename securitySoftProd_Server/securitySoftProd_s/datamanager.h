@@ -21,25 +21,25 @@ public:
     QJsonDocument& getClientData(); //전체 고객 정보
     QJsonDocument& getOrderData();
     QJsonDocument& getChatLogData();
+
+    //공통
+    bool SaveData(const QString    &filePath);
+
     //ProductDB
-    bool SaveProductData(const QString    &filePath);
     void AddProductData (const QByteArray &NewData);
     void ModiProductData(const QByteArray &ModiData);
     void DelProductData (const QByteArray &DelData);
 
     //Client DB
-    bool        SaveClientData(const QString    &filePath);
     void        AddClientData (const QByteArray &NewData);
     QJsonObject IsClient      (const QByteArray &IdPwData);
     QJsonObject IsId          (const QByteArray &IdPwData);
 
     //Order DB
-    bool SaveOrderData(const QString    &filePath);
     void AddOrderData (const QByteArray &NewData);
     QJsonDocument LoadThatOrderData(int ClientId);
 
     //ChatLog DB
-    bool SaveChatLogData(const QString    &filePath);
     void AddChatLogData (const QByteArray &NewData, ClientInfo* UserInfo);
 
 private:
@@ -59,7 +59,6 @@ private:
     bool LoadClientData();
     bool LoadOrderData();
     bool LoadChatLogData();
-
 };
 
 #endif // DATAMANAGER_H

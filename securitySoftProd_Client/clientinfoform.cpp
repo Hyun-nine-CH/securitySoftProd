@@ -57,9 +57,9 @@ void ClientInfoForm::on_pushButton_order_clicked()
          QJsonObject userInfo = Communication::getInstance()->getUserInfo();
         if(rowData.size() == 3){
             orderData["product"] = rowData[0];
-            orderData["price"] = rowData[1];
+            orderData["price"] = rowData[1].toInt();//꼭 숫자형으로 넣을것!
             orderData["expire"] = rowData[2];
-            orderData["company"] = userInfo.value("company").toString(); // "회사명" -> "companyName"
+            orderData["RoomId"] = userInfo.value("RoomId").toString(); // "회사명" -> "companyName"
             orderData["department"] = userInfo.value("department").toString(); // "부서명" -> "departmentName"
             orderData["manager"] = userInfo.value("manager").toString(); // "담당자명" -> "managerName"
             orderData["phone"] = userInfo.value("phone").toString(); // "폰 번호" -> "phoneNumber"
@@ -172,7 +172,7 @@ void ClientInfoForm::displayOrderList(const QBuffer &buffer)
             ui->tableWidget->insertRow(row);
 
             // 회사명
-            QTableWidgetItem* nameItem = new QTableWidgetItem(Order["company"].toString());
+            QTableWidgetItem* nameItem = new QTableWidgetItem(Order["RoomId"].toString());
             ui->tableWidget->setItem(row, 0, nameItem);
 
             // 부서명

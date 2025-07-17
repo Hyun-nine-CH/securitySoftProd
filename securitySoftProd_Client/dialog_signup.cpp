@@ -24,9 +24,6 @@ Dialog_SignUp::Dialog_SignUp(QWidget *parent) :
     ui->PW_check->setEchoMode(QLineEdit::Password);
 
     // 버튼과 슬롯 연결
-    //connect(ui->pushButton_SignUp, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_SignUp_clicked);
-    //connect(ui->pushButton_IDcheck, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_IDcheck_clicked);
-    //connect(ui->pushButton_DoubleCheck, &QPushButton::clicked, this, &Dialog_SignUp::on_pushButton_DoubleCheck_clicked);
     connect(Communication::getInstance(),&Communication::IdCheckResult,this,&Dialog_SignUp::IdCheck);
 }
 

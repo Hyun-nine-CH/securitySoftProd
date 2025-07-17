@@ -21,7 +21,7 @@ public:
 private:
     QByteArray ChatLogData;
     const ClientInfo *Clinfo;
-    const QString FileId = "제품 번호";
+    const QString FileId = "ClientId";
 
 };
 

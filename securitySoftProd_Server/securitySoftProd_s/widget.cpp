@@ -184,13 +184,13 @@ void Widget::LoadProductDB(CommuniCation* Thread)
 void Widget::ProductAdd(CommuniCation *Thread, const QBuffer &MessageData)
 {
     DMan->AddProductData(MessageData.data());
-    SendData((DMan->getProductData()).toJson(),Thread,PD_ADD);
+    SendData((DMan->getProductData()).toJson(),Thread,PD_ALL);
 }
 
 void Widget::ProductDel(CommuniCation *Thread, const QBuffer &MessageData)
 {
     DMan->DelProductData(MessageData.data());
-    SendData((DMan->getProductData()).toJson(),Thread,PD_DEL);
+    SendData((DMan->getProductData()).toJson(),Thread,PD_ALL);
 }
 
 void Widget::ConfirmLogin(CommuniCation *Thread, const QBuffer &MessageData)
@@ -312,7 +312,7 @@ void Widget::DisConnectEvent(QTcpSocket* Socket, CommuniCation* Thread)
 void Widget::ProductModi(CommuniCation* Thread, const QByteArray& MessageData)
 {
     DMan->ModiProductData(MessageData.data());
-    SendData((DMan->getProductData()).toJson(),Thread,PD_MODI);
+    SendData((DMan->getProductData()).toJson(),Thread,PD_ALL);
 }
 
 Widget::~Widget()

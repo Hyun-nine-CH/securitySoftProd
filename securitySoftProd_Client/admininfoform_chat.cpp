@@ -1,27 +1,37 @@
-// #include "admininfoform_chat.h"
-// #include "ui_admininfoform_chat.h"
-// #include <QTabWidget>
-// #include <QIcon>
-// #include <QJsonDocument>
-// #include <QJsonObject>
-// #include <QJsonArray>
-// #include <QScrollBar>
-// #include "Protocol.h"
+#include "admininfoform_chat.h"
+#include "ui_admininfoform_chat.h"
+#include <QTabWidget>
+#include <QIcon>
+#include <QJsonDocument>
+#include <QJsonObject>
+#include <QJsonArray>
+#include <QScrollBar>
+#include "Protocol.h"
+#include "communication.h"
 
-// AdminInfoForm_Chat::AdminInfoForm_Chat(const QString& companyName, QWidget *parent)
-//     : QWidget(parent)
-//     , ui(new Ui::AdminInfoForm_Chat)
-//     , m_companyName(companyName)
-// {
-//     ui->setupUi(this);
-//     // UI의 pushButton_admin이 클릭되면 on_pushButton_admin_clicked 슬롯이 호출됨
-//     connect(ui->pushButton_admin, &QPushButton::clicked, this, &AdminInfoForm_Chat::on_pushButton_admin_clicked);
-// }
+AdminInfoForm_Chat::AdminInfoForm_Chat(const QString& companyName, QWidget *parent)
+    : QWidget(parent)
+    , ui(new Ui::AdminInfoForm_Chat)
+    , m_companyName(companyName)
+{
+    ui->setupUi(this);
+    // UI의 pushButton_admin이 클릭되면 on_pushButton_admin_clicked 슬롯이 호출됨
+    //connect(ui->pushButton_admin, &QPushButton::clicked, this, &AdminInfoForm_Chat::on_pushButton_admin_clicked);
 
-// AdminInfoForm_Chat::~AdminInfoForm_Chat()
-// {
-//     delete ui;
-// }
+    //통신클래스 연결
+    connect(this, &AdminInfoForm_Chat::clientListRequested,Communication::getInstance(),&Communication::RequestUserInfo);
+    connect(Communication::getInstance(), &Communication::ReceiveUserInfo,this,&AdminInfoForm_Chat::displayRoomList);
+}
+
+AdminInfoForm_Chat::~AdminInfoForm_Chat()
+{
+    delete ui;
+}
+
+void AdminInfoForm_Chat::displayRoomList()
+{
+
+}
 
 // // '전송' 버튼이 눌리면 MainWindow_Admin에 시그널을 보냄
 // void AdminInfoForm_Chat::on_pushButton_admin_clicked()

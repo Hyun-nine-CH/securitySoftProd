@@ -55,26 +55,32 @@ void ChatLogDB::AddData(const QByteArray &NewData)
 
     AllDoc.setArray(AllArr);
     //qDebug() << "추가 : "<< AllDoc;
-    DbManager->SaveProductData(FilePath);
+    DbManager->SaveData(FilePath);
 }
 
 int ChatLogDB::FindLastNum(const QJsonDocument &Trace)
 {
-    QJsonParseError parseError;
     int BigNum = 0;
+
     if (!Trace.isNull() && Trace.isArray()) {
         QJsonArray arr = Trace.array();
-        for(int i = 0; i < arr.size()-1; i++) {
-            QJsonObject first = arr[i].toObject();
-            QJsonObject second = arr[i+1].toObject();
-            first.value(FileId).toInt() < second.value(FileId).toInt() ? \
-                                                                         BigNum = second.value(FileId).toInt() : BigNum = first.value(FileId).toInt();
-        }
-        qDebug() << "JSON Parsing Succsess";
-    } else
-        qDebug() << "FindLastNum JSON 파싱 실패:" << parseError.errorString();
+        if (arr.isEmpty()) {
+            qDebug() << "JSON 배열이 비어있습니다.";
+        } else {
+            BigNum = arr[0].toObject().value(FileId).toString().toInt();
 
-    return BigNum+1;
+            for (int i = 1; i < arr.size(); ++i) {
+                QJsonObject currentObject = arr[i].toObject();
+                int currentFileId = currentObject.value(FileId).toString().toInt();
+                if (currentFileId > BigNum)
+                    BigNum = currentFileId;
+            }
+            qDebug() << "JSON Parsing Success. Max FileId found:" << BigNum;
+        }
+    } else {
+        qDebug() << "FindLastNum JSON 파싱 실패: Trace가 유효한 배열이 아니거나 null입니다.";
+    }
+    return BigNum + 1;
 }
 
 void ChatLogDB::setClientInfo(ClientInfo* UserInfo)

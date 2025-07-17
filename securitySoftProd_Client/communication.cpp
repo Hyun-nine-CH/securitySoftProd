@@ -41,7 +41,7 @@ Communication::Communication()
         qDebug() << "[Client] 소켓 오류 발생:" << socket->errorString() << "오류 코드:" << error;
         QMessageBox::critical(0, "Connection Error", socket->errorString());
     });
-
+    connect(this, &Communication::FinishInit,this,&Communication::RequestUserInfo);
     qDebug() << "서버 연결 시도 중... (127.0.0.1:50000)";
     socket->connectToHost("127.0.0.1", 50000);
 }
@@ -126,6 +126,29 @@ void Communication::setUserInfo(const QByteArray &buffer)
 
 }
 
+void Communication::Receive_Product(const QBuffer &buffer)
+{
+    if(isFirst){
+        isFirst = false;
+        emit FinishInit();
+    }
+    if(getUserInfo().value("ClientId").toInteger() > 1000){
+        emit ReceiveProductInfo_ad(buffer);
+    }else{
+        emit ReceiveProductInfo(buffer);
+    }
+}
+
+void Communication::Receive_UserInfo(const QBuffer &buffer)
+{
+    if(isRoomInit){
+        isRoomInit = false;
+        emit ReceviceChatRoomInfo(buffer);
+    }else{
+        emit ReceiveUserInfo(buffer);
+    }
+}
+
 void Communication::SendLoginConfirm(const QString &id, const QString &pw)
 {
     qDebug() << "로그인 버튼 클릭됨 - ID:" << id;
@@ -203,6 +226,30 @@ void Communication::RequestProductInfo()
     qDebug() << "제품목록 요청 전송 완료";
 }
 
+void Communication::RequestProductInfo_ad()
+{
+    qDebug() << "admin 제품목록 요청 데이터 생성 중...";
+    QJsonObject ProductObject;
+    ProductObject["product"] = "Request Product";
+    QByteArray payload = QJsonDocument(ProductObject).toJson();
+
+    qDebug() << "admin 제품목록 요청 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "Product info";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Request_Product_List) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 admin 제품목록 요청 전송 중... (프로토콜:" << Protocol::Request_Product_List << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "admin 제품목록 요청 전송 완료";
+}
+
 void Communication::RequestOrderInfo()
 {
     qDebug() << "주문목록 요청 데이터 생성 중...";
@@ -222,9 +269,123 @@ void Communication::RequestOrderInfo()
     out.device()->seek(0);
     out << qint64(Protocol::Request_That_Order) << totalSize << totalSize;
     socket->write(blockToSend);
-    qDebug() << "서버로 주문목록 요청 전송 중... (프로토콜:" << Protocol::Request_Product_List << ", 크기:" << totalSize << "바이트)";
+    qDebug() << "서버로 주문목록 요청 전송 중... (프로토콜:" << Protocol::Request_That_Order << ", 크기:" << totalSize << "바이트)";
 
     qDebug() << "주문목록 요청 전송 완료";
+}
+
+void Communication::RequestAllOrderInfo()
+{
+    qDebug() << "모든 주문목록 요청 데이터 생성 중...";
+    QJsonObject OrderObject;
+    OrderObject["Order"] = "Client Order List";
+    QByteArray payload = QJsonDocument(OrderObject).toJson();
+
+    qDebug() << "모든 주문목록 요청 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "Product info";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Request_Order_Info) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 모든 주문목록 요청 전송 중... (프로토콜:" << Protocol::Request_Order_Info << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "모든 주문목록 요청 전송 완료";
+}
+
+void Communication::RequestUserInfo()
+{
+    qDebug() << "고객목록 요청 데이터 생성 중...";
+    QJsonObject OrderObject;
+    OrderObject["Order"] = "Client Order List";
+    QByteArray payload = QJsonDocument(OrderObject).toJson();
+
+    qDebug() << "고객목록 요청 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "Product info";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Request_User_Info) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 고객목록 요청 전송 중... (프로토콜:" << Protocol::Request_User_Info << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "고객목록 요청 전송 완료";
+}
+
+void Communication::RequestProductAdd(const QJsonObject &productData)
+{
+    qDebug() << "제품 추가 데이터 보내는 중...";
+    QByteArray payload = QJsonDocument(productData).toJson();
+
+    qDebug() << "제품 추가 데이터 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "pd add";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Add_Product) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 제품 추가 데이터 전송 중... (프로토콜:" << Protocol::Add_Product << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "제품 추가 데이터 전송 완료";
+}
+
+void Communication::RequestProductDel(const QJsonObject &productData)
+{
+    qDebug() << "제품 삭제 데이터 보내는 중...";
+    QByteArray payload = QJsonDocument(productData).toJson();
+
+    qDebug() << "제품 삭제 데이터 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "pd del";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Delete_Product) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 제품 삭제 데이터 전송 중... (프로토콜:" << Protocol::Delete_Product << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "제품 삭제 데이터 전송 완료";
+}
+
+void Communication::RequestProductMod(const QJsonObject &productData)
+{
+    qDebug() << "제품 수정 데이터 보내는 중...";
+    QByteArray payload = QJsonDocument(productData).toJson();
+
+    qDebug() << "제품 수정 데이터 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "pd mod";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Update_Product) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 제품 수정 데이터 전송 중... (프로토콜:" << Protocol::Update_Product << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "제품 수정 데이터 전송 완료";
 }
 
 void Communication::SendChatMesg(const QString &mesg)
@@ -290,15 +451,15 @@ void Communication::onReadyRead()
     //qDebug() << "데이터 타입 : " << DataType;
     switch (DataType) {
     //case 0x01:FileReceive            (buffer);     break;
-    case 0x03:emit ReceiveProductInfo  (buffer);       break;
+    case 0x03:Receive_Product  (buffer);       break;
     //case 0x04:ModiProductInfo        (buffer);     break;
     //case 0x05:AddProductInfo         (buffer);     break;
     //case 0x06:DelProductInfo         (buffer);     break;
     case 0x07:Login         (buffer);     break;
     //case 0x08:SignUp                   (buffer);     break;
-    //case 0x09:emit RequestUserInfo   (this);       break;
+    case 0x09:Receive_UserInfo(buffer);     break;
     //case 0x10:AddOrderInfo           (buffer);     break;
-    //case 0x11:emit RequestOrderInfo  (this);       break;
+    case 0x11:emit ReceiveAllOrderInfo  (buffer);    break;
     //case 0x12:emit RequestChatLogInfo(this);       break;
     case 0x13:emit ReceiveChat(buffer);       break;
     case 0x14:IdChekc(buffer);                break;

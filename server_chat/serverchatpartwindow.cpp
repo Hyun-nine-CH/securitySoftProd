@@ -59,7 +59,7 @@ QString ServerChatPartWindow::getCompanyByCredentials(const QString& id, const Q
     for (const QJsonValue& value : clientData) {
         QJsonObject obj = value.toObject();
         if (obj["id"].toString() == id && obj["pw"].toString() == pw) {
-            return obj["company"].toString();
+            return obj["RoomId"].toString();
         }
     }
     return "";
