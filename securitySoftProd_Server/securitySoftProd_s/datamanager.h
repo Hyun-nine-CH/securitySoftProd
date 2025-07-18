@@ -9,6 +9,7 @@
 #include "clientdb.h"
 #include "orderdb.h"
 #include "chatlogdb.h"
+#include "fildb.h"
 
 class DataManager : public QObject
 {
@@ -22,6 +23,7 @@ public:
     QJsonDocument& getClientData(); //전체 고객 정보
     QJsonDocument& getOrderData();
     QJsonDocument& getChatLogData();
+    QJsonDocument& getFileData();
 
     //공통
     bool SaveData(const QString &filePath, DBType Type, QSharedPointer<ClientInfo> userInfo = nullptr);
@@ -51,11 +53,13 @@ private:
     ClientDB  *CDb;
     OrderDB   *ODb;
     ChatLogDB *MDb;
+    FilDB     *FDb;
 
     QJsonDocument  ProductData;
     QJsonDocument  ClientData;
     QJsonDocument  OrderData;
     QJsonDocument  ChatLogData;
+    QJsonDocument  FileData;
     QByteArray     AddChatData;
     QString        ChatroomId;
 
@@ -64,8 +68,12 @@ private:
     bool LoadClientData();
     bool LoadOrderData();
     bool LoadChatLogData();
+    bool LoadFileData();
 private slots:
     void ReceiveAddData(QByteArray add, QString rId);
+
+public slots:
+    void SavePNGFile(const QJsonObject& files);
 signals:
     void ChatLogSaveFinished(QByteArray ChatData,QString rid, QSharedPointer<ClientInfo> UserInfo);
 };

@@ -45,6 +45,9 @@
 
     20250717
     최종 채팅 안정화 및 파일전송 작업중
+
+    20250718
+    채팅 안정화 완성, 파일전송 작업중
 */
 
 Widget::Widget(QWidget *parent)
@@ -118,29 +121,30 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestIdCheck, this, &Widget::CheckId);//아이디 중복 체크
     connect(Comm, &CommuniCation::RequestThatOrder, this, &Widget::LoadThatOrderInfo);//특정 고객 주문 조회
     connect(DMan, &DataManager::ChatLogSaveFinished, this, &Widget::BroadCast);
+    connect(Comm, &CommuniCation::FinishReceiveFile, DMan, &DataManager::SavePNGFile);
 }
 
 void Widget::BroadCast(QByteArray ChatData,QString chatRoomId, QSharedPointer<ClientInfo> UserInfo)
 {
     UserInfo->ChangeJsonData();
     QString AOrCMesg;
-    if(!(chatRoomId.isEmpty()))
-        AOrCMesg = chatRoomId;
-    else
-        AOrCMesg = UserInfo->getClientRoomId();
+    qDebug() << ">>>>>>>>>>>>>>>>>>>>>>>채팅룸 정보 브로드캐스트 : " << chatRoomId;
+    AOrCMesg = UserInfo->getClientRoomId();
     ListMutex->lock();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
         CommuniCation* W = it.key();
-        //같은 방이면 브로드캐스트 해라
-        qDebug() << "compare : " << C->getClientRoomId();
-        qDebug() << "origin  : " << UserInfo->getClientRoomId();
 
         if(QString::compare(C->getClientRoomId(), AOrCMesg) == 0)
         {
+            //같은 방이면 브로드캐스트 해라
+            qDebug() << "compare : " << C->getClientRoomId();
+            qDebug() << "origin  : " << UserInfo->getClientRoomId();
+
             QJsonObject ChatObject;
-            ChatObject["message"] = QString::fromUtf8(ChatData);
+            ChatObject["message"]  = QString::fromUtf8(ChatData);
             ChatObject["nickname"] = UserInfo->getClientNick();
+            ChatObject["RoomId"]   =  chatRoomId;
             QByteArray payload = QJsonDocument(ChatObject).toJson();
 
             QByteArray Container;
@@ -277,6 +281,7 @@ void Widget::ChatLogAdd(const QBuffer &MessageData,QSharedPointer<ClientInfo> Us
     QJsonObject MesgObj = Mesg.object();
     UserInfo->ChangeJsonData();
     DMan->setChatLogUserInfo(UserInfo);
+    qDebug() << "여기가 문제였구만 ! : " << MesgObj.contains("RoomId");
     if(MesgObj.contains("RoomId")){
         QString AOrCMesg;
         AOrCMesg = MesgObj.value("RoomId").toString();

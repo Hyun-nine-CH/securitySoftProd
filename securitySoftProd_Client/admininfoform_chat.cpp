@@ -32,7 +32,12 @@ void AdminInfoForm_Chat::on_pushButton_admin_clicked()
 {
     QString messageText = ui->lineEdit->text().trimmed();
     if (messageText.isEmpty()) return;
-    Communication::getInstance()->SendChatMesg(messageText);
+    QJsonObject ChatObject;
+    ChatObject["message"] = messageText;
+    ChatObject["nickname"] = Communication::getInstance()->getUserInfo().value("id").toString();
+    ChatObject["RoomId"] = this->m_companyName;
+    QByteArray payload = QJsonDocument(ChatObject).toJson();
+    Communication::getInstance()->SendChatMesg_ad(payload);
 
     ui->lineEdit->clear();
 
@@ -48,12 +53,14 @@ void AdminInfoForm_Chat::appendMessage(const QBuffer& buffer)
     arr.remove(0, buffer.pos());
     QJsonObject Mesg = QJsonDocument::fromJson(arr).object();
     QString id, m;
-    id = Mesg["nickname"].toString();
-    m = Mesg["message"].toString();
-
-    QString formattedMessage;
-    formattedMessage = id + " : " + m;
-    ui->chatDisplay->append(formattedMessage);
+    if(this->m_companyName == Mesg.value("RoomId").toString())
+    {
+        id = Mesg["nickname"].toString();
+        m = Mesg["message"].toString();
+        QString formattedMessage;
+        formattedMessage = id + " : " + m;
+        ui->chatDisplay->append(formattedMessage);
+    }
     // 스크롤을 최하단으로 이동
     QScrollBar *scrollBar = ui->chatDisplay->verticalScrollBar();
     scrollBar->setValue(scrollBar->maximum());

@@ -7,6 +7,9 @@
 #include <QJsonObject>
 #include <QJsonArray>
 #include <QScrollBar>
+#include <QFileDialog>
+#include <QFile>
+#include <QMessageBox>
 
 ClientInfoForm_Chat::ClientInfoForm_Chat(QWidget *parent)
     : QWidget(parent), ui(new Ui::ClientInfoForm_Chat)
@@ -62,10 +65,33 @@ void ClientInfoForm_Chat::on_pushButton_client_clicked()
 }
 
 // // 파일 전송 버튼 클릭 처리
-// void ClientInfoForm_Chat::on_pushButton_fileClient_clicked()
-// {
-//     // 파일 전송 기능 구현 (향후 확장)
-// }
+void ClientInfoForm_Chat::on_pushButton_fileClient_clicked()
+{
+    // QFileDialog를 사용하여 사용자에게 파일을 선택하도록 합니다.
+    QString filePath = QFileDialog::getOpenFileName(this,
+                                                    tr("전송할 PNG 파일 선택"),
+                                                    QString(), // 초기 디렉터리 (비워두면 마지막 사용 경로)
+                                                    tr("PNG 파일 (*.png)"));
+
+    if (!filePath.isEmpty()) { // 사용자가 파일을 선택한 경우
+        QFile* fileToTransfer = new QFile(filePath); // 선택된 경로로 QFile 객체 동적 생성
+
+        // 파일을 읽기 모드로 열기 시도
+        if (fileToTransfer->open(QFile::ReadOnly)) {
+            qDebug() << "File selected and successfully opened by ClientInfoForm_Chat: " << filePath;
+            //->startFileTransfer(fileToTransfer);
+            Communication::getInstance()->SendFile(fileToTransfer);
+        } else {
+            // 파일 열기 실패 시
+            qDebug() << "Failed to open file: " << filePath << ". Error: " << fileToTransfer->errorString();
+            delete fileToTransfer; // 열기 실패했으므로 즉시 해제
+            fileToTransfer = nullptr;
+            QMessageBox::warning(this, tr("파일 열기 오류"), tr("선택한 파일을 열 수 없습니다:\n%1").arg(filePath));
+        }
+    } else {
+        qDebug() << "File selection cancelled by user.";
+    }
+}
 
 // 메시지 표시 함수
 void ClientInfoForm_Chat::appendMessage(const QBuffer &buffer)

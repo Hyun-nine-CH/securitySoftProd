@@ -29,7 +29,8 @@ enum class DBType
     ORDER   = 1,
     PRODUCT = 2,
     CLIENT  = 3,
-    CHATLOG = 4
+    CHATLOG = 4,
+    FILE    = 5
 };
 
 #endif // DATABASE_H

@@ -2,6 +2,7 @@
 #include "dialog_log.h"
 #include "Protocol.h"
 #include <QMessageBox>
+#include <QFileInfo>
 
 Communication* Communication::instance = nullptr; // 정적 멤버 초기화
 
@@ -42,6 +43,8 @@ Communication::Communication()
         QMessageBox::critical(0, "Connection Error", socket->errorString());
     });
     connect(this, &Communication::FinishInit,this,&Communication::RequestUserInfo);
+    // 기존 코드 일부 (예시)
+    //connect(socket, &QTcpSocket::bytesWritten, this, &Communication::goOnSend); // Qt5 신 문법
     qDebug() << "서버 연결 시도 중... (127.0.0.1:50000)";
     socket->connectToHost("127.0.0.1", 50000);
 }
@@ -451,40 +454,111 @@ void Communication::SendOrderData(const QByteArray &data)
     qDebug() << "주문 데이터 전송 완료";
 }
 
+void Communication::SendFile(QFile *file)
+{
+    isFileSending = true;
+    disconnect(socket, &QTcpSocket::readyRead, this, &Communication::onReadyRead);
+    connect(socket, &QTcpSocket::bytesWritten, this, &Communication::goOnSend);
+    if (file->isOpen()) {
+        file->close();
+    }
+    if (file->open(QFile::ReadOnly)) {
+        Files_ = file; // 파일 객체 저장 (소유권 이전)
+        QString filename = Files_->fileName(); // 파일 이름 저장
+
+        // 파일의 바이너리 데이터를 읽어옴
+        QByteArray fileData = Files_->readAll();
+
+        // 파일 데이터를 Base64로 인코딩
+        QByteArray base64EncodedData = fileData.toBase64();
+
+        // JSON 객체 생성
+        QJsonObject jsonObject;
+        jsonObject["type"] = "file_transfer"; // 메시지 타입
+        jsonObject["filename"] = QFileInfo(filename).fileName(); // 파일 이름만 추출
+        jsonObject["filetype"] = "image/png"; // 파일 타입 (PNG로 가정)
+        jsonObject["data"] = QString::fromLatin1(base64EncodedData); // Base64 데이터를 문자열로 변환하여 저장
+        jsonObject["id"] = Communication::getInstance()->getUserInfo().value("id").toString();
+        // JSON 객체를 QJsonDocument로 변환
+        QByteArray payload = QJsonDocument(jsonObject).toJson();
+
+        // 전송할 데이터 크기 설정
+
+        loadSize = 1024;
+        // 헤더 정보 추가 (기존 방식과 유사하게)
+        QDataStream out(&outBlock, QIODevice::WriteOnly);
+        out.setVersion(QDataStream::Qt_5_15);
+        // 헤더 정보 설정 (데이터 타입, 전체 크기, 헤더 크기)
+        out << qint64(0) << qint64(0) << qint64(0) << filename;
+        outBlock.append(payload);
+        byteToWrite = TotalSize = outBlock.size();
+
+        // 헤더 정보 업데이트
+        out.device()->seek(0);
+        qint64 dataType = Protocol::File_Transfer; // 프로토콜에 정의된 파일 전송 타입
+        out << dataType << TotalSize << byteToWrite;
+
+        // 헤더 전송
+        socket->write(outBlock);
+
+        qDebug() << "File encoded as Base64 and prepared as JSON. Total size:" << TotalSize;
+    } else {
+        qDebug() << "Failed to open file:" << file->fileName();
+        delete file;
+        file = nullptr;
+    }
+}
+
 void Communication::onReadyRead()
 {
-    //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
-    m_buffer.append(socket->readAll());
-    qDebug() << "수신 후 ByteArray 크기: " << m_buffer.size();
-    QBuffer buffer(&m_buffer);
-    buffer.open(QIODevice::ReadOnly); // 읽기 모드로 오픈 필수
-    QDataStream In(&buffer);
-    In.setVersion(QDataStream::Qt_5_15);
-    qDebug() <<"받았을때 시점의 내용 : " << m_buffer;
-    // qDebug() << "Server: " << ClientConnection->peerAddress().toString()
-    //          << "에서 데이터 수신. 현재 버퍼 크기: " << ByteArray.size();
-    QByteArray FileName;
-    if(ReceivePacket == 0)
-        In >> DataType >> TotalSize >> CurrentPacket >> FileName;
-    qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
-             << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
-    //qDebug() << "데이터 타입 : " << DataType;
-    switch (DataType) {
-    //case 0x01:FileReceive            (buffer);     break;
-    case 0x03:Receive_Product  (buffer);       break;
-    //case 0x04:ModiProductInfo        (buffer);     break;
-    //case 0x05:AddProductInfo         (buffer);     break;
-    //case 0x06:DelProductInfo         (buffer);     break;
-    case 0x07:Login         (buffer);     break;
-    //case 0x08:SignUp                   (buffer);     break;
-    case 0x09:Receive_UserInfo(buffer);     break;
-    //case 0x10:AddOrderInfo           (buffer);     break;
-    case 0x11:emit ReceiveAllOrderInfo  (buffer);    break;
-    //case 0x12:emit RequestChatLogInfo(this);       break;
-    case 0x13:emit ReceiveChat(buffer);       break;
-    case 0x14:IdChekc(buffer);                break;
-    case 0x15:emit ReceiveOrderInfo(buffer);  break;
+    if(!isFileSending)
+    {
+        //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
+        m_buffer.append(socket->readAll());
+        qDebug() << "수신 후 ByteArray 크기: " << m_buffer.size();
+        QBuffer buffer(&m_buffer);
+        buffer.open(QIODevice::ReadOnly); // 읽기 모드로 오픈 필수
+        QDataStream In(&buffer);
+        In.setVersion(QDataStream::Qt_5_15);
+        qDebug() <<"받았을때 시점의 내용 : " << m_buffer;
+        // qDebug() << "Server: " << ClientConnection->peerAddress().toString()
+        //          << "에서 데이터 수신. 현재 버퍼 크기: " << ByteArray.size();
+        QByteArray FileName;
+        if(ReceivePacket == 0)
+            In >> DataType >> TotalSize >> CurrentPacket >> FileName;
+        // qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
+        //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
+        //qDebug() << "데이터 타입 : " << DataType;
+        switch (DataType) {
+        //case 0x01:FileReceive            (buffer);     break;
+        case 0x03:Receive_Product  (buffer);       break;
+        //case 0x04:ModiProductInfo        (buffer);     break;
+        //case 0x05:AddProductInfo         (buffer);     break;
+        //case 0x06:DelProductInfo         (buffer);     break;
+        case 0x07:Login         (buffer);     break;
+        //case 0x08:SignUp                   (buffer);     break;
+        case 0x09:Receive_UserInfo(buffer);     break;
+        //case 0x10:AddOrderInfo           (buffer);     break;
+        case 0x11:emit ReceiveAllOrderInfo  (buffer);    break;
+        //case 0x12:emit RequestChatLogInfo(this);       break;
+        case 0x13:emit ReceiveChat(buffer);       break;
+        case 0x14:IdChekc(buffer);                break;
+        case 0x15:emit ReceiveOrderInfo(buffer);  break;
+        }
+        m_buffer.clear();
     }
-    m_buffer.clear();
+}
+
+void Communication::goOnSend(qint64 numBytes)
+{
+    byteToWrite -= numBytes;
+    outBlock = Files_->read(qMin(byteToWrite,numBytes));
+    socket->write(outBlock);
+    if(byteToWrite == 0){
+        disconnect(socket, &QTcpSocket::bytesWritten, this, &Communication::goOnSend);
+        connect(socket, &QTcpSocket::readyRead, this, &Communication::onReadyRead);
+        isFileSending = false;
+        QMessageBox::information(0,tr("파일 전송 완료"), tr("파일이 성공적으로 전송되었습니다."), QMessageBox::Ok);
+    }
 }
 

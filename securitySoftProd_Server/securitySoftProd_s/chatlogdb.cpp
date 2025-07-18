@@ -99,6 +99,7 @@ QSharedPointer<ClientInfo> ChatLogDB::getClientInfo()
 void ChatLogDB::AdminAddData(const QByteArray &NewData, QString RoomId)
 {
     emit SendAddData(NewData, RoomId);
+    qDebug() << ">>>>>>>>>>>>>>>>>>>>>>>관리자 브로드캐스트 rid : " << RoomId;
     //qDebug() << "원본 NewData:" << NewData;
     QJsonDocument &AllDoc = DbManager->getChatLogData();
     int LastNum = FindLastNum(AllDoc);

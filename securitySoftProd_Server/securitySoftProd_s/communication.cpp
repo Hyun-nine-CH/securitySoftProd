@@ -101,21 +101,21 @@ void CommuniCation::ReadClientData()
     QTcpSocket *ClientConnection = dynamic_cast<QTcpSocket*>(sender());
     //qDebug() << "수신 전 ByteArray 크기: " << ByteArray.size();
     ByteArray.append(ClientConnection->readAll());
-    qDebug() << "수신 후 ByteArray 크기: " << ByteArray.size();
+    //qDebug() << "수신 후 ByteArray 크기: " << ByteArray.size();
     QBuffer buffer(&ByteArray);
     buffer.open(QIODevice::ReadOnly); // 읽기 모드로 오픈 필수
     QDataStream In(&buffer);
     In.setVersion(QDataStream::Qt_5_15);
-    qDebug() <<"받았을때 시점의 내용 : " << ByteArray;
+    //qDebug() <<"받았을때 시점의 내용 : " << ByteArray;
     // qDebug() << "Server: " << ClientConnection->peerAddress().toString()
     //          << "에서 데이터 수신. 현재 버퍼 크기: " << ByteArray.size();
     //파싱
     if(ReceivePacket == 0)
         In >> DataType >> TotalSize >> CurrentPacket >> FileName;
-    // buffer의 읽기 포인터는 자동으로 8바이트 이동합니다.
-    // qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
-    //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
-    qDebug() << "데이터 타입 : " << DataType;
+    //buffer의 읽기 포인터는 자동으로 8바이트 이동합니다.
+    qDebug() << "데이터 타입: " << DataType << ", 전체 크기: " << TotalSize
+             << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
+    //qDebug() << "데이터 타입 : " << DataType;
     switch (DataType) {
     case 0x01:FileReceive            (buffer);                  break;
     case 0x03:emit RequestPdInfo     (this);                    break;
@@ -138,33 +138,33 @@ void CommuniCation::ReadClientData()
 void CommuniCation::FileReceive(const QBuffer &buffer)
 {
     if(ReceivePacket == 0){
-        QFileInfo info(FileName);
-        QString CurrentFileName = info.fileName();
-        NewFile = new QFile(CurrentFileName);
-        NewFile->open(QFile::WriteOnly);
-
         // 첫 패킷에서도 헤더 제거 후 데이터를 파일에 써야 함!
         ByteArray.remove(0, buffer.pos());
+        //qDebug() << ">>>>>>>File Receive : "<< ByteArray;
         ReceivePacket = CurrentPacket; // 첫 패킷의 데이터 크기 업데이트
-        //qDebug() << "첫 패킷 ReceivePacket : " << ReceivePacket;
+        qDebug() << ">>>>>>>>>>>첫 패킷 ReceivePacket : " << ReceivePacket;
     }else{
         qDebug() << "ByteArray 파일 : " << ByteArray;
-        if (NewFile && NewFile->isOpen()) { // NewFile이 nullptr이 아니고, 열려있는지 확인
-            NewFile->write(ByteArray);
-        }
         ReceivePacket += ByteArray.size();
-        // qDebug() << "ReceivePacket : " << ReceivePacket;
-        // qDebug() << "TotalSize : " << TotalSize;
+        qDebug() << "ReceivePacket : " << ReceivePacket;
+        qDebug() << "TotalSize : " << TotalSize;
     }
     if(ReceivePacket == TotalSize){
         qDebug() <<" receive completed :" <<FileName;
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(ByteArray);
+        if (!jsonDoc.isNull() && jsonDoc.isObject()) {
+            QJsonObject jsonObject = jsonDoc.object();
+
+            // 데이터 매니저에 저장하도록 시그널 발생
+            emit FinishReceiveFile(jsonObject);
+            qDebug() << "Signal emitted: finishfilerecieve with JSON object";
+        } else {
+            qDebug() << "Failed to parse complete JSON data";
+        }
         ByteArray.clear();
         ReceivePacket = 0;
         TotalSize = 0;
         DataType = 0;
-        NewFile->close();
-        delete NewFile;
-        NewFile = nullptr;
     }
 }
 

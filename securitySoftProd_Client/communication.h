@@ -5,7 +5,7 @@
 #include <QTcpSocket>
 #include <QJsonObject>
 #include <QBuffer>
-
+#include <QFile>
 class Communication : public QObject
 {
     Q_OBJECT
@@ -25,6 +25,7 @@ public:
     void SendIdCheck(const QByteArray &idcheck); //아이디 중복 서버에 체크해달라고
     void SendJoinData(const QByteArray &idcheck);//회원가입 데이터
     void SendOrderData(const QByteArray &data);
+    void SendFile(QFile* file);
 private:
     explicit Communication();
     QTcpSocket* socket;
@@ -34,6 +35,9 @@ private:
     qint64      CurrentPacket;
     qint64      DataType;
     qint64      ReceivePacket;
+    qint64      loadSize;
+    qint64      byteToWrite;
+    QByteArray  outBlock;
     bool        isFirst = true;
     bool        isRoomInit = true;
 
@@ -48,6 +52,8 @@ private:
     static Communication* instance;
     void Receive_Product(const QBuffer &buffer);
     void Receive_UserInfo(const QBuffer &buffer);
+    QFile* Files_;
+    bool isFileSending = false;
 
 public slots:
     void SendLoginConfirm(const QString& id, const QString& pw);
@@ -66,6 +72,7 @@ private slots:
     void StartComm();
     //void SignUp(); //
     void onReadyRead();
+    void goOnSend(qint64);
 
 
 signals:

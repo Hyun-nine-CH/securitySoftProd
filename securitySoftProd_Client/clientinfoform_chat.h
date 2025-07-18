@@ -29,7 +29,7 @@ public:
     // void onChatTabActivated();
 private slots:
     void on_pushButton_client_clicked();
-    // void on_pushButton_fileClient_clicked();
+    void on_pushButton_fileClient_clicked();
     // void appendMessage(const QBuffer &buffer);
     //void on_pushButton_admin_clicked();
 
@@ -37,6 +37,7 @@ private:
     Ui::ClientInfoForm_Chat *ui;
     // 엔터키 이벤트 처리를 위한 이벤트 필터
     bool eventFilter(QObject *watched, QEvent *event) override;
+
 };
 
 #endif // CLIENTINFOFORM_CHAT_H

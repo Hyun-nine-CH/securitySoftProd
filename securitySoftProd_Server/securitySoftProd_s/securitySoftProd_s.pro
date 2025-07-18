@@ -15,6 +15,7 @@ SOURCES += \
     communication.cpp \
     database.cpp \
     datamanager.cpp \
+    fildb.cpp \
     main.cpp \
     orderdb.cpp \
     productdb.cpp \
@@ -27,6 +28,7 @@ HEADERS += \
     communication.h \
     database.h \
     datamanager.h \
+    fildb.h \
     orderdb.h \
     productdb.h \
     widget.h

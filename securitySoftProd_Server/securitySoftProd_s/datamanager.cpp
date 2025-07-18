@@ -7,11 +7,13 @@ DataManager::DataManager(QObject *parent)
     CDb = new ClientDB(this);
     ODb = new OrderDB(this);
     MDb = new ChatLogDB(this);
+    FDb = new FilDB(this);
 
     Db.insert("Product"   ,PDb);
     Db.insert("Client"    ,CDb);
     Db.insert("Order"     ,ODb);
     Db.insert("MesgLog"   ,MDb);
+    Db.insert("File"      ,FDb);
 
     if(LoadProductData() && LoadChatLogData() &&
        LoadClientData()  && LoadOrderData() ){
@@ -45,6 +47,9 @@ bool DataManager::SaveData(const QString &filePath, DBType Type,QSharedPointer<C
         break;
     case DBType::CHATLOG:
         Data = getChatLogData();
+        break;
+    case DBType::FILE:
+        Data = getFileData();
         break;
     default:
         qDebug() << "타입이 잘못 되었습니다";
@@ -99,10 +104,26 @@ bool DataManager::LoadChatLogData()
     return false;
 }
 
+bool DataManager::LoadFileData()
+{
+    FileData = FDb->LoadData();
+    if(!(FileData.isEmpty())){
+        qDebug() << "Load FileData Data";
+        return true;
+    }
+    return false;
+}
+
 void DataManager::ReceiveAddData(QByteArray add, QString rId)
 {
     this->AddChatData = add;
     this->ChatroomId  = rId;
+    qDebug() << ">>>>>>>>>>>>>>>>>>>>>>>채팅로그 저장후 rid : " << this->ChatroomId;
+}
+
+void DataManager::SavePNGFile(const QJsonObject &files)
+{
+    FDb->SaveData(files,getFileData());
 }
 
 void DataManager::AddProductData(const QByteArray &NewData)
@@ -189,4 +210,9 @@ QJsonDocument &DataManager::getOrderData()
 QJsonDocument &DataManager::getChatLogData()
 {
     return ChatLogData;
+}
+
+QJsonDocument &DataManager::getFileData()
+{
+    return FileData;
 }
