@@ -8,6 +8,7 @@
 #include <QFile>
 #include <QBuffer>
 #include <QThread>
+#include <QWaitCondition>
 
 #include "clientinfo.h"
 #include "communication.h"
@@ -28,7 +29,7 @@ private slots:
     void ClientConnect  ();// 클라이언트 연결시
 
     void DisConnectEvent(QTcpSocket* Socket,CommuniCation* Thread);// 클라이언트 종료시
-    void BroadCast(QByteArray ChatData,QString chatRoomId, QSharedPointer<ClientInfo> UserInfo);// 채팅 메시지 받았을 때
+    void BroadCast(const QBuffer& MessageData, QSharedPointer<ClientInfo> UserInfo);// 채팅 메시지 받았을 때
     void SetCInfo(CommuniCation* Thread,ClientInfo* Info);// 클라이언트 정보 완성되서 넘길때
     void ProductModi(CommuniCation* Thread,const QByteArray& MessageData);// 상품정보 수정 요청 들어왔을때
     void LoadProductDB(CommuniCation* Thread);// 상품정보 조회 요청 들어왔을때
@@ -79,5 +80,10 @@ private:
     const qint64 ORDER_LI  = 0x15;
 
     void SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand);
+
+    // 클래스 멤버 변수로 선언
+    QMutex processMutex;
+    QWaitCondition waitForSlot1;
+    bool slot1Completed = false;
 };
 #endif // WIDGET_H

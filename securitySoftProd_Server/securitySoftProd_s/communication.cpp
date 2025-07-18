@@ -180,6 +180,9 @@ QSharedPointer<ClientInfo> CommuniCation::getClientInfo()
 
 void CommuniCation::WriteData(const QByteArray& MessageData)
 {
+    //qDebug() << ">>>>>>>>>>>>>send data>>>>>>>>>>>>>";
+    qDebug() << MessageData;
+    //qDebug() << ">>>>>>>>>>>>>send data>>>>>>>>>>>>>";
     Socket->write(MessageData);
     Socket->flush();
 }

@@ -117,58 +117,84 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestUserInfo, this, &Widget::LoadUserInfo);//고객정보 조회
     connect(Comm, &CommuniCation::RequestOrderAdd, this, &Widget::OrderAdd);//주문정보 추가
     connect(Comm, &CommuniCation::RequestOrderInfo, this, &Widget::LoadOrderInfo);//주문정보 조회
-    connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
+    //connect(Comm, &CommuniCation::RequestChatLogInfo, this, &Widget::LoadChatLogInfo);//채팅로그 조회
     connect(Comm, &CommuniCation::RequestIdCheck, this, &Widget::CheckId);//아이디 중복 체크
     connect(Comm, &CommuniCation::RequestThatOrder, this, &Widget::LoadThatOrderInfo);//특정 고객 주문 조회
-    connect(DMan, &DataManager::ChatLogSaveFinished, this, &Widget::BroadCast);
+    connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);
     connect(Comm, &CommuniCation::FinishReceiveFile, DMan, &DataManager::SavePNGFile);
 }
 
-void Widget::BroadCast(QByteArray ChatData,QString chatRoomId, QSharedPointer<ClientInfo> UserInfo)
+void Widget::BroadCast(const QBuffer& MessageData, QSharedPointer<ClientInfo> UserInfo)
 {
+    // 슬롯1이 완료될 때까지 대기
+    QMutexLocker locker(&processMutex);
+    while (!slot1Completed) {
+        waitForSlot1.wait(&processMutex);
+    }
+
+    // 상태 초기화 (다음 메시지를 위해)
+    slot1Completed = false;
     UserInfo->ChangeJsonData();
+
+    QByteArray messageCopy = MessageData.data();
+    qDebug() << "서버에서 받은 chat mesg : " << messageCopy;
+    QJsonDocument Mesg = QJsonDocument::fromJson(messageCopy);
+    if(Mesg.isNull()){
+        qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
+    }
+    QJsonObject MesgObj = Mesg.object();
+
     QString AOrCMesg;
-    qDebug() << ">>>>>>>>>>>>>>>>>>>>>>>채팅룸 정보 브로드캐스트 : " << chatRoomId;
+    qDebug() << ">>>>>>>>>>>>>>>>>>>>>>>채팅룸 정보 브로드캐스트 : " << MesgObj.value("RoomId").toString();
     AOrCMesg = UserInfo->getClientRoomId();
     ListMutex->lock();
+    QJsonObject ChatObject;
+    ChatObject["message"]  = MesgObj.value("message").toString();
+    ChatObject["nickname"] = UserInfo->getClientNick();
+    ChatObject["RoomId"]   = (MesgObj.value("RoomId").toString().isEmpty()) ? UserInfo->getClientRoomId() : MesgObj.value("RoomId").toString();
+    QByteArray payload = QJsonDocument(ChatObject).toJson();
+
+    QByteArray Container;
+    QByteArray filename = "filename";
+    QDataStream out(&Container,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << filename;
+    Container.append(payload);
+
+    out.device()->seek(0);
+    qint64 dataType = CHAT_MESG;
+    out << dataType << Container.size() << Container.size();
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
         CommuniCation* W = it.key();
-
-        if(QString::compare(C->getClientRoomId(), AOrCMesg) == 0)
-        {
-            //같은 방이면 브로드캐스트 해라
-            qDebug() << "compare : " << C->getClientRoomId();
-            qDebug() << "origin  : " << UserInfo->getClientRoomId();
-
-            QJsonObject ChatObject;
-            ChatObject["message"]  = QString::fromUtf8(ChatData);
-            ChatObject["nickname"] = UserInfo->getClientNick();
-            ChatObject["RoomId"]   =  chatRoomId;
-            QByteArray payload = QJsonDocument(ChatObject).toJson();
-
-            QByteArray Container;
-            QByteArray filename = "filename";
-            QDataStream out(&Container,QIODevice::WriteOnly);
-            out.setVersion(QDataStream::Qt_5_15);
-            out << qint64(0) << qint64(0) << qint64(0) << filename;
-            Container.append(payload);
-
-            out.device()->seek(0);
-            qint64 dataType = CHAT_MESG;
-            out << dataType << Container.size() << Container.size();
-
-            if(W)
-            {
-                // QMetaObject::invokeMethod를 사용하여 대상 스레드의 슬롯 호출
-                // Qt::QueuedConnection: 호출이 대상 스레드의 이벤트 큐에 추가되고,
-                // 대상 스레드의 이벤트 루프에서 안전하게 실행됩니다.
-                QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
-                                          Qt::QueuedConnection,  // 연결 타입 (필수)
-                                          Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
-                //qDebug() << "메시지 전송 요청됨: " << W->metaObject()->className();
+        if( MesgObj.value("RoomId").toString().isEmpty()){
+            if((QString::compare(C->getClientRoomId(), AOrCMesg) == 0) ||
+                (QString::compare(C->getClientRoomId(), "Corp") == 0)){
+                //같은 방이면 브로드캐스트 해라
+                // qDebug() << "compare : " << C->getClientRoomId();
+                // qDebug() << "origin  : " << UserInfo->getClientRoomId();
+                if(W){
+                    qDebug() << "왜 채팅이 중복되는거니?";
+                    qDebug() << "origin  : " << AOrCMesg;
+                    // QMetaObject::invokeMethod를 사용하여 대상 스레드의 슬롯 호출
+                    // Qt::QueuedConnection: 호출이 대상 스레드의 이벤트 큐에 추가되고,
+                    // 대상 스레드의 이벤트 루프에서 안전하게 실행됩니다.
+                    QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
+                                              Qt::QueuedConnection,  // 연결 타입 (필수)
+                                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
+                }
+            }
+        }else{
+            if((QString::compare(C->getClientRoomId(), MesgObj.value("RoomId").toString()) == 0) ||
+                (QString::compare(C->getClientRoomId(), "Corp") == 0)){
+                if(W) {
+                    QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
+                                              Qt::QueuedConnection,  // 연결 타입 (필수)
+                                              Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
+                }
             }
         }
+
     }
     ListMutex->unlock();
 }
@@ -289,6 +315,11 @@ void Widget::ChatLogAdd(const QBuffer &MessageData,QSharedPointer<ClientInfo> Us
     }
     else
         DMan->AddChatLogData(MessageData,UserInfo);
+
+    // 작업 완료 표시
+    QMutexLocker locker(&processMutex);
+    slot1Completed = true;
+    waitForSlot1.wakeAll(); // 대기 중인 슬롯2를 깨움
 
 }
 
