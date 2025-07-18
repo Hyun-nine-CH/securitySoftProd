@@ -465,7 +465,7 @@ void Communication::SendFile(QFile *file)
     if (file->open(QFile::ReadOnly)) {
         Files_ = file; // 파일 객체 저장 (소유권 이전)
         QString filename = Files_->fileName(); // 파일 이름 저장
-
+        byteToWrite = TotalSize = Files_->size();
         // 파일의 바이너리 데이터를 읽어옴
         QByteArray fileData = Files_->readAll();
 
@@ -491,12 +491,13 @@ void Communication::SendFile(QFile *file)
         // 헤더 정보 설정 (데이터 타입, 전체 크기, 헤더 크기)
         out << qint64(0) << qint64(0) << qint64(0) << filename;
         outBlock.append(payload);
-        byteToWrite = TotalSize = outBlock.size();
+        byteToWrite += outBlock.size();
+        TotalSize   += outBlock.size();
 
         // 헤더 정보 업데이트
         out.device()->seek(0);
         qint64 dataType = Protocol::File_Transfer; // 프로토콜에 정의된 파일 전송 타입
-        out << dataType << TotalSize << byteToWrite;
+        out << dataType <<  TotalSize - sizeof(qint64) * 3 - filename.size() * 2  << qint64(outBlock.size());
 
         // 헤더 전송
         socket->write(outBlock);

@@ -69,12 +69,23 @@ int FilDB::FindLastNum(const QJsonDocument &Trace)
 
 bool FilDB::SaveData(const QJsonObject &files, QJsonDocument &Data)
 {
-    QFile file(FilePath);
-    if (!file.open(QIODevice::WriteOnly)) {
-        qDebug() << "파일을 열 수 없습니다: " << FilePath;
-        return false;
-    }
-    file.write(Data.toJson(QJsonDocument::Indented));
-    file.close();
+    QJsonDocument &AllDoc = DbManager->getFileData();
+    QJsonDocument New;
+    QJsonObject NewObj = New.object();
+
+    NewObj.insert("id",files["id"].toString());
+    NewObj.insert("data",files["data"].toString());
+    NewObj.insert("Timestamp", QDateTime::currentDateTime().toString("yyyy-MM-dd hh:mm:ss"));
+    New.setObject(NewObj);
+
+    QJsonArray AllArr;
+    AllArr = AllDoc.array();
+    AllArr.append(NewObj);
+
+    AllDoc.setArray(AllArr);
+    qDebug() << "파일 최종 내용:\n" << AllDoc.toJson(QJsonDocument::Indented);
+    //qDebug() << "추가 : "<< ;
+    DbManager->SaveData(FilePath, DBType::FILE);
+
     return true;
 }

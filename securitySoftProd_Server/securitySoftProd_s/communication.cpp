@@ -139,33 +139,38 @@ void CommuniCation::FileReceive(const QBuffer &buffer)
 {
     if(ReceivePacket == 0){
         // 첫 패킷에서도 헤더 제거 후 데이터를 파일에 써야 함!
+        FileBuffer.clear();
         ByteArray.remove(0, buffer.pos());
+        FileBuffer.append(ByteArray);
         //qDebug() << ">>>>>>>File Receive : "<< ByteArray;
         ReceivePacket = CurrentPacket; // 첫 패킷의 데이터 크기 업데이트
-        qDebug() << ">>>>>>>>>>>첫 패킷 ReceivePacket : " << ReceivePacket;
+        //qDebug() << ">>>>>>>>>>>첫 패킷 ReceivePacket : " << ReceivePacket;
     }else{
-        qDebug() << "ByteArray 파일 : " << ByteArray;
+        //qDebug() << "ByteArray 파일 : " << ByteArray;
         ReceivePacket += ByteArray.size();
         qDebug() << "ReceivePacket : " << ReceivePacket;
         qDebug() << "TotalSize : " << TotalSize;
+        FileBuffer.append(ByteArray);
     }
-    if(ReceivePacket == TotalSize){
-        qDebug() <<" receive completed :" <<FileName;
-        QJsonDocument jsonDoc = QJsonDocument::fromJson(ByteArray);
+    //if(ReceivePacket == TotalSize){
+        //qDebug() <<" receive completed :" <<FileName;
+        QJsonDocument jsonDoc = QJsonDocument::fromJson(FileBuffer);
         if (!jsonDoc.isNull() && jsonDoc.isObject()) {
             QJsonObject jsonObject = jsonDoc.object();
 
             // 데이터 매니저에 저장하도록 시그널 발생
             emit FinishReceiveFile(jsonObject);
             qDebug() << "Signal emitted: finishfilerecieve with JSON object";
+            ByteArray.clear();
+            ReceivePacket = 0;
+            TotalSize = 0;
+            DataType = 0;
+            FileBuffer.clear();
         } else {
             qDebug() << "Failed to parse complete JSON data";
         }
-        ByteArray.clear();
-        ReceivePacket = 0;
-        TotalSize = 0;
-        DataType = 0;
-    }
+
+    //}
 }
 
 QSharedPointer<ClientInfo> CommuniCation::getClientInfo()

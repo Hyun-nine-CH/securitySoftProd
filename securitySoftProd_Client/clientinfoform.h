@@ -33,8 +33,8 @@ signals:
     void productListRequested();
 public slots:
     void on_pushButton_order_clicked();
-    //void on_pushButton_search_clicked();
-    //void on_pushButton_Reset_clicked();
+    void on_pushButton_search_clicked();
+    void on_pushButton_Reset_clicked();
     void displayProductList(const QBuffer &buffer);
     void displayOrderList(const QBuffer &buffer);
     void ProductTableSet();

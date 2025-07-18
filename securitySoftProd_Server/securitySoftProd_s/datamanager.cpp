@@ -123,6 +123,7 @@ void DataManager::ReceiveAddData(QByteArray add, QString rId)
 
 void DataManager::SavePNGFile(const QJsonObject &files)
 {
+    qDebug() << ">>>>>>>>>>>>>>>>>>>>>>>그림 저장하기>< : " << files.isEmpty();
     FDb->SaveData(files,getFileData());
 }
 

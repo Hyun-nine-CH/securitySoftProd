@@ -56,8 +56,8 @@ void ClientInfoForm::on_pushButton_order_clicked()
         QJsonObject orderData;
          QJsonObject userInfo = Communication::getInstance()->getUserInfo();
         if(rowData.size() == 3){
-            orderData["product"] = rowData[0];
-            orderData["price"] = rowData[1].toInt();//꼭 숫자형으로 넣을것!
+            orderData["productname"] = rowData[0];
+            orderData["price"] = rowData[1].remove(',').toInt();//꼭 숫자형으로 넣을것!
             orderData["expire"] = rowData[2];
             orderData["RoomId"] = userInfo.value("RoomId").toString(); // "회사명" -> "companyName"
             orderData["department"] = userInfo.value("department").toString(); // "부서명" -> "departmentName"
@@ -94,27 +94,27 @@ void ClientInfoForm::on_pushButton_order_clicked()
 
 }
 
-// void ClientInfoForm::on_pushButton_search_clicked()
-// {
-//     // 검색 조건 수집
-//     QString productName = ui->ProdName->text().trimmed();
-//     QString price = ui->Price->text().trimmed();
-//     QString dueDate = ui->Due->text().trimmed();
+void ClientInfoForm::on_pushButton_search_clicked()
+{
+    // 검색 조건 수집
+    QString productName = ui->ProdName->text().trimmed();
+    QString price = ui->Price->text().trimmed();
+    QString dueDate = ui->Due->text().trimmed();
 
-//     // 검색 요청 시그널 발생
-//     emit searchOrdersRequested(productName, price, dueDate);
-// }
+    // 검색 요청 시그널 발생
+    //emit searchOrdersRequested(productName, price, dueDate);
+}
 
-// void ClientInfoForm::on_pushButton_Reset_clicked()
-// {
-//     // 검색 입력란 초기화
-//     ui->ProdName->clear();
-//     ui->Price->clear();
-//     ui->Due->clear();
+void ClientInfoForm::on_pushButton_Reset_clicked()
+{
+    // 검색 입력란 초기화
+    ui->ProdName->clear();
+    ui->Price->clear();
+    ui->Due->clear();
 
-//     // 전체 목록 다시 요청
-//     emit orderListRequested();
-// }
+    // 전체 목록 다시 요청
+    emit orderListRequested();
+}
 
 void ClientInfoForm::displayProductList(const QBuffer &buffer)
 {
@@ -194,7 +194,7 @@ void ClientInfoForm::displayOrderList(const QBuffer &buffer)
             ui->tableWidget->setItem(row, 4, address);
 
             // 구매한 제품
-            QTableWidgetItem* pd = new QTableWidgetItem(Order["product"].toString());
+            QTableWidgetItem* pd = new QTableWidgetItem(Order["productname"].toString());
             ui->tableWidget->setItem(row, 5, pd);
 
             // 가격

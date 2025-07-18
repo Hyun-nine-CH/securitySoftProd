@@ -54,6 +54,7 @@ private:
     qint64     DataType;
     qint64     ReceivePacket;
     QTcpSocket *Socket;
+    QByteArray FileBuffer;
 
     QSharedPointer<ClientInfo> CInfo;
     QThread    WorkThread;
