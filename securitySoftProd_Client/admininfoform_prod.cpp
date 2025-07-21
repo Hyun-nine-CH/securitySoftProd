@@ -61,27 +61,42 @@ QToolBox* AdminInfoForm_Prod::getToolBox()
     return ui->toolBox;
 }
 
-// void AdminInfoForm_Prod::on_pushButton_search_clicked()
-// {
-//     // 검색 조건 수집
-//     QString name = ui->comboBox_search->currentText().trimmed();
-//     QString price = ui->lineEdit_searchPrice->text().trimmed();
-//     QString dueDate = ui->lineEdit_searchDue->text().trimmed();
+void AdminInfoForm_Prod::on_pushButton_search_clicked()
+{
+    // 검색 조건 수집
+    QString name = ui->comboBox_search->currentText().trimmed();
 
-//     // 검색 요청 시그널 발생
-//     emit searchProductsRequested(name, price, dueDate);
-// }
+    // 테이블 위젯의 모든 행을 확인
+    for (int row = 0; row < ui->tableWidget->rowCount(); ++row) {
+        bool match = true;
 
-// void AdminInfoForm_Prod::on_pushButton_reset_clicked()
-// {
-//     // 검색 입력란 초기화
-//     ui->comboBox_search->setCurrentText("");
-//     ui->lineEdit_searchPrice->clear();
-//     ui->lineEdit_searchDue->clear();
+        // 회사명(name) 검색 조건 확인 - 0번 열에 있는 회사명으로 검색
+        if (!name.isEmpty()) {
+            QTableWidgetItem* item = ui->tableWidget->item(row, 1); // 0번 열이 회사명(RoomId)
+            if (item) {
+                QString cellCompanyName = item->text();
+                if (!cellCompanyName.contains(name, Qt::CaseInsensitive)) {
+                    match = false;
+                }
+            } else {
+                // 해당 셀이 비어있으면 검색 조건에 맞지 않음
+                match = false;
+            }
+        }
 
-//     // 전체 목록 다시 요청
-//     emit productListRequested();
-// }
+        // 검색 조건에 맞는 행만 표시
+        ui->tableWidget->setRowHidden(row, !match);
+    }
+}
+
+void AdminInfoForm_Prod::on_pushButton_reset_clicked()
+{
+    // 검색 입력란 초기화
+    ui->comboBox_search->setCurrentText("");
+
+    // 전체 목록 다시 요청
+    emit productListRequested();
+}
 
 void AdminInfoForm_Prod::on_pushButton_add_clicked()
 {
@@ -259,7 +274,9 @@ void AdminInfoForm_Prod::displayProductList(const QBuffer &buffer)
     // comboBox 초기화
     ui->comboBox_search->clear();
     ui->comboBox_Delete->clear();
-
+    // 가로 스크롤바 활성화
+    ui->tableWidget->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    ui->tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     //통신
     qDebug() << "테이블 디스플레이 :" << buffer.data();
     QByteArray arr = buffer.data();
@@ -307,6 +324,14 @@ void AdminInfoForm_Prod::displayProductList(const QBuffer &buffer)
 
     // 테이블 정렬
     ui->tableWidget->sortItems(0, Qt::AscendingOrder);
+    // 내용에 맞게 칸 크기 조정
+    ui->tableWidget->resizeColumnsToContents();
+    // 테이블 위젯의 크기 정책을 설정하여 가로 스크롤바가 필요할 때 나타나도록 함
+    ui->tableWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+
+    // 테이블 헤더 설정
+    ui->tableWidget->horizontalHeader()->setStretchLastSection(false);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 }
 
 void AdminInfoForm_Prod::ProductTableSet()

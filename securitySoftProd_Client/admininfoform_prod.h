@@ -43,8 +43,8 @@ signals:
     void updateProductRequested(const QJsonObject& productData);
 
 private slots:
-    // void on_pushButton_search_clicked();
-    // void on_pushButton_reset_clicked();
+    void on_pushButton_search_clicked();
+    void on_pushButton_reset_clicked();
     void on_pushButton_add_clicked();
     void on_pushButton_delete_clicked();
     void on_pushButton_update_clicked();

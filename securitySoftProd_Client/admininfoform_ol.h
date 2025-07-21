@@ -30,9 +30,6 @@ signals:
     // 주문 목록 요청 시그널
     void orderListRequested();
 
-    // 주문 검색 요청 시그널
-    void searchOrdersRequested(const QString& productName, const QString& price, const QString& dueDate);
-
 private slots:
     void on_pushButton_OS_clicked();
     void on_pushButton_OS_Reset_clicked();

@@ -22,6 +22,7 @@ SOURCES += \
     widget.cpp
 
 HEADERS += \
+    ChatMutex.h \
     chatlogdb.h \
     clientdb.h \
     clientinfo.h \

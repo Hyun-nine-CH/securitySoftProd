@@ -34,21 +34,33 @@ void AdminInfoForm::on_pushButtonSearch_clicked()
 {
     // 검색 조건 수집
     QString company = ui->CompanyName->text().trimmed();
-    QString department = ui->DepName->text().trimmed();
-    QString manager = ui->ClientName->text().trimmed();
-    QString phone = ui->PhoneNum->text().trimmed();
+    // 테이블 위젯의 모든 행을 확인
+    for (int row = 0; row < ui->tableWidget->rowCount(); ++row) {
+        bool match = true;
 
-    // 검색 요청 시그널 발생
-    emit searchClientsRequested(company, department, manager, phone);
+        // 제품명 검색 조건 확인
+        if (!company.isEmpty()) {
+            QTableWidgetItem* item = ui->tableWidget->item(row, 0);
+            if (item) {
+                QString cellProductName = item->text();
+                if (!cellProductName.contains(company, Qt::CaseInsensitive)) {
+                    match = false;
+                }
+            } else {
+                // 해당 셀이 비어있으면 검색 조건에 맞지 않음
+                match = false;
+            }
+        }
+
+        // 검색 조건에 맞는 행만 표시
+        ui->tableWidget->setRowHidden(row, !match);
+    }
 }
 
 void AdminInfoForm::on_pushButtonReset_clicked()
 {
     // 검색 입력란 초기화
     ui->CompanyName->clear();
-    ui->DepName->clear();
-    ui->ClientName->clear();
-    ui->PhoneNum->clear();
 
     // 전체 목록 다시 요청
     emit clientListRequested();
@@ -58,7 +70,9 @@ void AdminInfoForm::displayClientList(const QBuffer &buffer)
 {
     // 테이블 초기화
     ui->tableWidget->setRowCount(0);
-
+    // 가로 스크롤바 활성화
+    ui->tableWidget->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    ui->tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     //통신
     qDebug() << "테이블 디스플레이 :" << buffer.data();
     QByteArray arr = buffer.data();
@@ -89,6 +103,14 @@ void AdminInfoForm::displayClientList(const QBuffer &buffer)
         QTableWidgetItem* addressItem = new QTableWidgetItem(client["address"].toString());
         ui->tableWidget->setItem(row, 3, addressItem);
     }
+    // 내용에 맞게 칸 크기 조정
+    ui->tableWidget->resizeColumnsToContents();
+    // 테이블 위젯의 크기 정책을 설정하여 가로 스크롤바가 필요할 때 나타나도록 함
+    ui->tableWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+
+    // 테이블 헤더 설정
+    ui->tableWidget->horizontalHeader()->setStretchLastSection(false);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 }
 
 QToolBox *AdminInfoForm::getToolBox()

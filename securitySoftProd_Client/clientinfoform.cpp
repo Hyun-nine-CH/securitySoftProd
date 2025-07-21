@@ -101,8 +101,41 @@ void ClientInfoForm::on_pushButton_search_clicked()
     QString price = ui->Price->text().trimmed();
     QString dueDate = ui->Due->text().trimmed();
 
-    // 검색 요청 시그널 발생
-    //emit searchOrdersRequested(productName, price, dueDate);
+    // 테이블 위젯의 모든 행을 확인
+    for (int row = 0; row < ui->tableWidget->rowCount(); ++row) {
+        bool match = true;
+
+        // 제품명 검색 조건 확인
+        if (!productName.isEmpty()) {
+            QString cellProductName = ui->tableWidget->item(row, 5)->text();
+            if (!cellProductName.contains(productName, Qt::CaseInsensitive)) {
+                match = false;
+            }
+        }
+
+        // 가격 검색 조건 확인
+        if (!price.isEmpty() && match) {
+            QString cellPrice = ui->tableWidget->item(row, 6)->text();
+            // 쉼표 제거 후 비교 (숫자 형식 처리)
+            QString cleanedCellPrice = cellPrice.remove(",");
+            QString cleanedPrice = price.remove(",");
+
+            if (!cleanedCellPrice.contains(cleanedPrice)) {
+                match = false;
+            }
+        }
+
+        // 만료일 검색 조건 확인
+        if (!dueDate.isEmpty() && match) {
+            QString cellDueDate = ui->tableWidget->item(row, 7)->text();
+            if (!cellDueDate.contains(dueDate)) {
+                match = false;
+            }
+        }
+
+        // 검색 조건에 맞는 행만 표시
+        ui->tableWidget->setRowHidden(row, !match);
+    }
 }
 
 void ClientInfoForm::on_pushButton_Reset_clicked()
@@ -120,7 +153,9 @@ void ClientInfoForm::displayProductList(const QBuffer &buffer)
 {
     // 테이블 초기화
     ui->tableWidget->setRowCount(0);
-
+    // 가로 스크롤바 활성화
+    ui->tableWidget->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+    ui->tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
     //통신
     //qDebug() << "테이블 디스플레이 :" << buffer.data();
     QByteArray arr = buffer.data();
@@ -150,6 +185,14 @@ void ClientInfoForm::displayProductList(const QBuffer &buffer)
         QTableWidgetItem* dueDateItem = new QTableWidgetItem(product["expire"].toString());
         ui->tableWidget->setItem(row, 2, dueDateItem);
     }
+    // 내용에 맞게 칸 크기 조정
+    ui->tableWidget->resizeColumnsToContents();
+    // 테이블 위젯의 크기 정책을 설정하여 가로 스크롤바가 필요할 때 나타나도록 함
+    ui->tableWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+
+    // 테이블 헤더 설정
+    ui->tableWidget->horizontalHeader()->setStretchLastSection(false);
+    ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
 }
 
 void ClientInfoForm::displayOrderList(const QBuffer &buffer)
@@ -158,6 +201,9 @@ void ClientInfoForm::displayOrderList(const QBuffer &buffer)
     {
         // 테이블 초기화
         ui->tableWidget->setRowCount(0);
+        // 가로 스크롤바 활성화
+        ui->tableWidget->setHorizontalScrollMode(QAbstractItemView::ScrollPerPixel);
+        ui->tableWidget->setHorizontalScrollBarPolicy(Qt::ScrollBarAlwaysOn);
 
         //통신
         //qDebug() << "주문 테이블 디스플레이 :" << buffer.data();
@@ -208,6 +254,14 @@ void ClientInfoForm::displayOrderList(const QBuffer &buffer)
             QTableWidgetItem* dueDateItem = new QTableWidgetItem(Order["expire"].toString());
             ui->tableWidget->setItem(row, 7, dueDateItem);
         }
+        // 내용에 맞게 칸 크기 조정
+        ui->tableWidget->resizeColumnsToContents();
+        // 테이블 위젯의 크기 정책을 설정하여 가로 스크롤바가 필요할 때 나타나도록 함
+        ui->tableWidget->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Expanding);
+
+        // 테이블 헤더 설정
+        ui->tableWidget->horizontalHeader()->setStretchLastSection(false);
+        ui->tableWidget->horizontalHeader()->setSectionResizeMode(QHeaderView::Fixed);
     }
 }
 
