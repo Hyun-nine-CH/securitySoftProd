@@ -54,6 +54,9 @@ private:
     //QMap<QString, AdminInfoForm_Chat*> m_chatTabs;
     void onTabChanged(int index);
 
+signals:
+    void InviteUser(QString UserId);
+
 };
 
 #endif // MAINWINDOW_ADMIN_H

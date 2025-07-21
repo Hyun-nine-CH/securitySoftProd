@@ -122,6 +122,7 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::RequestThatOrder, this, &Widget::LoadThatOrderInfo);//특정 고객 주문 조회
     connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);
     connect(Comm, &CommuniCation::FinishReceiveFile, DMan, &DataManager::SavePNGFile);
+    connect(Comm, &CommuniCation::RequestMesgInvite,this, &Widget::SendInvite);
 }
 
 void Widget::BroadCast(const QBuffer& MessageData, QSharedPointer<ClientInfo> UserInfo)
@@ -321,6 +322,42 @@ void Widget::ChatLogAdd(const QBuffer &MessageData,QSharedPointer<ClientInfo> Us
     slot1Completed = true;
     waitForSlot1.wakeAll(); // 대기 중인 슬롯2를 깨움
 
+}
+
+void Widget::SendInvite(const QBuffer &userId)
+{
+    QByteArray idPacket = userId.data();
+    QJsonDocument Mesg = QJsonDocument::fromJson(idPacket);
+    if(Mesg.isNull()){
+        qDebug() << "클라이언트에서 데이터가 오지 않았습니다";
+    }
+    QJsonObject MesgObj = Mesg.object();
+    QJsonObject ChatObject;
+    ChatObject["invite"]  = "invite corp";
+    QByteArray payload = QJsonDocument(ChatObject).toJson();
+
+    QByteArray Container;
+    QByteArray filename = "invite";
+    QDataStream out(&Container,QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << filename;
+    Container.append(payload);
+
+    out.device()->seek(0);
+    qint64 dataType = INVITE;
+    out << dataType << Container.size() << Container.size();
+
+    for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();it != CInfoList.constEnd(); ++it){
+        ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
+        CommuniCation* W = it.key();
+        if( (QString::compare(C->getClientNick(), MesgObj.value("id").toString()) == 0)){
+            if(W){
+                qDebug() << MesgObj.value("id").toString() << "에게 채팅초대 메시지 보낸다";
+                QMetaObject::invokeMethod(W,"WriteData", Qt::QueuedConnection, Q_ARG(QByteArray, Container));
+                break;
+            }
+        }
+    }
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

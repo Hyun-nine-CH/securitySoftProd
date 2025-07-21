@@ -38,12 +38,14 @@ signals:
     void RequestChatLogInfo (CommuniCation* Thread);// 채팅로그 조회
     void RequestIdCheck     (CommuniCation* Thread,const QBuffer& MessageData); //아이디 중복체크
     void RequestThatOrder   (CommuniCation* Thread); //그 고객에 대한 주문정보 조회
-    void FinishReceiveFile  (const QJsonObject& files);
+    void FinishReceiveFile  (const QJsonObject& files); //데이터 다 받았다.
+    void RequestMesgInvite  (const QBuffer& userid);
 
 private slots:
     void ReadClientData    (); // 소켓에서 데이터 읽기
     void ClientDisconnected(); // 소켓 연결 끊김 처리
     void WriteData         (const QByteArray& MessageData);
+    void RequestInviteUser (const QBuffer& userid);
 
 private:
     QFile      *NewFile;
@@ -69,7 +71,8 @@ private:
         ADD_ORDER,
         ADD_LOG,
         CHAT_MESG,
-        ID_CHECK
+        ID_CHECK,
+        INVITE
     };
 
     void ProcessBuffer        (const QBuffer &buffer, int requestType);

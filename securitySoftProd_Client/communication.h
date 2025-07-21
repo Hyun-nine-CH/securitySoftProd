@@ -65,6 +65,7 @@ public slots:
     void RequestProductAdd(const QJsonObject& productData); //제품추가 요청 신호
     void RequestProductDel(const QJsonObject& productData); //제품삭제 요청 신호
     void RequestProductMod(const QJsonObject& productData); //제품수정 요청 신호
+    void RequestInviteUser(QString UserId); //채팅 초대
 
 private slots:
     void Login(const QBuffer &buffer); //로그인

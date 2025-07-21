@@ -391,6 +391,30 @@ void Communication::RequestProductMod(const QJsonObject &productData)
     qDebug() << "제품 수정 데이터 전송 완료";
 }
 
+void Communication::RequestInviteUser(QString UserId)
+{
+    qDebug() << "채팅 초대 데이터 보내는 중...";
+    QJsonObject invite;
+    invite["id"] = UserId;
+    QByteArray payload = QJsonDocument(invite).toJson();
+
+    qDebug() << "채팅 초대 데이터 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "invite";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Invite_Chat) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 채팅 초대 데이터 전송 중... (프로토콜:" << Protocol::Invite_Chat << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "채팅 초대 데이터 전송 완료";
+}
+
 void Communication::SendChatMesg(const QString &mesg)
 {
     qDebug() << "메시지 보내는 중...";

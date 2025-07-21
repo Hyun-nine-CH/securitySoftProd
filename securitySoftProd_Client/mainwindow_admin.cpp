@@ -13,7 +13,8 @@
 #include <QTimer>
 #include <QMap>
 #include <QTabWidget>
-#include "Protocol.h"
+#include <QListWidget>
+#include <QPushButton>
 #include "communication.h"
 
 MainWindow_Admin::MainWindow_Admin(QWidget *parent)
@@ -34,7 +35,7 @@ MainWindow_Admin::MainWindow_Admin(QWidget *parent)
     connect(ui->actionClient_Info, &QAction::triggered, this, &MainWindow_Admin::on_actionClient_Info_triggered);
     connect(ui->actionQuit, &QAction::triggered, this, &MainWindow_Admin::on_actionQuit_triggered);
     connect(Communication::getInstance(),&Communication::ReceviceChatRoomInfo, this, &MainWindow_Admin::CreateChatRoom);
-
+    connect(this, &MainWindow_Admin::InviteUser, &Communication::RequestInviteUser); //채팅초대
     // 1. 제품 정보 탭 생성 및 시그널 연결
     m_prodTab = new AdminInfoForm_Prod(this);
     ui->tabWidget->addTab(m_prodTab, tr("제품 정보"));
@@ -112,6 +113,51 @@ void MainWindow_Admin::CreateChatRoom(const QBuffer &buffer)
     for (const QString& identifier : uniqueRoomIds) {
         AdminInfoForm_Chat* newChatTab = new AdminInfoForm_Chat(identifier, this);
         int tabIndex = ui->tabWidget->addTab(newChatTab, identifier);
+        if(identifier == "Corp"){
+            // 수평 레이아웃 가져오기 (채팅창이 있는 레이아웃)
+            QHBoxLayout* horizontalLayout = newChatTab->findChild<QHBoxLayout*>("horizontalLayout");
+
+            if(horizontalLayout) {
+                // 사용자 목록을 위한 위젯 생성
+                QListWidget* userListWidget = new QListWidget(newChatTab);
+                userListWidget->setObjectName("userListWidget_" + identifier);
+                userListWidget->setMaximumWidth(150); // 적절한 너비 설정
+
+                // 사용자 목록 위젯을 수평 레이아웃에 추가
+                horizontalLayout->addWidget(userListWidget);
+
+                // 수직 레이아웃 생성 (버튼을 위한)
+                QVBoxLayout* verticalLayout = new QVBoxLayout();
+
+                // 초대 버튼 생성
+                QPushButton* inviteButton = new QPushButton("초대", newChatTab);
+                inviteButton->setObjectName("inviteButton_" + identifier);
+
+                // 버튼을 수직 레이아웃에 추가
+                verticalLayout->addWidget(inviteButton);
+                verticalLayout->addStretch(); // 버튼을 상단에 위치시키기 위한 스트레치
+
+                // 수직 레이아웃을 수평 레이아웃에 추가
+                horizontalLayout->addLayout(verticalLayout);
+
+                // 사용자 선택 및 버튼 클릭 이벤트 연결
+                connect(inviteButton, &QPushButton::clicked, [=]() {
+                    QListWidgetItem* selectedItem = userListWidget->currentItem();
+                    if(selectedItem) {
+                        QString selectedUser = selectedItem->text();
+                        qDebug() << "특정 사용자 초대: " << selectedUser;
+                        emit InviteUser(selectedUser);
+                    } else {
+                        qDebug() << "선택된 사용자가 없습니다.";
+                    }
+                });
+                // 예시 사용자 추가 (실제로는 서버에서 받아온 사용자 목록을 추가해야 함)
+                userListWidget->addItem("사용자1");
+                userListWidget->addItem("사용자2");
+                userListWidget->addItem("사용자3");
+            }
+
+        }
 
         qDebug() << "탭 추가됨: " << identifier << " (인덱스: " << tabIndex << ")";
     }

@@ -44,7 +44,7 @@ private slots:
     void CheckId(CommuniCation* Thread,const QBuffer& MessageData);//아이디 중복조회
     void LoadThatOrderInfo(CommuniCation* Thread); //개인 고객 주문정보 조회
     void ChatLogAdd(const QBuffer &MessageData, QSharedPointer<ClientInfo> UserInfo);//채팅로그 저장
-
+    void SendInvite(const QBuffer& userId);
 private:
     QLabel     *InfoLabel;
     QLabel     *PortLabel;
@@ -78,6 +78,7 @@ private:
     const qint64 CHAT_MESG = 0x13;
     const qint64 ID_CHECK  = 0x14;
     const qint64 ORDER_LI  = 0x15;
+    const qint64 INVITE    = 0x16;
 
     void SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand);
 

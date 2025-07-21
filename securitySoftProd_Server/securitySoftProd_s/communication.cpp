@@ -81,6 +81,10 @@ void CommuniCation::ProcessBuffer(const QBuffer &buffer, int requestType)
             qDebug() << "id check data receive completed";
             emit RequestIdCheck(this,buffer);
             break;
+        case INVITE:
+            qDebug() << "id check data receive completed";
+            emit RequestMesgInvite(buffer);
+            break;
         }
         // 공통 초기화 코드
         ReceivePacket = 0;
@@ -130,7 +134,9 @@ void CommuniCation::ReadClientData()
     case 0x12:emit RequestChatLogInfo(this);                    break;
     case 0x13:ChattingParse          (buffer);                  break;
     case 0x14:DuplicIdCheck          (buffer);                  break;
-    case 0x15:emit RequestThatOrder  (this);    break;
+    case 0x15:emit RequestThatOrder  (this);                    break;
+    case 0x16:RequestInviteUser      (buffer);                  break;
+    case 0x17:RequestActiveUser      ();            break;
     }
     ByteArray.clear();
 }
@@ -185,6 +191,11 @@ void CommuniCation::WriteData(const QByteArray& MessageData)
     //qDebug() << ">>>>>>>>>>>>>send data>>>>>>>>>>>>>";
     Socket->write(MessageData);
     Socket->flush();
+}
+
+void CommuniCation::RequestInviteUser(const QBuffer &userid)
+{
+    ProcessBuffer(userid,INVITE);
 }
 
 void CommuniCation::ClientDisconnected()
