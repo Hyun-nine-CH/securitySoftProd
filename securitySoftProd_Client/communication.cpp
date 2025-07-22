@@ -414,6 +414,30 @@ void Communication::RequestInviteUser(QString UserId)
     qDebug() << "채팅 초대 데이터 전송 완료";
 }
 
+void Communication::RequestInviteExit()
+{
+    qDebug() << "채팅 나가기 요청 보내는 중...";
+    QJsonObject exit;
+    exit["exit"] = "exit";
+    QByteArray payload = QJsonDocument(exit).toJson();
+
+    qDebug() << "채팅 나가기 요청 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "exit";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::EXIT_Chat) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 채팅 나가기 요청 전송 중... (프로토콜:" << Protocol::EXIT_Chat << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "채팅 나가기 요청 전송 완료";
+}
+
 void Communication::SendChatMesg(const QString &mesg)
 {
     qDebug() << "메시지 보내는 중...";

@@ -67,6 +67,7 @@ public slots:
     void RequestProductDel(const QJsonObject& productData); //제품삭제 요청 신호
     void RequestProductMod(const QJsonObject& productData); //제품수정 요청 신호
     void RequestInviteUser(QString UserId); //채팅 초대
+    void RequestInviteExit();
 
 private slots:
     void Login(const QBuffer &buffer); //로그인

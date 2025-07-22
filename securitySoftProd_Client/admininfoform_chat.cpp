@@ -12,6 +12,7 @@ AdminInfoForm_Chat::AdminInfoForm_Chat(const QString& companyName, QWidget *pare
     : QWidget(parent)
     , ui(new Ui::AdminInfoForm_Chat)
     , m_companyName(companyName)
+    , m_userListWidget(nullptr)
 {
     ui->setupUi(this);
     // UI의 pushButton_admin이 클릭되면 on_pushButton_admin_clicked 슬롯이 호출됨

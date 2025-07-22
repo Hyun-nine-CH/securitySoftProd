@@ -46,6 +46,7 @@ private slots:
     void ChatLogAdd(const QBuffer &MessageData, QSharedPointer<ClientInfo> UserInfo);//채팅로그 저장
     void SendInvite(const QBuffer& userId);
     void SendActivUserList(CommuniCation* Thread);
+    void ExitChatRoom(CommuniCation* Thread);
 
 private:
     QLabel     *InfoLabel;

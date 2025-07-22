@@ -31,6 +31,7 @@ private slots:
     void on_pushButton_client_clicked();
     void on_pushButton_fileClient_clicked();
     void AlertInvite();
+    void ExitCorpRoom();
     // void appendMessage(const QBuffer &buffer);
     //void on_pushButton_admin_clicked();
 
@@ -39,7 +40,8 @@ private:
     // 엔터키 이벤트 처리를 위한 이벤트 필터
     bool eventFilter(QObject *watched, QEvent *event) override;
     bool isInvite = false;
-
+signals:
+    void exits();
 };
 
 #endif // CLIENTINFOFORM_CHAT_H

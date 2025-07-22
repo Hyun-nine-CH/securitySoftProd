@@ -18,14 +18,15 @@ ClientInfoForm_Chat::ClientInfoForm_Chat(QWidget *parent)
 
     // 메시지 전송 버튼 연결
     connect(ui->pushButton_client, &QPushButton::clicked, this, &ClientInfoForm_Chat::on_pushButton_client_clicked);
-
     // 파일 전송 버튼 연결
-    //connect(ui->pushButton_fileClient, &QPushButton::clicked, this, &ClientInfoForm_Chat::on_pushButton_fileClient_clicked);
-
+    connect(ui->pushButton_exit, &QPushButton::clicked,this, &ClientInfoForm_Chat::ExitCorpRoom);
     // 서버에서 메시지 응답 받기
     connect(Communication::getInstance(),&Communication::ReceiveChat,this,&ClientInfoForm_Chat::appendMessage);
     // 초대 메시지 받기
     connect(Communication::getInstance(),&Communication::InviteFromCorp,this,&ClientInfoForm_Chat::AlertInvite);
+    // 채팅방 나가기
+    connect(this, &ClientInfoForm_Chat::exits,Communication::getInstance(),&Communication::RequestInviteExit);
+
     // 엔터키 이벤트 필터 설치
     ui->lineEdit->installEventFilter(this);
 
@@ -106,6 +107,16 @@ void ClientInfoForm_Chat::AlertInvite()
 {
     QMessageBox::information(this, "강제 초대", "관리자와의 채팅으로 전환됩니다");
     isInvite = true;
+}
+
+void ClientInfoForm_Chat::ExitCorpRoom()
+{
+    if(isInvite){
+        QMessageBox::information(this, "나가기", "관리자와의 채팅에서 빠져나갑니다");
+        isInvite = false;
+        ui->chatDisplay->clear();
+        emit exits();
+    }
 }
 
 // 메시지 표시 함수

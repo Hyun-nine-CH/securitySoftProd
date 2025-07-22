@@ -124,6 +124,7 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::FinishReceiveFile, DMan, &DataManager::SavePNGFile);
     connect(Comm, &CommuniCation::RequestMesgInvite,this, &Widget::SendInvite);
     connect(Comm, &CommuniCation::RequestActiveUser, this, &Widget::SendActivUserList);
+    connect(Comm, &CommuniCation::ExitChatRoom, this, &Widget::ExitChatRoom);
 }
 
 void Widget::BroadCast(const QBuffer& MessageData, QSharedPointer<ClientInfo> UserInfo)
@@ -411,6 +412,11 @@ void Widget::SendActivUserList(CommuniCation* Thread)
     qint64 dataType = ACTIVE;
     out << dataType << Container.size() << Container.size();
     QMetaObject::invokeMethod(Thread, "WriteData", Qt::QueuedConnection, Q_ARG(QByteArray, Container));
+}
+
+void Widget::ExitChatRoom(CommuniCation *Thread)
+{
+    CInfoList.value(Thread)->setIsInvite(false);
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

@@ -29,6 +29,7 @@ enum DataType : qint64 {
     Chatting_Parse = 0x13, // 서버의 ChattingParse에 해당 (새로 추가)
     Invite_Chat    = 0x16, //채팅 초대
     Active_user    = 0x17,
+    EXIT_Chat      = 0x18,
 
     // 클라이언트 전용 코드 (충돌 방지를 위해 높은 값 사용)
     ID_Check_Request = 0x14, // 아이디중복 요청

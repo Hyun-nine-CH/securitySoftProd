@@ -41,6 +41,7 @@ signals:
     void FinishReceiveFile  (const QJsonObject& files); //데이터 다 받았다.
     void RequestMesgInvite  (const QBuffer& userid);
     void RequestActiveUser  (CommuniCation* Thread);
+    void ExitChatRoom       (CommuniCation* Thread);
 
 private slots:
     void ReadClientData    (); // 소켓에서 데이터 읽기
