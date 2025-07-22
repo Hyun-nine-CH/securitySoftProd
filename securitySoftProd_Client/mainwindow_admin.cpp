@@ -13,7 +13,7 @@
 #include <QTimer>
 #include <QMap>
 #include <QTabWidget>
-#include <QListWidget>
+
 #include <QPushButton>
 #include "communication.h"
 
@@ -21,7 +21,6 @@ MainWindow_Admin::MainWindow_Admin(QWidget *parent)
     : QMainWindow(parent), ui(new Ui::MainWindow_Admin)
 {
     ui->setupUi(this);
-
     // 윈도우 제목 설정 - 관리자 정보 표시
     QString title = QString("관리자 - %1 (%2)")
                         .arg(Communication::getInstance()->getUserInfo()["department"].toString())
@@ -35,7 +34,9 @@ MainWindow_Admin::MainWindow_Admin(QWidget *parent)
     connect(ui->actionClient_Info, &QAction::triggered, this, &MainWindow_Admin::on_actionClient_Info_triggered);
     connect(ui->actionQuit, &QAction::triggered, this, &MainWindow_Admin::on_actionQuit_triggered);
     connect(Communication::getInstance(),&Communication::ReceviceChatRoomInfo, this, &MainWindow_Admin::CreateChatRoom);
-    connect(this, &MainWindow_Admin::InviteUser, &Communication::RequestInviteUser); //채팅초대
+    connect(this, &MainWindow_Admin::InviteUser,Communication::getInstance(), &Communication::RequestInviteUser); //채팅초대
+    connect(Communication::getInstance(), &Communication::ReceiveActiveUserList, this, &MainWindow_Admin::ReceiveActiveUserList);
+
     // 1. 제품 정보 탭 생성 및 시그널 연결
     m_prodTab = new AdminInfoForm_Prod(this);
     ui->tabWidget->addTab(m_prodTab, tr("제품 정보"));
@@ -112,20 +113,18 @@ void MainWindow_Admin::CreateChatRoom(const QBuffer &buffer)
     }
     for (const QString& identifier : uniqueRoomIds) {
         AdminInfoForm_Chat* newChatTab = new AdminInfoForm_Chat(identifier, this);
+
         int tabIndex = ui->tabWidget->addTab(newChatTab, identifier);
         if(identifier == "Corp"){
             // 수평 레이아웃 가져오기 (채팅창이 있는 레이아웃)
             QHBoxLayout* horizontalLayout = newChatTab->findChild<QHBoxLayout*>("horizontalLayout");
 
             if(horizontalLayout) {
-                // 사용자 목록을 위한 위젯 생성
                 QListWidget* userListWidget = new QListWidget(newChatTab);
+                // 사용자 목록을 위한 위젯 생성
                 userListWidget->setObjectName("userListWidget_" + identifier);
                 userListWidget->setMaximumWidth(150); // 적절한 너비 설정
-
-                // 사용자 목록 위젯을 수평 레이아웃에 추가
-                horizontalLayout->addWidget(userListWidget);
-
+                newChatTab->setUserListWidget(userListWidget);
                 // 수직 레이아웃 생성 (버튼을 위한)
                 QVBoxLayout* verticalLayout = new QVBoxLayout();
 
@@ -134,6 +133,7 @@ void MainWindow_Admin::CreateChatRoom(const QBuffer &buffer)
                 inviteButton->setObjectName("inviteButton_" + identifier);
 
                 // 버튼을 수직 레이아웃에 추가
+                verticalLayout->addWidget(userListWidget);
                 verticalLayout->addWidget(inviteButton);
                 verticalLayout->addStretch(); // 버튼을 상단에 위치시키기 위한 스트레치
 
@@ -151,41 +151,68 @@ void MainWindow_Admin::CreateChatRoom(const QBuffer &buffer)
                         qDebug() << "선택된 사용자가 없습니다.";
                     }
                 });
-                // 예시 사용자 추가 (실제로는 서버에서 받아온 사용자 목록을 추가해야 함)
-                userListWidget->addItem("사용자1");
-                userListWidget->addItem("사용자2");
-                userListWidget->addItem("사용자3");
             }
 
         }
-
         qDebug() << "탭 추가됨: " << identifier << " (인덱스: " << tabIndex << ")";
+    }
+    connect(ui->tabWidget, &QTabWidget::currentChanged,this, &MainWindow_Admin::RequestActiveUserList);
+}
+
+void MainWindow_Admin::RequestActiveUserList(int index)
+{
+    // 현재 선택된 탭의 텍스트(이름)를 가져옵니다.
+    QString tabName = ui->tabWidget->tabText(index);
+
+    qDebug() << "탭이 변경되었습니다. 현재 탭 이름:" << tabName << ", 인덱스:" << index;
+
+    // 탭 이름이 "Corp"일 경우에만 특정 동작 수행
+    if (tabName == "Corp") {
+        Communication::getInstance()->RequestActiveUserList();
     }
 }
 
-// 새로운 채팅방 탭 생성 (회사별 채팅방)
-void MainWindow_Admin::createNewChatTab(const QString& roomId, const QString& initialMessage) {
-    // // 새 채팅방 탭 생성
-    // AdminInfoForm_Chat* newChatTab = new AdminInfoForm_Chat(roomId, this);
-    // connect(newChatTab, &AdminInfoForm_Chat::messageSendRequested,
-    //         this, &MainWindow_Admin::sendChatMessage);
+void MainWindow_Admin::ReceiveActiveUserList(const QBuffer &buffer)
+{
+    // 현재 활성화된 탭 가져오기
+    int currentIndex = ui->tabWidget->currentIndex();
+    if (currentIndex < 0) return; // 탭이 없는 경우
 
-    // // 탭 추가 (탭 이름은 회사명)
-    // ui->tabWidget->addTab(newChatTab, roomId);
+    AdminInfoForm_Chat* currentTab = qobject_cast<AdminInfoForm_Chat*>(ui->tabWidget->widget(currentIndex));
+    if (!currentTab) return;
 
-    // // 채팅방 탭 맵에 추가
-    // m_chatTabs[roomId] = newChatTab;
+    // 현재 탭의 QListWidget 가져오기
+    QListWidget* currentListWidget = currentTab->getUserListWidget();
+    if (!currentListWidget) return;
 
-    // // 초기 메시지 표시
-    // if (!initialMessage.isEmpty()) {
-    //     newChatTab->appendMessage(initialMessage);
-    // }
+    // 기존 항목 지우기
+    currentListWidget->clear();
 
-    // // 새 메시지가 왔으므로 알림 표시
-    // newChatTab->showChatNotification();
+    QByteArray arr = buffer.data();
+    arr.remove(0, buffer.pos());
+    qDebug() << "이건또 왜 다르니 "<< arr;
+    QJsonArray ActiveUser = QJsonDocument::fromJson(arr).array();
 
-    // // 채팅 기록 요청
-    // QJsonObject requestObj;
-    // requestObj["roomId"] = roomId;
-    // sendDataToServer(Protocol::Chat_History_Request, requestObj, "chat_history");
+    qDebug() << "받은 사용자 목록 크기: " << ActiveUser.size();
+
+    // QListWidget에 ActiveUser 배열의 항목들을 추가
+    for (int i = 0; i < ActiveUser.size(); ++i) {
+        QJsonObject userObj = ActiveUser[i].toObject();
+
+        QString displayText;
+        if (userObj.contains("id")) {
+            displayText = userObj["id"].toString();
+            if(QString::compare(displayText, Communication::getInstance()->getUserInfo().value("id").toString()) == 0)
+                displayText = "Me";
+            qDebug() << "사용자 추가: " << displayText;
+        } else {
+            displayText = "현재 사용자가 없습니다";
+            qDebug() << "사용자 정보 없음";
+        }
+
+        // QListWidget에 항목 추가
+        currentListWidget->addItem(displayText);
+    }
+
+    qDebug() << "위젯에 추가된 항목 수: " << currentListWidget->count();
 }

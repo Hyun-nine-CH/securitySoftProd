@@ -4,6 +4,7 @@
 #include <QWidget>
 #include <QByteArray>
 #include <QBuffer>
+#include <QListWidget>
 
 namespace Ui {
 class AdminInfoForm_Chat;
@@ -24,6 +25,9 @@ public:
     void showChatNotification();
     void clearChatNotification();
     void onChatTabActivated();
+    QListWidget* getUserListWidget() const { return m_userListWidget; }
+    void setUserListWidget(QListWidget* widget) { m_userListWidget = widget; }
+
 
 private slots:
     void on_pushButton_admin_clicked();
@@ -31,6 +35,7 @@ private slots:
 private:
     Ui::AdminInfoForm_Chat *ui;
     QString m_companyName; // 이 채팅방이 속한 회사명 (roomId)
+    QListWidget* m_userListWidget;
 };
 
 #endif // ADMININFOFORM_CHAT_H

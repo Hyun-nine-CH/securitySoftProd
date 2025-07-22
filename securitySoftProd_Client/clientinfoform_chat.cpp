@@ -24,7 +24,8 @@ ClientInfoForm_Chat::ClientInfoForm_Chat(QWidget *parent)
 
     // 서버에서 메시지 응답 받기
     connect(Communication::getInstance(),&Communication::ReceiveChat,this,&ClientInfoForm_Chat::appendMessage);
-
+    // 초대 메시지 받기
+    connect(Communication::getInstance(),&Communication::InviteFromCorp,this,&ClientInfoForm_Chat::AlertInvite);
     // 엔터키 이벤트 필터 설치
     ui->lineEdit->installEventFilter(this);
 
@@ -55,8 +56,16 @@ void ClientInfoForm_Chat::on_pushButton_client_clicked()
 {
     QString messageText = ui->lineEdit->text().trimmed();
     if (messageText.isEmpty()) return;
-    Communication::getInstance()->SendChatMesg(messageText);
-
+    if(isInvite){
+        QJsonObject ChatObject;
+        ChatObject["message"] = messageText;
+        ChatObject["nickname"] = Communication::getInstance()->getUserInfo().value("id").toString();
+        ChatObject["RoomId"] = "Corp";
+        QByteArray payload = QJsonDocument(ChatObject).toJson();
+        Communication::getInstance()->SendChatMesg(payload);
+    }else{
+        Communication::getInstance()->SendChatMesg(messageText);
+    }
     ui->lineEdit->clear();
 
     // 메시지 입력 후 스크롤을 최하단으로 이동
@@ -91,6 +100,12 @@ void ClientInfoForm_Chat::on_pushButton_fileClient_clicked()
     } else {
         qDebug() << "File selection cancelled by user.";
     }
+}
+
+void ClientInfoForm_Chat::AlertInvite()
+{
+    QMessageBox::information(this, "강제 초대", "관리자와의 채팅으로 전환됩니다");
+    isInvite = true;
 }
 
 // 메시지 표시 함수

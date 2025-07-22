@@ -123,6 +123,7 @@ void Widget::ClientConnect()
     connect(Comm, &CommuniCation::ChattingMesg, this, &Widget::BroadCast);
     connect(Comm, &CommuniCation::FinishReceiveFile, DMan, &DataManager::SavePNGFile);
     connect(Comm, &CommuniCation::RequestMesgInvite,this, &Widget::SendInvite);
+    connect(Comm, &CommuniCation::RequestActiveUser, this, &Widget::SendActivUserList);
 }
 
 void Widget::BroadCast(const QBuffer& MessageData, QSharedPointer<ClientInfo> UserInfo)
@@ -165,16 +166,24 @@ void Widget::BroadCast(const QBuffer& MessageData, QSharedPointer<ClientInfo> Us
     out.device()->seek(0);
     qint64 dataType = CHAT_MESG;
     out << dataType << Container.size() << Container.size();
+
+    if(!(MesgObj.value("RoomId").toString().isEmpty())
+        && QString::compare(AOrCMesg, "Corp") != 0){
+        UserInfo->setIsInvite(true);
+    }else{
+        UserInfo->setIsInvite(false);
+    }
+
     for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin();it != CInfoList.constEnd(); ++it){
         ClientInfo *C = it.value(); // 이터레이터가 가리키는 실제 값(ClientInfo* 포인터)을 가져옴
         CommuniCation* W = it.key();
         if( MesgObj.value("RoomId").toString().isEmpty()){
             if((QString::compare(C->getClientRoomId(), AOrCMesg) == 0) ||
-                (QString::compare(C->getClientRoomId(), "Corp") == 0)){
+                (QString::compare(C->getClientRoomId(), "Corp") == 0)){//관리자는 항상 메시지를 다 받음
                 //같은 방이면 브로드캐스트 해라
                 // qDebug() << "compare : " << C->getClientRoomId();
                 // qDebug() << "origin  : " << UserInfo->getClientRoomId();
-                if(W){
+                if(W && (C->getIsInvite() == false)){
                     qDebug() << "왜 채팅이 중복되는거니?";
                     qDebug() << "origin  : " << AOrCMesg;
                     // QMetaObject::invokeMethod를 사용하여 대상 스레드의 슬롯 호출
@@ -186,12 +195,24 @@ void Widget::BroadCast(const QBuffer& MessageData, QSharedPointer<ClientInfo> Us
                 }
             }
         }else{
+            //관리자 브로드캐스트
             if((QString::compare(C->getClientRoomId(), MesgObj.value("RoomId").toString()) == 0) ||
-                (QString::compare(C->getClientRoomId(), "Corp") == 0)){
-                if(W) {
+                (QString::compare(C->getClientRoomId(), "Corp") == 0) ||
+                (C->getIsInvite() && (QString::compare("Corp", MesgObj.value("RoomId").toString()) == 0))){
+                if(W){
                     QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
                                               Qt::QueuedConnection,  // 연결 타입 (필수)
                                               Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
+                }
+            //초대받은 클라이언트
+            }else if(UserInfo->getIsInvite()){
+                if((QString::compare(C->getClientRoomId(), "Corp") == 0) ||
+                    (QString::compare(C->getClientNick(), UserInfo->getClientNick()) == 0)){
+                    if(W){
+                        QMetaObject::invokeMethod(W,"WriteData", // 호출할 슬롯 이름 (문자열)
+                                                  Qt::QueuedConnection,  // 연결 타입 (필수)
+                                                  Q_ARG(QByteArray, Container)); // 슬롯에 전달할 인자
+                    }
                 }
             }
         }
@@ -358,6 +379,38 @@ void Widget::SendInvite(const QBuffer &userId)
             }
         }
     }
+}
+
+void Widget::SendActivUserList(CommuniCation* Thread)
+{
+
+    QByteArray filename = "ActiveUser";
+
+    // JSON 배열 생성
+    QJsonArray userArray;
+
+    // 모든 클라이언트 정보를 배열에 추가
+    for(QMap<CommuniCation*, ClientInfo*>::const_iterator it = CInfoList.constBegin(); it != CInfoList.constEnd(); ++it) {
+        ClientInfo *C = it.value();
+        CommuniCation* W = it.key();
+        if(W) {
+            QJsonObject ActiveList;
+            ActiveList["id"] = C->getClientNick();
+            userArray.append(ActiveList);
+        }
+    }
+    // 전체 JSON 배열을 QByteArray로 변환
+    QByteArray payload = QJsonDocument(userArray).toJson(QJsonDocument::Compact);
+    QByteArray Container;
+    // 데이터 스트림 설정
+    QDataStream out(&Container, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    out << qint64(0) << qint64(0) << qint64(0) << filename;
+    Container.append(payload);
+    out.device()->seek(0);
+    qint64 dataType = ACTIVE;
+    out << dataType << Container.size() << Container.size();
+    QMetaObject::invokeMethod(Thread, "WriteData", Qt::QueuedConnection, Q_ARG(QByteArray, Container));
 }
 
 void Widget::SendData(const QByteArray &Data, CommuniCation *Thread, const qint64 &Comand)

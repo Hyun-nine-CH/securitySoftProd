@@ -136,7 +136,7 @@ void CommuniCation::ReadClientData()
     case 0x14:DuplicIdCheck          (buffer);                  break;
     case 0x15:emit RequestThatOrder  (this);                    break;
     case 0x16:RequestInviteUser      (buffer);                  break;
-    case 0x17:RequestActiveUser      ();            break;
+    case 0x17:emit RequestActiveUser (this);                    break;
     }
     ByteArray.clear();
 }

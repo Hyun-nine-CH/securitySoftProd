@@ -23,6 +23,7 @@ void ClientInfo::ChangeJsonData()
             setClientID(obj.value("ClientId").toInt());
             setClientRoomId(obj.value("RoomId").toString());
             setClientNick(obj.value("id").toString());
+            setIsInvite(false);
             qDebug() << "JSON Parsing Succsess";
         } else {
             // 파싱 실패 또는 예상치 못한 JSON 형태 (객체가 아님)일 경우 처리
@@ -74,8 +75,18 @@ void ClientInfo::setClientNick(const QString &nick)
     this->ID = nick;
 }
 
+void ClientInfo::setIsInvite(const bool invite)
+{
+    this->isInvite = invite;
+}
+
 QByteArray ClientInfo::getClientData() const{
     return InfoData;
+}
+
+bool ClientInfo::getIsInvite() const
+{
+    return isInvite;
 }
 
 void ClientInfo::setClientData(const QByteArray &Data)

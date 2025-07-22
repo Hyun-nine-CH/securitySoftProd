@@ -1,5 +1,4 @@
 #include "communication.h"
-#include "dialog_log.h"
 #include "Protocol.h"
 #include <QMessageBox>
 #include <QFileInfo>
@@ -79,7 +78,7 @@ void Communication::ProcessBuffer(const QBuffer &buffer, int requestType)
             break;
         case ID_CHECK:
             QJsonDocument doc = QJsonDocument::fromJson(m_buffer);
-            if(doc.object()["IdCheck"] == "unique")
+            if(doc.object().value("IdCheck") == "unique")
                 emit IdCheckResult(false);
             else
                 emit IdCheckResult(true);
@@ -420,7 +419,7 @@ void Communication::SendChatMesg(const QString &mesg)
     qDebug() << "메시지 보내는 중...";
     QJsonObject ChatObject;
     ChatObject["message"] = mesg;
-    ChatObject["nickname"] = getUserInfo()["id"].toString();
+    ChatObject["nickname"] = getUserInfo().value("id").toString();
     QByteArray payload = QJsonDocument(ChatObject).toJson();
 
     qDebug() << "메시지 JSON 생성됨:" << QString(payload);
@@ -440,7 +439,7 @@ void Communication::SendChatMesg(const QString &mesg)
     qDebug() << "메시지 전송 완료";
 }
 
-void Communication::SendChatMesg_ad(const QByteArray &mesg)
+void Communication::SendChatMesg(const QByteArray &mesg)
 {
 
     qDebug() << "관리자 메시지 JSON 생성됨:" << QString(mesg);
@@ -534,6 +533,30 @@ void Communication::SendFile(QFile *file)
     }
 }
 
+void Communication::RequestActiveUserList()
+{
+    qDebug() << "활성 사용자 목록 요청 데이터 보내는 중...";
+    QJsonObject invite;
+    invite["request"] = "ActiveUserList";
+    QByteArray payload = QJsonDocument(invite).toJson();
+
+    qDebug() << "활성 사용자 목록 요청 데이터 JSON 생성됨:" << QString(payload);
+
+    QByteArray blockToSend;
+    QDataStream out(&blockToSend, QIODevice::WriteOnly);
+    out.setVersion(QDataStream::Qt_5_15);
+    QByteArray filename =  "invite";
+    out << qint64(0) << qint64(0) << qint64(0) <<filename;
+    blockToSend.append(payload);
+    qint64 totalSize = blockToSend.size();
+    out.device()->seek(0);
+    out << qint64(Protocol::Active_user) << totalSize << totalSize;
+    socket->write(blockToSend);
+    qDebug() << "서버로 활성 사용자 목록 요청 데이터 전송 중... (프로토콜:" << Protocol::Active_user << ", 크기:" << totalSize << "바이트)";
+
+    qDebug() << "활성 사용자 목록 요청 데이터 전송 완료";
+}
+
 void Communication::onReadyRead()
 {
     if(!isFileSending)
@@ -555,20 +578,15 @@ void Communication::onReadyRead()
         //          << ", 현재 패킷: " << CurrentPacket << ", 파일명: " << FileName;
         //qDebug() << "데이터 타입 : " << DataType;
         switch (DataType) {
-        //case 0x01:FileReceive            (buffer);     break;
-        case 0x03:Receive_Product  (buffer);       break;
-        //case 0x04:ModiProductInfo        (buffer);     break;
-        //case 0x05:AddProductInfo         (buffer);     break;
-        //case 0x06:DelProductInfo         (buffer);     break;
-        case 0x07:Login         (buffer);     break;
-        //case 0x08:SignUp                   (buffer);     break;
-        case 0x09:Receive_UserInfo(buffer);     break;
-        //case 0x10:AddOrderInfo           (buffer);     break;
-        case 0x11:emit ReceiveAllOrderInfo  (buffer);    break;
-        //case 0x12:emit RequestChatLogInfo(this);       break;
-        case 0x13:emit ReceiveChat(buffer);       break;
-        case 0x14:IdChekc(buffer);                break;
-        case 0x15:emit ReceiveOrderInfo(buffer);  break;
+        case 0x03:Receive_Product  (buffer);          break;
+        case 0x07:Login         (buffer);             break;
+        case 0x09:Receive_UserInfo(buffer);           break;
+        case 0x11:emit ReceiveAllOrderInfo  (buffer); break;
+        case 0x13:emit ReceiveChat(buffer);           break;
+        case 0x14:IdChekc(buffer);                    break;
+        case 0x15:emit ReceiveOrderInfo(buffer);      break;
+        case 0x16:emit InviteFromCorp();              break;
+        case 0x17:emit ReceiveActiveUserList(buffer); break;
         }
         m_buffer.clear();
     }

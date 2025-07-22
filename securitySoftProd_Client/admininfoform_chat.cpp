@@ -37,7 +37,7 @@ void AdminInfoForm_Chat::on_pushButton_admin_clicked()
     ChatObject["nickname"] = Communication::getInstance()->getUserInfo().value("id").toString();
     ChatObject["RoomId"] = this->m_companyName;
     QByteArray payload = QJsonDocument(ChatObject).toJson();
-    Communication::getInstance()->SendChatMesg_ad(payload);
+    Communication::getInstance()->SendChatMesg(payload);
 
     ui->lineEdit->clear();
 

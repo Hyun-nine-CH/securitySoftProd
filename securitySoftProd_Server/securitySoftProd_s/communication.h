@@ -40,6 +40,7 @@ signals:
     void RequestThatOrder   (CommuniCation* Thread); //그 고객에 대한 주문정보 조회
     void FinishReceiveFile  (const QJsonObject& files); //데이터 다 받았다.
     void RequestMesgInvite  (const QBuffer& userid);
+    void RequestActiveUser  (CommuniCation* Thread);
 
 private slots:
     void ReadClientData    (); // 소켓에서 데이터 읽기

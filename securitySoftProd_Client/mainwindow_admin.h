@@ -5,7 +5,7 @@
 #include <QJsonObject>
 #include <QMap>
 #include <QBuffer>
-
+#include <QListWidget>
 // 전방 선언
 class QTcpSocket;
 class AdminInfoForm_Prod;
@@ -38,20 +38,17 @@ private slots:
     void on_actionQuit_triggered();
 
     void CreateChatRoom(const QBuffer &buffer);
+    void RequestActiveUserList(int index);
+    void ReceiveActiveUserList(const QBuffer &buffer);
 
 private:
-    // 새로운 채팅방 탭 생성 함수
-    void createNewChatTab(const QString& roomId, const QString& initialMessage = "");
-
     Ui::MainWindow_Admin *ui;
-
     // 각 탭 위젯의 포인터를 멤버 변수로 관리
     AdminInfoForm_Prod* m_prodTab;
     AdminInfoForm_OL* m_orderTab;
     AdminInfoForm* m_clientTab;
 
     // 채팅방 탭 관리 (roomId를 키로 사용)
-    //QMap<QString, AdminInfoForm_Chat*> m_chatTabs;
     void onTabChanged(int index);
 
 signals:
