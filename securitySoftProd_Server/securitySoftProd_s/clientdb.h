@@ -13,11 +13,13 @@ public:
     ClientDB(DataManager *Dm, QObject *parent = nullptr);
     QJsonDocument LoadData   ()                              override;
     void          AddData    (const QByteArray &NewData)     override;
+    int           FindLastNum(const QJsonDocument &Trace)    override;
     QJsonObject Confirm      (const QByteArray &IdPwData);
     QJsonObject IdCheck      (const QByteArray &IdPwData);
 
 private:
     QByteArray ClientData;
+    const QString FileId = "ClientId";
 };
 
 #endif // CLIENTDB_H

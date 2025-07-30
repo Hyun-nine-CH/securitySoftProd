@@ -52,6 +52,31 @@ void ClientDB::AddData(const QByteArray &NewData)
     DbManager->SaveData(FilePath,DBType::CLIENT);
 }
 
+int ClientDB::FindLastNum(const QJsonDocument &Trace)
+{
+    int BigNum = 0;
+
+    if (!Trace.isNull() && Trace.isArray()) {
+        QJsonArray arr = Trace.array();
+        if (arr.isEmpty()) {
+            qDebug() << "JSON 배열이 비어있습니다.";
+        } else {
+            BigNum = arr[0].toObject().value(FileId).toInt();
+
+            for (int i = 1; i < arr.size(); ++i) {
+                QJsonObject currentObject = arr[i].toObject();
+                int currentFileId = currentObject.value(FileId).toInt();
+                if (currentFileId > BigNum && currentFileId < 1000 && BigNum < 1000)
+                    BigNum = currentFileId;
+            }
+            qDebug() << "JSON Parsing Success. Max FileId found:" << BigNum;
+        }
+    } else {
+        qDebug() << "FindLastNum JSON 파싱 실패: Trace가 유효한 배열이 아니거나 null입니다.";
+    }
+    return BigNum + 1;
+}
+
 QJsonObject ClientDB::Confirm(const QByteArray &IdPwData)
 {
     QJsonDocument &AllDoc  = DbManager->getClientData();

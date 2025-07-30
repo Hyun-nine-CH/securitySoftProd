@@ -46,6 +46,7 @@ Communication::Communication()
     //connect(socket, &QTcpSocket::bytesWritten, this, &Communication::goOnSend); // Qt5 신 문법
     qDebug() << "서버 연결 시도 중... (127.0.0.1:50000)";
     socket->connectToHost("127.0.0.1", 50000);
+    //socket->connectToHost("192.168.2.26", 50000);
 }
 
 void Communication::ProcessBuffer(const QBuffer &buffer, int requestType)
